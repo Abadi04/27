@@ -2,6 +2,17 @@
 
 ## Refero Results
 
+### Visual Redesign References
+
+1. Instagram iOS QR color screens, `bcad6ba0-d2bc-4aa8-9777-72bd46c7187e`, `a4740b81-cd7b-4200-bf03-7c5abbe403f8`, Flow `2871`: full-screen gradient profile sharing, centered QR card, style pill, paired share/copy actions, and copy feedback toast.
+2. Instagram iOS QR emoji screen, `5645911e-2e70-4975-bde4-6b82a36ee39d`: playful tiled background supporting a strict, scannable white QR card.
+3. Telegram iOS QR screens, `af456445-b932-4a6f-a718-d1be3da6548c`, `2fdc49e6-9f85-4401-91eb-22667cebc0dc`, `9f298bcb-09aa-4f9a-a46d-bb33202d8f1f`: avatar overlapping QR card, gradient/doodle backgrounds, and social-share customization carousel.
+4. FeedHive web social inbox, `90a7014b-a059-499f-b7bd-b75ab31f517a`: bold product landing with social inbox imagery, strong CTA, clean nav, and product-image hero.
+5. ManyChat web product hero, `34ba7875-5d0a-4eda-979c-cffa019d5f4f`: large display headline and phone/product visuals inside colored communication-product sections.
+6. Telegram web chat personalization, Flow `616`, screen `368e5651-cbde-4ff7-81af-1da35854057e`: split desktop chat/settings layout, live chat preview, custom backgrounds, color picker controls.
+
+### Original Cross-Platform References
+
 1. Telegram iOS Chats, `1cd24653-ba85-404a-8555-d26ddf563378` and `dd252cb6-ad13-42e4-b0cb-a8a8ff00e227`: iOS header with left edit action, centered title, right compose icons, search bar, avatar rows, unread badges, bottom tab bar.
 2. Vimeo web Messages, `22ea7710-007f-4114-9312-74af8ab65654`: web inbox with top search/actions, message tabs, filters, empty state, and a right action sidebar.
 3. X web Direct Messages, Flow `927`: three-column desktop shell, conversation list, message detail, new-message modal, conversation settings, block/report/delete actions.
@@ -24,7 +35,8 @@
 - Tablet layout: compact left rail plus list/detail columns; keep the same hierarchy and avoid desktop-only controls.
 - Mobile layout: iOS top header, single-column screens, large rows, bottom tab bar, modals/bottom sheets for safety and subscription.
 - Typography: system sans; 12-13px metadata, 14-16px rows/body, 18-22px screen titles, 32-44px landing headline.
-- Color: white content surfaces, #F2F2F7 and #F7F8FA app canvas, near-black primary text, #0A7AFF/#1D9BF0 primary action, green success, pink only for premium/danger emphasis.
+- Visual system: the share artifact is the product's expressive center, following Instagram and Telegram QR references: large QR/profile card, avatar overlap, style pill, vivid structured color fields, and paired share/copy actions. Utility surfaces remain iOS-gray/white.
+- Color: white content surfaces, #F2F2F7 and #F7F8FA app canvas, near-black primary text, #0A7AFF/#1D9BF0 primary action, plus Refero-observed social accents #FF2D55, #FFD35A, and #34D399 for share/paywall emphasis.
 - Spacing: 8px base rhythm, 12-16px row gaps, 20-24px gutters, 44-52px touch targets.
 - Empty/error states: centered or pane-local empty states with one action; report/block errors in focused modal or iOS-style sheet.
 

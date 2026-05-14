@@ -23,7 +23,6 @@ import {
   Settings,
   Shield,
   Sparkles,
-  User,
   UserX,
   X,
 } from "lucide-react";
@@ -38,6 +37,7 @@ const messages = [
     time: "2m",
     unread: true,
     status: "New",
+    accent: "mint",
   },
   {
     id: 2,
@@ -47,6 +47,7 @@ const messages = [
     time: "18m",
     unread: true,
     status: "Needs reply",
+    accent: "pink",
   },
   {
     id: 3,
@@ -56,6 +57,7 @@ const messages = [
     time: "1h",
     unread: false,
     status: "Read",
+    accent: "amber",
   },
   {
     id: 4,
@@ -65,6 +67,7 @@ const messages = [
     time: "3h",
     unread: false,
     status: "Request",
+    accent: "ink",
   },
 ];
 
@@ -89,26 +92,33 @@ const navItems = [
   { id: "settings", label: "Settings", icon: Settings },
 ];
 
+const accentStyles = {
+  mint: "bg-[#DDFBEA] text-[#0B6B3A] ring-[#B9F2D0]",
+  pink: "bg-[#FFE2ED] text-[#B11348] ring-[#FFC0D7]",
+  amber: "bg-[#FFF1BF] text-[#805A00] ring-[#FFE08A]",
+  ink: "bg-[#ECEEF2] text-[#101214] ring-[#D8DCE3]",
+  blue: "bg-[#DFF0FF] text-[#075EAB] ring-[#BADEFF]",
+};
+
 function classNames(...values) {
   return values.filter(Boolean).join(" ");
 }
 
-function Avatar({ label = "V", tone = "blue" }) {
-  const tones = {
-    blue: "bg-blue-50 text-blue-700 ring-blue-100",
-    green: "bg-emerald-50 text-emerald-700 ring-emerald-100",
-    pink: "bg-rose-50 text-rose-700 ring-rose-100",
-    gray: "bg-gray-100 text-gray-700 ring-gray-200",
-  };
-
+function Avatar({ label = "V", accent = "blue", className = "" }) {
   return (
-    <span className={classNames("grid h-10 w-10 shrink-0 place-items-center rounded-full text-sm font-semibold ring-2", tones[tone])}>
+    <span
+      className={classNames(
+        "grid h-10 w-10 shrink-0 place-items-center rounded-full text-sm font-black ring-2",
+        accentStyles[accent] || accentStyles.blue,
+        className
+      )}
+    >
       {label}
     </span>
   );
 }
 
-function IconButton({ label, children, onClick, active = false }) {
+function IconButton({ label, children, onClick, active = false, className = "" }) {
   return (
     <button
       type="button"
@@ -116,8 +126,9 @@ function IconButton({ label, children, onClick, active = false }) {
       title={label}
       onClick={onClick}
       className={classNames(
-        "grid h-10 w-10 place-items-center rounded-full border text-gray-700 transition hover:border-gray-300 hover:bg-white",
-        active ? "border-blue-200 bg-blue-50 text-action" : "border-transparent bg-transparent"
+        "grid h-10 w-10 place-items-center rounded-lg border text-gray-700 transition hover:border-gray-300 hover:bg-white",
+        active ? "border-blue-200 bg-blue-50 text-action" : "border-transparent bg-transparent",
+        className
       )}
     >
       {children}
@@ -125,12 +136,13 @@ function IconButton({ label, children, onClick, active = false }) {
   );
 }
 
-function PrimaryButton({ children, className = "", variant = "blue", onClick }) {
+function PrimaryButton({ children, className = "", variant = "dark", onClick }) {
   const variants = {
+    dark: "bg-[#101214] text-white hover:bg-black",
     blue: "bg-action text-white hover:bg-blue-700",
-    dark: "bg-gray-950 text-white hover:bg-black",
     pink: "bg-premium text-white hover:bg-rose-600",
     light: "border border-line bg-white text-ink hover:border-gray-300",
+    glass: "border border-white/20 bg-white/12 text-white hover:bg-white/20",
     danger: "bg-red-600 text-white hover:bg-red-700",
   };
 
@@ -138,14 +150,18 @@ function PrimaryButton({ children, className = "", variant = "blue", onClick }) 
     <button
       type="button"
       onClick={onClick}
-      className={classNames("inline-flex min-h-11 items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition", variants[variant], className)}
+      className={classNames(
+        "inline-flex min-h-11 items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-bold transition",
+        variants[variant],
+        className
+      )}
     >
       {children}
     </button>
   );
 }
 
-function QRMark() {
+function QRMark({ inverted = false, color = "bg-[#101214]" }) {
   const cells = useMemo(
     () =>
       Array.from({ length: 121 }, (_, index) => {
@@ -162,10 +178,129 @@ function QRMark() {
   );
 
   return (
-    <div className="grid h-36 w-36 grid-cols-11 gap-1 rounded-lg border border-gray-200 bg-white p-3 shadow-panel" aria-label="Profile QR code preview">
+    <div
+      className={classNames(
+        "grid h-36 w-36 grid-cols-11 gap-1 rounded-lg p-3",
+        inverted ? "bg-[#101214]" : "border border-gray-200 bg-white"
+      )}
+      aria-label="Profile QR code preview"
+    >
       {cells.map((fill, index) => (
-        <span key={index} className={classNames("rounded-[2px]", fill ? "bg-gray-950" : "bg-transparent")} />
+        <span
+          key={index}
+          className={classNames(
+            "rounded-[2px]",
+            fill ? color : inverted ? "bg-white/10" : "bg-transparent"
+          )}
+        />
       ))}
+    </div>
+  );
+}
+
+function ColorPattern({ variant = "hero" }) {
+  const variants = {
+    hero: "from-[#FF4F8B] via-[#FFD35A] to-[#34D399]",
+    share: "from-[#FF4F8B] via-[#FFE45C] to-[#33D6A6]",
+    blue: "from-[#33A6FF] via-[#60E6B5] to-[#FFD35A]",
+  };
+
+  return (
+    <div
+      aria-hidden="true"
+      className={classNames(
+        "absolute inset-0 bg-gradient-to-br opacity-95",
+        variants[variant] || variants.hero
+      )}
+    >
+      <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.28)_0_1px,transparent_1px_18px)]" />
+      <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(16,18,20,0.10)_0_1px,transparent_1px_72px)]" />
+    </div>
+  );
+}
+
+function ShareCard({ compact = false }) {
+  return (
+    <div
+      className={classNames(
+        "relative overflow-hidden rounded-lg border border-white/30 bg-white shadow-strong",
+        compact ? "p-4" : "p-5"
+      )}
+      data-refero-pattern="Instagram QR Flow 2871 steps 5-7: color/emoji QR card with paired Share and Copy actions"
+    >
+      <div className="absolute inset-x-0 top-0 h-20 overflow-hidden">
+        <ColorPattern variant="share" />
+      </div>
+      <div className="relative mx-auto grid justify-items-center">
+        <div className="mb-3 inline-flex min-h-8 items-center gap-2 rounded-full border border-[#101214]/15 bg-white px-3 text-xs font-black uppercase text-[#101214]">
+          Color
+        </div>
+        <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-panel">
+          <Avatar label="M" accent="pink" className="mx-auto -mt-8 h-14 w-14 text-lg" />
+          <QRMark color="bg-[#FF2D55]" />
+          <p className="mt-3 text-center text-sm font-black uppercase text-[#FF2D55]">@MAYA</p>
+        </div>
+        <div className="mt-4 grid w-full grid-cols-2 gap-2">
+          <PrimaryButton variant="light" className="px-2">
+            <Send size={16} />
+            Share
+          </PrimaryButton>
+          <PrimaryButton variant="light" className="px-2">
+            <LinkIcon size={16} />
+            Copy
+          </PrimaryButton>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PhonePreview() {
+  return (
+    <div
+      className="relative mx-auto w-full max-w-[330px] overflow-hidden rounded-[28px] border-[10px] border-[#101214] bg-[#F2F2F7] shadow-strong"
+      data-refero-pattern="Telegram iOS Chats 1cd24653: centered title, edit action, search bar, avatar-led rows, unread badges"
+    >
+      <div className="flex items-center justify-between bg-white px-4 py-3">
+        <button className="text-sm font-bold text-action" type="button">Edit</button>
+        <h3 className="text-base font-black text-[#101214]">Inbox</h3>
+        <div className="flex gap-1 text-action">
+          <Plus size={19} />
+          <MessageCircle size={19} />
+        </div>
+      </div>
+      <div className="bg-[#F2F2F7] px-4 py-3">
+        <label className="flex min-h-10 items-center gap-2 rounded-lg bg-white px-3 text-sm text-gray-500 ring-1 ring-black/5">
+          <Search size={17} />
+          Search
+        </label>
+      </div>
+      <div className="bg-white">
+        {messages.slice(0, 4).map((message) => (
+          <div key={message.id} className="flex gap-3 border-b border-gray-100 px-4 py-3">
+            <Avatar label={message.tone.slice(0, 1)} accent={message.accent} />
+            <div className="min-w-0 flex-1">
+              <div className="flex items-start justify-between gap-2">
+                <p className="truncate text-sm font-black text-[#101214]">{message.tone} note</p>
+                <span className="text-xs text-gray-500">{message.time}</span>
+              </div>
+              <p className="mt-1 truncate text-sm text-gray-500">{message.preview}</p>
+            </div>
+            {message.unread && <span className="mt-2 h-2.5 w-2.5 rounded-full bg-action" />}
+          </div>
+        ))}
+      </div>
+      <div className="grid grid-cols-4 border-t border-gray-100 bg-white px-2 py-2 text-xs font-bold text-gray-500">
+        {navItems.map((item) => {
+          const Icon = item.icon;
+          return (
+            <span key={item.id} className={classNames("grid justify-items-center gap-1", item.id === "inbox" && "text-action")}>
+              <Icon size={19} />
+              {item.label}
+            </span>
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -173,95 +308,70 @@ function QRMark() {
 function LandingHero({ onOpenAuth, onOpenShare }) {
   return (
     <section
-      className="mx-auto grid min-h-[min(760px,100svh)] w-full max-w-7xl grid-cols-[minmax(0,1fr)] items-center gap-8 px-4 py-5 sm:px-6 lg:grid-cols-[minmax(0,0.95fr)_minmax(360px,1.05fr)] lg:px-8"
-      data-refero-pattern="Hashnode flow 3913 marketing-to-auth + Mozi b83b0ba5 share preview + Telegram iOS chat list"
+      className="relative isolate min-h-[84svh] overflow-hidden bg-[#101214] px-4 py-5 text-white sm:px-6 lg:px-8"
+      data-refero-pattern="FeedHive 90a7014b product-image landing + ManyChat 34ba7875 large display hero + Instagram QR Flow 2871 visual profile sharing"
     >
-      <div className="min-w-0 max-w-2xl">
-        <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-600 shadow-panel">
-          <span className="h-2 w-2 rounded-full bg-success" />
-          Anonymous inbox, profile link, safety controls
+      <ColorPattern variant="hero" />
+      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(16,18,20,0.22),rgba(16,18,20,0.78)_62%,#101214)]" />
+
+      <div className="relative mx-auto flex max-w-7xl items-center justify-between gap-4">
+        <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-white text-lg font-black text-[#101214]">V</div>
+        <div className="hidden items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-sm font-bold backdrop-blur sm:flex">
+          <span className="h-2 w-2 rounded-full bg-[#34D399]" />
+          Anonymous social inbox
         </div>
-        <h1 className="max-w-2xl text-5xl font-bold tracking-normal text-ink sm:text-6xl lg:text-7xl">
-          Veil
-        </h1>
-        <p className="mt-5 max-w-xl text-lg leading-8 text-gray-600">
-          Receive anonymous messages, manage requests, reply from a focused inbox, and share a profile link that feels natural on web and iOS.
-        </p>
-        <div className="mt-7 flex flex-wrap gap-3">
-          <PrimaryButton onClick={onOpenAuth}>
-            <LogIn size={18} />
-            Create profile
-          </PrimaryButton>
-          <PrimaryButton variant="light" onClick={onOpenShare}>
-            <QrCode size={18} />
-            Preview share link
-          </PrimaryButton>
-        </div>
+        <PrimaryButton variant="glass" onClick={onOpenAuth}>
+          <LogIn size={17} />
+          Sign in
+        </PrimaryButton>
       </div>
 
-      <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-4 lg:grid-cols-[0.82fr_1fr]">
-        <div className="order-2 min-w-0 rounded-lg border border-line bg-white p-4 shadow-panel lg:order-1">
-          <div className="mb-4 flex items-center justify-between">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Share profile</p>
-              <p className="text-sm font-semibold text-ink">@maya</p>
-            </div>
-            <IconButton label="Copy profile link">
-              <Copy size={17} />
-            </IconButton>
-          </div>
-          <div className="grid justify-items-center gap-4">
-            <div className="rounded-lg bg-gray-950 px-5 py-4 text-center text-white">
-              <Avatar label="M" tone="pink" />
-              <p className="mt-3 text-xs font-semibold uppercase tracking-wide text-gray-300">Maya Rivers</p>
-            </div>
-            <QRMark />
-            <div className="grid w-full grid-cols-2 gap-2">
-              <PrimaryButton variant="light" className="px-2">
-                <Send size={16} />
-                Share
-              </PrimaryButton>
-              <PrimaryButton variant="light" className="px-2">
-                <LinkIcon size={16} />
-                Copy
-              </PrimaryButton>
-            </div>
+      <div className="relative mx-auto grid max-w-7xl gap-8 pb-16 pt-12 lg:grid-cols-[minmax(0,0.92fr)_minmax(420px,1.08fr)] lg:items-center lg:pb-20 lg:pt-20">
+        <div className="max-w-3xl">
+          <p className="mb-4 text-sm font-black uppercase tracking-[0.18em] text-white/75">Veil for anonymous messages</p>
+          <h1 className="text-6xl font-black leading-[0.9] tracking-normal sm:text-7xl lg:text-8xl">
+            Say the quiet part safely.
+          </h1>
+          <p className="mt-6 max-w-xl text-lg leading-8 text-white/78">
+            Share a profile link, collect anonymous questions, and run every reply through an inbox that feels social on web and native on iOS.
+          </p>
+          <div className="mt-8 flex flex-wrap gap-3">
+            <PrimaryButton onClick={onOpenAuth} className="!bg-white !text-[#101214] hover:!bg-white/90">
+              <Mail size={18} />
+              Create profile
+            </PrimaryButton>
+            <PrimaryButton variant="glass" onClick={onOpenShare}>
+              <QrCode size={18} />
+              Preview share card
+            </PrimaryButton>
           </div>
         </div>
 
-        <div className="order-1 min-w-0 rounded-lg border border-line bg-white shadow-panel lg:order-2">
-          <div className="flex items-center justify-between border-b border-line px-4 py-3">
-            <button className="text-sm font-semibold text-action" type="button">Edit</button>
-            <div className="flex items-center gap-2">
-              <Avatar label="M" tone="blue" />
-              <h2 className="text-base font-bold">Inbox</h2>
-            </div>
-            <div className="flex items-center gap-1 text-action">
-              <Plus size={19} />
-              <MessageCircle size={19} />
-            </div>
+        <div className="relative min-h-[520px] lg:min-h-[620px]" aria-label="Veil product preview">
+          <div className="absolute left-0 top-8 w-[48%] max-w-[260px] rotate-[-6deg] sm:left-10 lg:left-0">
+            <ShareCard compact />
           </div>
-          <div className="border-b border-line bg-gray-50 px-4 py-3">
-            <label className="flex min-h-10 items-center gap-2 rounded-lg bg-white px-3 text-sm text-gray-500 ring-1 ring-gray-200">
-              <Search size={17} />
-              Search messages
-            </label>
-          </div>
-          <div className="divide-y divide-gray-100">
-            {messages.slice(0, 3).map((message, index) => (
-              <div key={message.id} className="flex gap-3 px-4 py-3">
-                <Avatar label={message.tone.slice(0, 1)} tone={index === 0 ? "green" : index === 1 ? "pink" : "gray"} />
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center justify-between gap-3">
-                    <p className="truncate text-sm font-semibold text-ink">{message.tone} anonymous note</p>
-                    <span className="text-xs text-gray-500">{message.time}</span>
-                  </div>
-                  <p className="mt-1 truncate text-sm text-gray-500">{message.preview}</p>
+          <div className="absolute bottom-4 right-0 w-[48%] max-w-[260px] rotate-[5deg] sm:right-12 lg:right-6">
+            <div
+              className="overflow-hidden rounded-lg border border-white/25 bg-[#101214] p-4 text-white shadow-strong"
+              data-refero-pattern="Telegram web Flow 616 chat personalization: live chat preview with colorful background"
+            >
+              <div className="relative mb-4 h-32 overflow-hidden rounded-lg">
+                <ColorPattern variant="blue" />
+                <div className="absolute inset-3 rounded-lg bg-white/88 p-3 text-[#101214]">
+                  <p className="text-xs font-black uppercase text-gray-500">Profile prompt</p>
+                  <p className="mt-2 text-lg font-black leading-tight">Ask me anything anonymously</p>
                 </div>
-                {message.unread && <span className="mt-1 h-2.5 w-2.5 rounded-full bg-action" />}
               </div>
-            ))}
+              <div className="rounded-lg bg-white/10 p-3">
+                <p className="text-sm leading-6 text-white/82">312 messages this week</p>
+                <div className="mt-3 h-2 rounded-full bg-white/12">
+                  <div className="h-2 w-3/4 rounded-full bg-[#34D399]" />
+                </div>
+              </div>
+            </div>
           </div>
+          <PhonePreview />
         </div>
       </div>
     </section>
@@ -271,13 +381,13 @@ function LandingHero({ onOpenAuth, onOpenShare }) {
 function DesktopRail({ active, setActive }) {
   return (
     <aside
-      className="hidden border-r border-line bg-white lg:block"
+      className="hidden bg-[#101214] text-white lg:block"
       data-refero-pattern="X Flow 927 and Instagram web settings three-column left navigation"
     >
       <div className="flex h-full min-h-[760px] flex-col px-3 py-4">
-        <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-lg bg-gray-950 text-lg font-bold text-white">V</div>
+        <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-lg bg-white text-lg font-black text-[#101214]">V</div>
         <nav className="grid gap-1">
-          <button className="flex min-h-11 items-center gap-3 rounded-lg px-3 text-left text-sm font-semibold text-gray-900 hover:bg-gray-50" type="button">
+          <button className="flex min-h-11 items-center gap-3 rounded-lg px-3 text-left text-sm font-bold text-white/88 hover:bg-white/10" type="button">
             <Home size={20} />
             Home
           </button>
@@ -289,8 +399,8 @@ function DesktopRail({ active, setActive }) {
                 type="button"
                 onClick={() => setActive(item.id)}
                 className={classNames(
-                  "flex min-h-11 items-center gap-3 rounded-lg px-3 text-left text-sm font-semibold transition",
-                  active === item.id ? "bg-blue-50 text-action" : "text-gray-700 hover:bg-gray-50"
+                  "flex min-h-11 items-center gap-3 rounded-lg px-3 text-left text-sm font-bold transition",
+                  active === item.id ? "bg-white text-[#101214]" : "text-white/70 hover:bg-white/10 hover:text-white"
                 )}
               >
                 <Icon size={20} />
@@ -299,15 +409,20 @@ function DesktopRail({ active, setActive }) {
             );
           })}
         </nav>
-        <PrimaryButton className="mt-6 w-full">
+        <PrimaryButton className="mt-6 w-full bg-[#34D399] text-[#101214] hover:bg-[#5BE7B0]">
           <Plus size={18} />
           New link
         </PrimaryButton>
-        <div className="mt-auto flex items-center gap-3 rounded-lg bg-gray-50 p-2">
-          <Avatar label="M" tone="blue" />
-          <div className="min-w-0">
-            <p className="truncate text-sm font-semibold">Maya</p>
-            <p className="truncate text-xs text-gray-500">@maya</p>
+        <div className="mt-auto overflow-hidden rounded-lg border border-white/12 bg-white/8 p-3">
+          <div className="relative mb-3 h-16 rounded-lg">
+            <ColorPattern variant="share" />
+          </div>
+          <div className="flex items-center gap-3">
+            <Avatar label="M" accent="pink" />
+            <div className="min-w-0">
+              <p className="truncate text-sm font-black">Maya</p>
+              <p className="truncate text-xs text-white/58">@maya</p>
+            </div>
           </div>
         </div>
       </div>
@@ -320,13 +435,11 @@ function MobileHeader({ active, setReportOpen }) {
 
   return (
     <header className="sticky top-0 z-20 flex items-center justify-between border-b border-line bg-white/95 px-4 py-3 backdrop-blur lg:hidden">
-      <button className="text-sm font-semibold text-action" type="button">Edit</button>
-      <h2 className="text-base font-bold text-ink">{title}</h2>
-      <div className="flex items-center gap-1 text-action">
-        <IconButton label="Report issue" onClick={() => setReportOpen(true)}>
-          <Flag size={18} />
-        </IconButton>
-      </div>
+      <button className="text-sm font-bold text-action" type="button">Edit</button>
+      <h2 className="text-base font-black text-ink">{title}</h2>
+      <IconButton label="Report issue" onClick={() => setReportOpen(true)}>
+        <Flag size={18} />
+      </IconButton>
     </header>
   );
 }
@@ -339,7 +452,10 @@ function InboxList({ selectedId, setSelectedId }) {
     >
       <div className="hidden border-b border-line px-5 py-4 lg:block">
         <div className="flex items-center justify-between">
-          <h2 className="text-xl font-bold text-ink">Messages</h2>
+          <div>
+            <p className="text-xs font-black uppercase tracking-[0.14em] text-gray-500">Anonymous</p>
+            <h2 className="text-2xl font-black text-ink">Messages</h2>
+          </div>
           <div className="flex text-gray-600">
             <IconButton label="Search">
               <Search size={18} />
@@ -349,7 +465,7 @@ function InboxList({ selectedId, setSelectedId }) {
             </IconButton>
           </div>
         </div>
-        <div className="mt-4 flex rounded-lg bg-gray-100 p-1 text-sm font-semibold">
+        <div className="mt-4 flex rounded-lg bg-gray-100 p-1 text-sm font-black">
           {["Inbox", "Unread", "Requests"].map((item, index) => (
             <button
               key={item}
@@ -370,31 +486,32 @@ function InboxList({ selectedId, setSelectedId }) {
       </div>
 
       <div className="divide-y divide-gray-100">
-        {messages.map((message, index) => (
+        {messages.map((message) => (
           <button
             key={message.id}
             type="button"
             onClick={() => setSelectedId(message.id)}
             className={classNames(
-              "flex w-full gap-3 px-4 py-4 text-left transition hover:bg-gray-50 lg:px-5",
-              selectedId === message.id ? "bg-blue-50/70" : "bg-white"
+              "relative flex w-full gap-3 px-4 py-4 text-left transition hover:bg-gray-50 lg:px-5",
+              selectedId === message.id ? "bg-[#EAF5FF]" : "bg-white"
             )}
           >
-            <Avatar label={message.tone.slice(0, 1)} tone={index === 0 ? "green" : index === 1 ? "pink" : "gray"} />
+            {selectedId === message.id && <span className="absolute inset-y-3 left-0 w-1 rounded-r bg-action" />}
+            <Avatar label={message.tone.slice(0, 1)} accent={message.accent} />
             <div className="min-w-0 flex-1">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-semibold text-ink">{message.tone} anonymous note</p>
+                  <p className="truncate text-sm font-black text-ink">{message.tone} anonymous note</p>
                   <p className="mt-1 truncate text-sm text-gray-500">{message.preview}</p>
                 </div>
                 <div className="grid justify-items-end gap-1">
                   <span className="text-xs text-gray-500">{message.time}</span>
-                  {message.unread && <span className="rounded-full bg-action px-2 py-0.5 text-xs font-semibold text-white">New</span>}
+                  {message.unread && <span className="rounded-full bg-action px-2 py-0.5 text-xs font-black text-white">New</span>}
                 </div>
               </div>
               <div className="mt-3 flex items-center gap-2">
-                <span className="rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600">{message.status}</span>
-                {message.status === "Request" && <span className="rounded-full bg-amber-50 px-2 py-1 text-xs font-medium text-amber-700">filtered</span>}
+                <span className={classNames("rounded-full px-2 py-1 text-xs font-bold ring-1", accentStyles[message.accent])}>{message.status}</span>
+                {message.status === "Request" && <span className="rounded-full bg-amber-50 px-2 py-1 text-xs font-bold text-amber-700 ring-1 ring-amber-100">filtered</span>}
               </div>
             </div>
           </button>
@@ -407,14 +524,14 @@ function InboxList({ selectedId, setSelectedId }) {
 function MessageDetail({ message, setReportOpen }) {
   return (
     <section
-      className="flex min-h-[620px] flex-col bg-white"
-      data-refero-pattern="Missive conversation detail + X Flow 927 conversation management"
+      className="flex min-h-[620px] flex-col bg-[#F7F8FA]"
+      data-refero-pattern="Missive conversation detail + X Flow 927 conversation management + Telegram Flow 616 chat background preview"
     >
-      <div className="flex items-center justify-between border-b border-line px-4 py-3 lg:px-6">
+      <div className="flex items-center justify-between border-b border-line bg-white px-4 py-3 lg:px-6">
         <div className="flex items-center gap-3">
-          <Avatar label="A" tone="green" />
+          <Avatar label="A" accent={message.accent} />
           <div>
-            <h3 className="text-base font-bold text-ink">Anonymous sender</h3>
+            <h3 className="text-base font-black text-ink">Anonymous sender</h3>
             <p className="text-xs text-gray-500">Private note via /maya</p>
           </div>
         </div>
@@ -428,36 +545,39 @@ function MessageDetail({ message, setReportOpen }) {
         </div>
       </div>
 
-      <div className="flex-1 space-y-4 overflow-auto bg-gray-50 px-4 py-5 lg:px-8">
-        <div className="max-w-xl rounded-lg border border-line bg-white p-4 shadow-panel">
-          <p className="text-sm leading-6 text-ink">{message.body}</p>
-          <div className="mt-4 flex items-center gap-2 text-xs text-gray-500">
-            <Lock size={14} />
-            Sender identity is not collected
+      <div className="relative flex-1 overflow-auto px-4 py-5 lg:px-8">
+        <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(10,122,255,0.07)_0_1px,transparent_1px_24px)]" />
+        <div className="relative space-y-4">
+          <div className="max-w-xl rounded-lg border border-line bg-white p-4 shadow-panel">
+            <p className="text-sm leading-6 text-ink">{message.body}</p>
+            <div className="mt-4 flex items-center gap-2 text-xs font-bold text-gray-500">
+              <Lock size={14} />
+              Sender identity is not collected
+            </div>
           </div>
-        </div>
-        <div className="ml-auto max-w-xl rounded-lg bg-blue-600 p-4 text-white shadow-panel">
-          <p className="text-sm leading-6">
-            I usually reply when the question feels useful for more than one person. Private kindness can stay private too.
-          </p>
-        </div>
-        <div className="rounded-lg border border-emerald-100 bg-emerald-50 p-4 text-sm text-emerald-900">
-          <div className="flex items-start gap-2">
-            <Shield size={18} />
-            <p>Auto-filter is on for repeated messages, hidden words, and blocked fingerprints.</p>
+          <div className="ml-auto max-w-xl rounded-lg bg-[#101214] p-4 text-white shadow-panel">
+            <p className="text-sm leading-6">
+              I usually reply when the question feels useful for more than one person. Private kindness can stay private too.
+            </p>
+          </div>
+          <div className="rounded-lg border border-emerald-100 bg-emerald-50 p-4 text-sm text-emerald-900">
+            <div className="flex items-start gap-2">
+              <Shield size={18} />
+              <p>Auto-filter is on for repeated messages, hidden words, and blocked fingerprints.</p>
+            </div>
           </div>
         </div>
       </div>
 
       <div className="border-t border-line bg-white p-4">
-        <div className="rounded-lg border border-line bg-white p-3">
+        <div className="rounded-lg border border-line bg-white p-3 shadow-panel">
           <textarea
             className="min-h-24 w-full resize-none border-0 p-0 text-sm leading-6 outline-none placeholder:text-gray-400"
             placeholder="Write a public reply..."
             defaultValue="I usually reply when the question feels useful for more than one person."
           />
           <div className="mt-3 flex flex-wrap items-center justify-between gap-3 border-t border-gray-100 pt-3">
-            <div className="flex items-center gap-2 text-xs text-gray-500">
+            <div className="flex items-center gap-2 text-xs font-bold text-gray-500">
               <Check size={15} className="text-success" />
               Public reply preview
             </div>
@@ -476,18 +596,20 @@ function AuthPanel() {
   return (
     <section
       className="grid gap-5 bg-white p-4 lg:grid-cols-[0.92fr_1.08fr] lg:p-6"
-      data-refero-pattern="Substack Flow 4511, Hashnode Flow 3913, Teal 657ecdd2, Instagram iOS login 5c5b4ccd"
+      data-refero-pattern="Substack Flow 4511, Hashnode Flow 3913, The Leap fcc63338 account setup"
     >
-      <div className="flex min-h-[520px] flex-col justify-between rounded-lg bg-gray-950 p-6 text-white">
-        <div>
-          <p className="text-sm font-semibold text-gray-300">Step 1 of 3</p>
-          <h2 className="mt-3 max-w-sm text-4xl font-bold tracking-normal">Create your anonymous inbox.</h2>
-          <p className="mt-4 max-w-sm text-sm leading-6 text-gray-300">
+      <div className="relative flex min-h-[520px] flex-col justify-between overflow-hidden rounded-lg bg-[#101214] p-6 text-white">
+        <ColorPattern variant="blue" />
+        <div className="absolute inset-0 bg-[#101214]/70" />
+        <div className="relative">
+          <p className="text-sm font-black text-white/70">Step 1 of 3</p>
+          <h2 className="mt-3 max-w-sm text-4xl font-black tracking-normal">Create your anonymous inbox.</h2>
+          <p className="mt-4 max-w-sm text-sm leading-6 text-white/75">
             Email-first auth keeps the path light on web, while the code confirmation pattern maps cleanly to iOS.
           </p>
         </div>
-        <div className="rounded-lg border border-white/10 bg-white/10 p-4">
-          <p className="text-xs font-semibold uppercase tracking-wide text-gray-300">Check your inbox</p>
+        <div className="relative rounded-lg border border-white/14 bg-white/12 p-4 backdrop-blur">
+          <p className="text-xs font-black uppercase tracking-wide text-white/65">Check your inbox</p>
           <div className="mt-3 flex items-center gap-3">
             <Mail size={20} />
             <p className="text-sm">A 6-digit code was sent to maya@example.com</p>
@@ -497,24 +619,24 @@ function AuthPanel() {
 
       <div className="mx-auto flex w-full max-w-md flex-col justify-center py-8">
         <div className="mb-8 text-center">
-          <div className="mx-auto grid h-12 w-12 place-items-center rounded-lg bg-gray-950 text-lg font-bold text-white">V</div>
-          <h2 className="mt-5 text-2xl font-bold text-ink">Sign in</h2>
+          <div className="mx-auto grid h-12 w-12 place-items-center rounded-lg bg-[#101214] text-lg font-black text-white">V</div>
+          <h2 className="mt-5 text-2xl font-black text-ink">Sign in</h2>
           <p className="mt-2 text-sm text-gray-500">Use email, username, or a one-time code.</p>
         </div>
         <div className="grid gap-3">
-          <label className="grid gap-1.5 text-sm font-medium text-gray-700">
+          <label className="grid gap-1.5 text-sm font-bold text-gray-700">
             Email or username
             <input className="min-h-12 rounded-lg border border-line px-3 outline-none focus:border-action focus:ring-4 focus:ring-blue-100" defaultValue="maya@example.com" />
           </label>
-          <label className="grid gap-1.5 text-sm font-medium text-gray-700">
+          <label className="grid gap-1.5 text-sm font-bold text-gray-700">
             Password
             <input className="min-h-12 rounded-lg border border-line px-3 outline-none focus:border-action focus:ring-4 focus:ring-blue-100" type="password" defaultValue="password" />
           </label>
           <PrimaryButton className="mt-2 w-full">Sign in</PrimaryButton>
-          <button type="button" className="text-sm font-semibold text-action">Send a one-time code instead</button>
+          <button type="button" className="text-sm font-black text-action">Send a one-time code instead</button>
           <div className="grid grid-cols-6 gap-2 pt-4">
             {["4", "1", "8", "0", "", ""].map((digit, index) => (
-              <span key={index} className="grid h-12 place-items-center rounded-lg border border-line bg-gray-50 text-lg font-semibold">
+              <span key={index} className="grid h-12 place-items-center rounded-lg border border-line bg-gray-50 text-lg font-black">
                 {digit || " "}
               </span>
             ))}
@@ -528,66 +650,45 @@ function AuthPanel() {
 function SharePanel() {
   return (
     <section
-      className="grid gap-6 bg-ios p-4 lg:grid-cols-[0.9fr_1.1fr] lg:p-6"
-      data-refero-pattern="Mozi b83b0ba5 share link + Instagram QR fa1930c4 paired actions"
+      className="grid gap-6 bg-[#101214] p-4 text-white lg:grid-cols-[0.86fr_1.14fr] lg:p-6"
+      data-refero-pattern="Mozi b83b0ba5 share link + Instagram QR Flow 2871 + Telegram QR af456445"
     >
-      <div className="rounded-lg bg-white p-5 shadow-panel">
-        <div className="mb-5 flex items-center justify-between">
-          <IconButton label="Back">
-            <X size={18} />
-          </IconButton>
-          <h2 className="text-lg font-bold">Connect</h2>
-          <IconButton label="Info">
-            <Shield size={18} />
-          </IconButton>
-        </div>
-        <div className="rounded-lg bg-gray-950 p-5 text-center text-white">
-          <Avatar label="M" tone="pink" />
-          <h3 className="mt-4 text-xl font-bold uppercase tracking-wide">Maya Rivers</h3>
-          <p className="mt-1 text-sm text-gray-300">@maya</p>
-        </div>
-        <div className="mt-6 grid justify-items-center gap-4">
-          <QRMark />
-          <PrimaryButton variant="light" className="w-full">
-            <LinkIcon size={18} />
-            veil.app/maya
-          </PrimaryButton>
-          <p className="max-w-sm text-center text-sm leading-6 text-gray-500">
-            Sharing this link lets anyone send an anonymous message. Sender identity is not shown in your inbox.
-          </p>
-        </div>
-      </div>
+      <ShareCard />
 
-      <div className="rounded-lg bg-white p-5 shadow-panel">
-        <h2 className="text-xl font-bold text-ink">Profile link performance</h2>
-        <p className="mt-2 text-sm text-gray-500">A simple web layout that can become an iOS share screen without changing the content hierarchy.</p>
+      <div className="rounded-lg border border-white/14 bg-white/10 p-5 shadow-panel backdrop-blur">
+        <p className="text-xs font-black uppercase tracking-[0.14em] text-white/58">Profile link performance</p>
+        <h2 className="mt-2 text-3xl font-black text-white">Make the share screen feel worth posting.</h2>
+        <p className="mt-3 max-w-2xl text-sm leading-6 text-white/68">
+          Refero QR references treat the share card as the main visual artifact: large QR, avatar overlap, style pill, paired share/copy actions, and immediate feedback.
+        </p>
         <div className="mt-6 grid gap-3 sm:grid-cols-3">
           {[
-            ["Link scans", "1,284"],
-            ["Messages", "312"],
-            ["Blocked", "18"],
-          ].map(([label, value]) => (
-            <div key={label} className="rounded-lg border border-line bg-white p-4">
-              <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">{label}</p>
-              <p className="mt-2 text-2xl font-bold">{value}</p>
+            ["Link scans", "1,284", "mint"],
+            ["Messages", "312", "pink"],
+            ["Blocked", "18", "amber"],
+          ].map(([label, value, accent]) => (
+            <div key={label} className="rounded-lg border border-white/12 bg-white p-4 text-[#101214]">
+              <p className="text-xs font-black uppercase tracking-wide text-gray-500">{label}</p>
+              <p className="mt-2 text-3xl font-black">{value}</p>
+              <span className={classNames("mt-3 inline-flex rounded-full px-2 py-1 text-xs font-bold ring-1", accentStyles[accent])}>Live</span>
             </div>
           ))}
         </div>
-        <div className="mt-6 rounded-lg border border-blue-100 bg-blue-50 p-4">
+        <div className="mt-6 rounded-lg border border-white/12 bg-white/10 p-4">
           <div className="flex items-start gap-3">
-            <Sparkles size={20} className="text-action" />
+            <Sparkles size={20} className="text-[#FFD35A]" />
             <div>
-              <h3 className="text-sm font-bold text-ink">Share prompt</h3>
-              <p className="mt-1 text-sm leading-6 text-gray-600">"Ask me anything anonymously" works best as profile copy because it sets expectations before the send form.</p>
+              <h3 className="text-sm font-black text-white">Share prompt</h3>
+              <p className="mt-1 text-sm leading-6 text-white/68">"Ask me anything anonymously" works best as profile copy because it sets expectations before the send form.</p>
             </div>
           </div>
         </div>
         <div className="mt-6 flex flex-wrap gap-3">
-          <PrimaryButton>
+          <PrimaryButton className="!bg-white !text-[#101214] hover:!bg-white/90">
             <Send size={18} />
             Share profile
           </PrimaryButton>
-          <PrimaryButton variant="light">
+          <PrimaryButton variant="glass">
             <Copy size={18} />
             Copy link
           </PrimaryButton>
@@ -605,11 +706,11 @@ function NotificationsPanel() {
     >
       <div className="mx-auto max-w-2xl">
         <div className="mb-4 flex items-center justify-between">
-          <button type="button" className="inline-flex items-center gap-1 text-sm font-semibold text-action">
+          <button type="button" className="inline-flex items-center gap-1 text-sm font-bold text-action">
             <ChevronLeft size={17} />
             Back
           </button>
-          <h2 className="text-lg font-bold">Notifications</h2>
+          <h2 className="text-lg font-black">Notifications</h2>
           <span className="w-12" />
         </div>
         <SettingsGroup title="Message notifications">
@@ -629,7 +730,7 @@ function NotificationsPanel() {
 function SettingsGroup({ title, children }) {
   return (
     <div className="mb-5">
-      <p className="mb-2 px-1 text-xs font-semibold uppercase tracking-wide text-gray-500">{title}</p>
+      <p className="mb-2 px-1 text-xs font-black uppercase tracking-wide text-gray-500">{title}</p>
       <div className="divide-y divide-gray-100 rounded-lg bg-white shadow-panel">{children}</div>
     </div>
   );
@@ -639,7 +740,7 @@ function ToggleRow({ label, sub, enabled }) {
   return (
     <div className="flex min-h-16 items-center justify-between gap-4 px-4 py-3">
       <div>
-        <p className="text-sm font-semibold text-ink">{label}</p>
+        <p className="text-sm font-black text-ink">{label}</p>
         <p className="mt-0.5 text-xs text-gray-500">{sub}</p>
       </div>
       <button
@@ -657,15 +758,15 @@ function SettingsPanel({ setReportOpen, setPaywallOpen }) {
   return (
     <section
       className="grid gap-6 bg-white p-4 lg:grid-cols-[300px_minmax(0,1fr)] lg:p-6"
-      data-refero-pattern="Instagram settings 2e596d7f + Telegram privacy 5a478b87 + Square pricing ba4df9a6"
+      data-refero-pattern="Instagram settings 2e596d7f + Telegram privacy 5a478b87 + TikTok subscription 4ee573ad"
     >
       <div className="hidden border-r border-line pr-5 lg:block">
-        <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-500">Settings</p>
+        <p className="mb-3 text-xs font-black uppercase tracking-wide text-gray-500">Settings</p>
         {["Messages and replies", "Hidden words", "Restricted senders", "Notifications", "Billing", "Help"].map((item, index) => (
           <button
             key={item}
             type="button"
-            className={classNames("mb-1 flex min-h-11 w-full items-center justify-between rounded-lg px-3 text-left text-sm font-semibold", index === 0 ? "bg-gray-100 text-ink" : "text-gray-600 hover:bg-gray-50")}
+            className={classNames("mb-1 flex min-h-11 w-full items-center justify-between rounded-lg px-3 text-left text-sm font-bold", index === 0 ? "bg-gray-100 text-ink" : "text-gray-600 hover:bg-gray-50")}
           >
             {item}
             <ChevronRight size={16} />
@@ -674,7 +775,7 @@ function SettingsPanel({ setReportOpen, setPaywallOpen }) {
       </div>
 
       <div>
-        <h2 className="text-2xl font-bold text-ink">Message Controls</h2>
+        <h2 className="text-3xl font-black text-ink">Message Controls</h2>
         <p className="mt-2 max-w-2xl text-sm leading-6 text-gray-600">
           Decide who can send anonymous messages, how requests are filtered, and what happens when a sender is blocked.
         </p>
@@ -682,7 +783,7 @@ function SettingsPanel({ setReportOpen, setPaywallOpen }) {
         <div className="mt-6 divide-y divide-gray-100 rounded-lg border border-line">
           {settingsRows.map(([label, value]) => (
             <button key={label} type="button" className="flex min-h-14 w-full items-center justify-between gap-4 px-4 text-left hover:bg-gray-50">
-              <span className="text-sm font-semibold text-ink">{label}</span>
+              <span className="text-sm font-black text-ink">{label}</span>
               <span className="inline-flex items-center gap-2 text-sm text-gray-500">
                 {value}
                 <ChevronRight size={16} />
@@ -693,7 +794,7 @@ function SettingsPanel({ setReportOpen, setPaywallOpen }) {
 
         <div className="mt-6 grid gap-4 lg:grid-cols-2">
           <div className="rounded-lg border border-line p-4">
-            <h3 className="text-base font-bold">Safety actions</h3>
+            <h3 className="text-base font-black">Safety actions</h3>
             <p className="mt-2 text-sm leading-6 text-gray-500">Use a focused report dialog for moderation and a clear block confirmation for repeat senders.</p>
             <div className="mt-4 flex flex-wrap gap-2">
               <PrimaryButton variant="danger" onClick={() => setReportOpen(true)}>
@@ -707,21 +808,22 @@ function SettingsPanel({ setReportOpen, setPaywallOpen }) {
             </div>
           </div>
 
-          <div className="rounded-lg border border-line p-4">
-            <h3 className="text-base font-bold">Veil Plus</h3>
+          <div className="relative overflow-hidden rounded-lg border border-line p-4">
+            <div className="absolute inset-x-0 top-0 h-2 bg-gradient-to-r from-[#FF2D55] via-[#FFD35A] to-[#34D399]" />
+            <h3 className="text-base font-black">Veil Plus</h3>
             <p className="mt-2 text-sm leading-6 text-gray-500">Unlock message insights, custom links, and extra safety automation.</p>
-            <div className="mt-4 flex items-center justify-between rounded-lg bg-blue-50 p-3">
+            <div className="mt-4 flex items-center justify-between rounded-lg bg-[#101214] p-3 text-white">
               <div>
-                <p className="text-sm font-bold text-ink">$8/mo</p>
-                <p className="text-xs text-gray-500">30-day trial</p>
+                <p className="text-sm font-black">$8/mo</p>
+                <p className="text-xs text-white/58">30-day trial</p>
               </div>
-              <PrimaryButton onClick={() => setPaywallOpen(true)}>Upgrade</PrimaryButton>
+              <PrimaryButton className="!bg-white !text-[#101214] hover:!bg-white/90" onClick={() => setPaywallOpen(true)}>Upgrade</PrimaryButton>
             </div>
           </div>
         </div>
 
         <div className="mt-6 rounded-lg border border-line p-4">
-          <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Potential connections</p>
+          <p className="text-xs font-black uppercase tracking-wide text-gray-500">Potential connections</p>
           <RadioOption label="Allow messages from anyone with my link" selected />
           <RadioOption label="Move unknown senders to requests" selected={false} />
           <RadioOption label="Do not receive messages from unknown senders" selected={false} />
@@ -737,7 +839,7 @@ function RadioOption({ label, selected }) {
       <span className={classNames("grid h-5 w-5 place-items-center rounded-full border", selected ? "border-action" : "border-gray-300")}>
         {selected && <span className="h-2.5 w-2.5 rounded-full bg-action" />}
       </span>
-      <p className="text-sm font-medium text-ink">{label}</p>
+      <p className="text-sm font-bold text-ink">{label}</p>
     </div>
   );
 }
@@ -752,7 +854,7 @@ function ReportModal({ open, setOpen }) {
     >
       <div className="w-full max-w-md rounded-lg bg-white p-5 shadow-modal">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-xl font-bold text-ink">Report an issue</h2>
+          <h2 className="text-xl font-black text-ink">Report an issue</h2>
           <IconButton label="Close report" onClick={() => setOpen(false)}>
             <X size={18} />
           </IconButton>
@@ -762,13 +864,13 @@ function ReportModal({ open, setOpen }) {
         </p>
         <div className="mt-5 grid gap-3">
           {["It is spam", "It is abusive or harmful", "It includes private information"].map((item) => (
-            <button key={item} type="button" className="flex min-h-12 items-center justify-between rounded-lg border border-line px-3 text-left text-sm font-semibold hover:bg-gray-50">
+            <button key={item} type="button" className="flex min-h-12 items-center justify-between rounded-lg border border-line px-3 text-left text-sm font-bold hover:bg-gray-50">
               {item}
               <ChevronRight size={17} />
             </button>
           ))}
         </div>
-        <label className="mt-4 grid gap-1.5 text-sm font-semibold text-gray-700">
+        <label className="mt-4 grid gap-1.5 text-sm font-bold text-gray-700">
           Additional context
           <textarea className="min-h-24 rounded-lg border border-line px-3 py-2 text-sm outline-none focus:border-action focus:ring-4 focus:ring-blue-100" placeholder="Optional" />
         </label>
@@ -794,10 +896,16 @@ function PaywallModal({ open, setOpen }) {
           <IconButton label="Back" onClick={() => setOpen(false)}>
             <ChevronLeft size={18} />
           </IconButton>
-          <h2 className="text-lg font-bold">Select plan</h2>
+          <h2 className="text-lg font-black">Select plan</h2>
           <IconButton label="Close" onClick={() => setOpen(false)}>
             <X size={18} />
           </IconButton>
+        </div>
+        <div className="relative mb-5 h-28 overflow-hidden rounded-lg">
+          <ColorPattern variant="share" />
+          <div className="absolute inset-0 grid place-items-center bg-[#101214]/38 text-center text-white">
+            <p className="text-2xl font-black">Veil Plus</p>
+          </div>
         </div>
         <p className="text-sm leading-6 text-gray-600">Veil Plus adds custom profile links, advanced filtering, message analytics, and priority report review.</p>
         <div className="mt-5 grid gap-3 sm:grid-cols-2">
@@ -813,7 +921,7 @@ function PaywallModal({ open, setOpen }) {
         <PrimaryButton variant="pink" className="mt-5 w-full" onClick={() => setOpen(false)}>
           Start 30-day free trial
         </PrimaryButton>
-        <button type="button" className="mt-4 w-full text-sm font-semibold text-gray-700">Restore purchase</button>
+        <button type="button" className="mt-4 w-full text-sm font-black text-gray-700">Restore purchase</button>
       </div>
     </div>
   );
@@ -829,10 +937,10 @@ function PlanCard({ title, price, badge, selected = false }) {
       )}
     >
       <div className="flex items-center justify-between gap-3">
-        <h3 className="text-base font-bold">{title}</h3>
-        {badge && <span className="rounded-full bg-rose-100 px-2 py-1 text-xs font-bold text-premium">{badge}</span>}
+        <h3 className="text-base font-black">{title}</h3>
+        {badge && <span className="rounded-full bg-rose-100 px-2 py-1 text-xs font-black text-premium">{badge}</span>}
       </div>
-      <p className="mt-5 text-3xl font-bold text-ink">{price}</p>
+      <p className="mt-5 text-3xl font-black text-ink">{price}</p>
       <p className="mt-1 text-sm text-gray-500">per account</p>
     </button>
   );
@@ -857,7 +965,7 @@ function MobileNav({ active, setActive }) {
               key={item.id}
               type="button"
               onClick={() => setActive(item.id)}
-              className={classNames("grid min-h-14 place-items-center rounded-lg text-xs font-semibold", active === item.id ? "text-action" : "text-gray-500")}
+              className={classNames("grid min-h-14 place-items-center rounded-lg text-xs font-bold", active === item.id ? "text-action" : "text-gray-500")}
             >
               <Icon size={21} />
               {item.label}
@@ -871,17 +979,23 @@ function MobileNav({ active, setActive }) {
 
 function ResearchStrip() {
   return (
-    <section className="mx-auto w-full max-w-7xl px-4 pb-8 sm:px-6 lg:px-8">
-      <div className="rounded-lg border border-line bg-white p-4 shadow-panel">
-        <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Refero trace</p>
-        <div className="mt-3 flex gap-2 overflow-auto no-scrollbar">
-          {referoSources.slice(0, 8).map((source) => (
-            <span key={source.refero} className="shrink-0 rounded-full border border-gray-200 bg-gray-50 px-3 py-1.5 text-xs font-medium text-gray-600">
-              {source.id}
-            </span>
-          ))}
+    <section className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      <div className="grid min-w-0 gap-4 lg:grid-cols-[0.75fr_1.25fr]">
+        <div className="min-w-0 rounded-lg bg-[#101214] p-5 text-white shadow-panel">
+          <p className="text-xs font-black uppercase tracking-wide text-white/58">Refero correction</p>
+          <h2 className="mt-2 text-2xl font-black">From conservative inbox to social-share product.</h2>
         </div>
-        <p className="mt-3 text-sm leading-6 text-gray-600">{designRules.desktop}</p>
+        <div className="min-w-0 rounded-lg border border-line bg-white p-4 shadow-panel">
+          <p className="text-xs font-black uppercase tracking-wide text-gray-500">New visual trace</p>
+          <div className="mt-3 flex min-w-0 gap-2 overflow-auto no-scrollbar">
+            {referoSources.slice(0, 10).map((source) => (
+              <span key={source.refero} className="shrink-0 rounded-full border border-gray-200 bg-gray-50 px-3 py-1.5 text-xs font-bold text-gray-600">
+                {source.id}
+              </span>
+            ))}
+          </div>
+          <p className="mt-3 text-sm leading-6 text-gray-600">{designRules.visual}</p>
+        </div>
       </div>
     </section>
   );
@@ -900,7 +1014,7 @@ export default function VeilApp() {
       <ResearchStrip />
 
       <section id="app" className="mx-auto w-full max-w-7xl px-4 pb-10 sm:px-6 lg:px-8">
-        <div className="overflow-hidden rounded-lg border border-line bg-white shadow-panel">
+        <div className="overflow-hidden rounded-lg border border-line bg-white shadow-strong">
           <div className="grid min-h-[720px] grid-cols-[minmax(0,1fr)] lg:grid-cols-[220px_380px_minmax(0,1fr)]">
             <DesktopRail active={active} setActive={setActive} />
             <div className={classNames(active === "inbox" ? "block" : "hidden lg:block")}>

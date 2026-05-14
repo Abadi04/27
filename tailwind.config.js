@@ -33,6 +33,7 @@ module.exports = {
       boxShadow: {
         modal: "0 24px 70px rgba(17, 24, 39, 0.18)",
         panel: "0 1px 2px rgba(16, 24, 40, 0.06)",
+        strong: "0 26px 70px rgba(16, 18, 20, 0.24)",
       },
     },
   },
