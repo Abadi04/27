@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>شارك رابطك | Whispr</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="page app-page share-page">
+  <header class="app-nav">
+    <a class="brand" href="dashboard.html">
+      <span class="brand-mark">W</span>
+      <span>Whispr</span>
+    </a>
+    <div class="icon-actions">
+      <a class="icon-btn" href="dashboard.html" title="الرسائل" aria-label="الرسائل">✉</a>
+      <a class="icon-btn" href="#" title="الإعدادات" aria-label="الإعدادات">⚙</a>
+    </div>
+  </header>
+
+  <main class="app-shell narrow-shell">
+    <section class="share-panel">
+      <span class="eyebrow">رابطك الشخصي</span>
+      <h1>شارك رابطك</h1>
+      <p>انسخ الرابط وشاركه مع أصدقائك ومتابعيك.</p>
+      <div class="link-box">
+        <code data-profile-link>https://whispr.me/username</code>
+        <button class="btn btn-primary" type="button" data-copy-link>نسخ الرابط</button>
+      </div>
+      <p class="copy-feedback" data-copy-feedback aria-live="polite"></p>
+      <div class="share-actions">
+        <a class="btn btn-secondary" href="https://x.com/intent/tweet?text=https%3A%2F%2Fwhispr.me%2Fusername" target="_blank" rel="noreferrer">مشاركة على X</a>
+        <a class="btn btn-secondary" href="https://wa.me/?text=https%3A%2F%2Fwhispr.me%2Fusername" target="_blank" rel="noreferrer">مشاركة على واتساب</a>
+      </div>
+    </section>
+  </main>
+
+  <script src="js/app.js"></script>
+</body>
+</html>
