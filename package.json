@@ -3,42 +3,15 @@
   "version": "1.0.0",
   "description": "27 ephemeral private chat app.",
   "homepage": "https://abadi04.github.io/27/",
-  "main": "server.js",
+  "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "api": "node server.js",
-    "api:dev": "nodemon server.js"
+    "serve": "cd public && python3 -m http.server 4188"
   },
   "keywords": [
-    "anonymous",
-    "messages",
-    "mobile",
-    "express",
-    "mongodb"
+    "ephemeral-chat",
+    "supabase",
+    "rtl",
+    "privacy"
   ],
-  "author": "",
-  "license": "MIT",
-  "dependencies": {
-    "autoprefixer": "^10.5.0",
-    "bcrypt": "^5.1.1",
-    "cors": "^2.8.5",
-    "dotenv": "^16.4.7",
-    "express": "^4.21.2",
-    "express-rate-limit": "^7.4.1",
-    "helmet": "^8.0.0",
-    "jsonwebtoken": "^9.0.2",
-    "lucide-react": "^1.14.0",
-    "mongoose": "^8.9.5",
-    "morgan": "^1.10.0",
-    "next": "^16.2.6",
-    "postcss": "^8.5.14",
-    "react": "^19.2.6",
-    "react-dom": "^19.2.6",
-    "tailwindcss": "^3.4.19"
-  },
-  "devDependencies": {
-    "nodemon": "^3.1.9"
-  }
+  "license": "MIT"
 }
