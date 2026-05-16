@@ -4,7 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="27 — محادثات خاصة، سريعة، وتُحذف تلقائيًا. تواصل بدون تسجيل." />
-    <meta name="theme-color" content="#000000" />
+    <meta name="theme-color" content="#0A0A0F" />
+    <link rel="manifest" href="manifest.json" />
     <title>27</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
@@ -84,6 +85,7 @@
             autocomplete="off"
             placeholder="اكتب رسالة مؤقتة..."
           />
+          <button class="burn-toggle" id="burnToggle" type="button" aria-label="رسالة تحترق" title="رسالة تحترق">🔥</button>
           <button class="send-btn" id="sendBtn" type="submit">إرسال</button>
         </form>
       </section>
@@ -111,6 +113,8 @@
             </span>
             <input class="settings-input" id="ttlInput" type="text" value="5h" disabled />
           </label>
+          <button class="setting-action" id="panicModeBtn" type="button">وضع التخفي</button>
+          <button class="setting-action" id="shareQrBtn" type="button">شارك كـ QR</button>
           <button class="start-btn save-settings" id="saveSettingsBtn" type="button">حفظ</button>
         </div>
       </section>
@@ -121,8 +125,30 @@
     </footer>
 
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <div class="panic-screen" id="panicScreen" hidden>
+      <div class="fake-notes" id="fakeNotesArea">
+        <h1 id="fakeNotesTitle">Notes</h1>
+        <div class="fake-note-lines" aria-hidden="true">
+          <span></span><span></span><span></span><span></span><span></span>
+        </div>
+      </div>
+    </div>
+    <div class="qr-modal" id="qrModal" hidden>
+      <div class="qr-backdrop" id="qrBackdrop"></div>
+      <div class="qr-dialog" role="dialog" aria-modal="true" aria-labelledby="qrModalTitle">
+        <button class="qr-close" id="closeQrModal" type="button" aria-label="إغلاق">×</button>
+        <h2 id="qrModalTitle">شارك رقمك</h2>
+        <img id="qrImage" alt="" />
+        <strong id="qrCodeText">------</strong>
+        <button class="start-btn" id="copyQrCodeBtn" type="button">نسخ الرقم</button>
+      </div>
+    </div>
+    <div class="onboarding-screen" id="onboardingScreen" hidden>
+      <div class="onboarding-code" id="onboardingCode"></div>
+    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="vendor/qrcode.min.js"></script>
     <script src="app.js"></script>
   </body>
 </html>

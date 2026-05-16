@@ -16,8 +16,13 @@
 
 const SUPABASE_URL = "https://rndwafkuqavqabpywosa.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJuZHdhZmt1cWF2cWFicHl3b3NhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg4NzkxOTEsImV4cCI6MjA5NDQ1NTE5MX0.tIrLqYHsK-qpvzlZBdPRRFNZZKhX445tE7xxsjZeceM";
+const VAPID_PUBLIC_KEY = "";
+const MESSAGE_TTL_SECONDS = 5 * 60 * 60;
+const BURN_TTL_SECONDS = 10;
 const FIVE_HOURS = 5 * 60 * 60 * 1000;
 const PROFILE_STORAGE_KEY = "twentyseven_profile";
+const ONBOARDING_STORAGE_KEY = "veil_seen";
+const SWIPE_DELETE_THRESHOLD = 80;
 
 const supabaseReady =
   typeof window.supabase !== "undefined" &&
@@ -78,6 +83,15 @@ const i18n = {
     realtimeConnecting: "جارٍ تفعيل الاتصال المباشر...",
     realtimeConnected: "الاتصال المباشر فعّال",
     mediaStorage: "رفع الوسائط يحتاج Storage لاحقًا. أُرسلت الرسالة النصية فقط.",
+    hideMode: "وضع التخفي",
+    shareQr: "شارك كـ QR",
+    qrTitle: "شارك رقمك",
+    copyNumber: "نسخ الرقم",
+    close: "إغلاق",
+    burnToggle: "رسالة تحترق",
+    burnAfterRead: "تحترق بعد القراءة",
+    typing: "يكتب الآن...",
+    fakeNotesTitle: "Notes",
     now: "الآن",
     userPrefix: "مستخدم",
     demoMode: "وضع تجريبي: أضف مفاتيح Supabase ليصبح حقيقيًا."
@@ -130,6 +144,15 @@ const i18n = {
     realtimeConnecting: "Connecting realtime...",
     realtimeConnected: "Realtime connected",
     mediaStorage: "Media upload needs Storage later. Text sent only.",
+    hideMode: "Hide Mode",
+    shareQr: "Share as QR",
+    qrTitle: "Share your number",
+    copyNumber: "Copy Number",
+    close: "Close",
+    burnToggle: "Burn message",
+    burnAfterRead: "Burns after reading",
+    typing: "Typing...",
+    fakeNotesTitle: "Notes",
     now: "Now",
     userPrefix: "User",
     demoMode: "Demo mode: add Supabase keys to make it real."
@@ -163,19 +186,66 @@ let chats = [];
 let activeConversationId = "";
 let activeSubscription = null;
 let countdownTimer = null;
+let messageTicker = null;
+let burnMode = false;
+let panicMode = false;
+let typing = false;
+let typingLastSentAt = 0;
+let typingStopTimer = null;
+let qrModalOpen = false;
 
 const $ = (id) => document.getElementById(id);
 
+function vibrate(pattern) {
+  if ("vibrate" in navigator) navigator.vibrate(pattern);
+}
+
+function prefersReducedMotion() {
+  return window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
+}
+
+function getAppBasePath() {
+  return window.location.pathname.endsWith("/")
+    ? window.location.pathname
+    : window.location.pathname.replace(/\/[^/]*$/, "/");
+}
+
+function urlBase64ToUint8Array(value) {
+  const padding = "=".repeat((4 - value.length % 4) % 4);
+  const base64 = (value + padding).replace(/-/g, "+").replace(/_/g, "/");
+  const raw = window.atob(base64);
+  return Uint8Array.from([...raw].map((char) => char.charCodeAt(0)));
+}
+
+function createMessageId(prefix = "msg") {
+  if (crypto?.randomUUID) return crypto.randomUUID();
+  return `${prefix}-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+}
+
 function createDemoChat(id, arName, enName, online, arMessages, enMessages) {
   const lastMessageAt = Date.now() - Math.floor(Math.random() * 25 + 1) * 60 * 1000;
+  const expiresAt = lastMessageAt + FIVE_HOURS;
   return {
     id,
     online,
     names: { ar: arName, en: enName },
     otherProfile: { id, display_name: arName, public_code: id, avatar_seed: arName },
     lastMessageAt,
-    expiresAt: lastMessageAt + FIVE_HOURS,
-    messages: { ar: arMessages, en: enMessages }
+    expiresAt,
+    messages: {
+      ar: arMessages.map((message, index) => normalizeMessage(message, `${id}-ar`, index, expiresAt)),
+      en: enMessages.map((message, index) => normalizeMessage(message, `${id}-en`, index, expiresAt))
+    }
+  };
+}
+
+function normalizeMessage(message, chatId = "demo", index = 0, fallbackExpiresAt = Date.now() + FIVE_HOURS) {
+  return {
+    id: message.id || `${chatId}-${index}-${Math.abs(hashHue(message.text || ""))}`,
+    burnAfterRead: Boolean(message.burnAfterRead),
+    expiresAt: message.expiresAt || new Date(fallbackExpiresAt).toISOString(),
+    createdAt: message.createdAt || new Date(fallbackExpiresAt - FIVE_HOURS).toISOString(),
+    ...message
   };
 }
 
@@ -557,11 +627,22 @@ async function loadConversation(conversationId) {
           activeChat.messages.neutral = [...messages, nextMessage];
           activeChat.lastMessageAt = new Date(payload.new.created_at).getTime();
           activeChat.expiresAt = new Date(payload.new.expires_at).getTime();
+          if (nextMessage.type === "incoming") vibrate(15);
           renderMessages(activeChat);
           renderChats();
           updateChatCountdown(activeChat);
         }
       )
+      .on("broadcast", { event: "typing" }, (payload) => {
+        if (payload.payload?.userId === currentProfile?.id) return;
+        typing = true;
+        renderMessages(getChat(conversationId));
+      })
+      .on("broadcast", { event: "stopped_typing" }, (payload) => {
+        if (payload.payload?.userId === currentProfile?.id) return;
+        typing = false;
+        renderMessages(getChat(conversationId));
+      })
       .subscribe((status) => {
         if (status === "SUBSCRIBED") showToast(i18n[currentLang].realtimeConnected);
       });
@@ -570,24 +651,34 @@ async function loadConversation(conversationId) {
   }
 }
 
-async function sendMessage(conversationId, content) {
+async function sendMessage(conversationId, content, options = {}) {
   if (!content.trim()) return;
+  const ttlMs = options.burnAfterRead ? BURN_TTL_SECONDS * 1000 : FIVE_HOURS;
 
   if (!isLiveMode()) {
-    appendDemoMessage(conversationId, { type: "outgoing", text: content, time: i18n[currentLang].now });
+    appendDemoMessage(conversationId, {
+      type: "outgoing",
+      text: content,
+      time: i18n[currentLang].now,
+      burnAfterRead: Boolean(options.burnAfterRead),
+      expiresAt: new Date(Date.now() + ttlMs).toISOString()
+    });
+    vibrate(30);
     return;
   }
 
   const now = new Date();
-  const expiresAt = new Date(now.getTime() + FIVE_HOURS).toISOString();
+  const expiresAt = new Date(now.getTime() + ttlMs).toISOString();
   const { error } = await db.from("messages").insert({
     conversation_id: conversationId,
     sender_id: currentProfile.id,
     content,
-    expires_at: expiresAt
+    expires_at: expiresAt,
+    burn_after_read: Boolean(options.burnAfterRead)
   });
 
   if (error) throw error;
+  vibrate(30);
 
   const { error: updateError } = await db
     .from("conversations")
@@ -603,7 +694,8 @@ function mapDbMessage(row) {
     text: row.content,
     time: formatTime(row.created_at),
     createdAt: row.created_at,
-    expiresAt: row.expires_at
+    expiresAt: row.expires_at,
+    burnAfterRead: Boolean(row.burn_after_read)
   };
 }
 
@@ -691,9 +783,15 @@ function appendDemoMessage(conversationId, message) {
     chat.messages.neutral = [];
   }
   const targetMessages = chat.messages.neutral || chat.messages[currentLang];
-  targetMessages.push({ ...message, expiresAt: new Date(Date.now() + FIVE_HOURS).toISOString() });
+  const expiresAt = message.expiresAt || new Date(Date.now() + FIVE_HOURS).toISOString();
+  targetMessages.push({
+    id: message.id || createMessageId("demo"),
+    createdAt: new Date().toISOString(),
+    ...message,
+    expiresAt
+  });
   chat.lastMessageAt = Date.now();
-  chat.expiresAt = Date.now() + FIVE_HOURS;
+  chat.expiresAt = new Date(expiresAt).getTime();
   renderMessages(chat);
   renderChats();
   updateChatCountdown(chat);
@@ -746,22 +844,38 @@ function renderMessages(chat) {
   const t = i18n[currentLang];
   const messages = getMessages(chat);
   const body = messages.length
-    ? messages.map((message) => `
-      <div class="message ${message.type}">
-        ${renderMessageContent(message)}
-        <span class="message-time">${escapeHtml(message.time || t.now)}</span>
+    ? messages.map((message) => {
+      const remaining = getMessageRemaining(message);
+      const percent = getMessageTimerPercent(message);
+      const criticalClass = remaining < 600000 ? " critical" : "";
+      const burnLabel = message.burnAfterRead
+        ? `<span class="burn-label">${escapeHtml(t.burnAfterRead)}</span>`
+        : "";
+      return `
+      <div class="message-shell ${message.type}" data-message-id="${escapeHtml(message.id || "")}">
+        <div class="swipe-delete-cue" aria-hidden="true">🔥</div>
+        <div class="message ${message.type}" style="--swipe-x: 0px; --delete-opacity: 0;">
+          ${renderMessageContent(message)}
+          ${burnLabel}
+          <span class="message-time">${escapeHtml(message.time || t.now)}</span>
+          <span class="message-timer${criticalClass}" style="--timer-width: ${percent}%"></span>
+        </div>
       </div>
-    `).join("")
+    `;
+    }).join("")
     : `<div class="system-note">${t.emptyChat}</div>`;
 
   const list = $("messagesList");
-  list.innerHTML = `<div class="system-note">${t.systemNote}</div>${body}`;
+  list.innerHTML = `<div class="system-note">${t.systemNote}</div>${body}${typing ? renderTypingIndicator() : ""}`;
+  attachSwipeToMessages();
+  updateMessageTimers();
   requestAnimationFrame(() => {
     list.scrollTop = list.scrollHeight;
   });
 }
 
 function renderMessageContent(message) {
+  const text = escapeHtml(message.text || "");
   if (message.mediaUrl && message.mediaType?.startsWith("image/")) {
     const caption = message.text ? `<span class="media-caption">${escapeHtml(message.text)}</span>` : "";
     return `<img class="message-media" src="${escapeHtml(message.mediaUrl)}" alt="${escapeHtml(message.fileName || "")}" />${caption}`;
@@ -772,7 +886,160 @@ function renderMessageContent(message) {
     return `<video class="message-media" src="${escapeHtml(message.mediaUrl)}" controls playsinline></video>${caption}`;
   }
 
-  return escapeHtml(message.text || "");
+  return `<span class="message-text">${text}</span>`;
+}
+
+function renderTypingIndicator() {
+  return `
+    <div class="typing-indicator" role="status" aria-live="polite">
+      <span>${escapeHtml(i18n[currentLang].typing)}</span>
+      <i></i><i></i><i></i>
+    </div>
+  `;
+}
+
+function broadcastTyping(eventName) {
+  if (!activeSubscription || !currentProfile?.id) return;
+  activeSubscription.send({
+    type: "broadcast",
+    event: eventName,
+    payload: { userId: currentProfile.id }
+  }).catch((error) => console.warn(error));
+}
+
+function handleComposerTyping() {
+  const now = Date.now();
+  if (now - typingLastSentAt > 2000) {
+    typingLastSentAt = now;
+    broadcastTyping("typing");
+  }
+
+  window.clearTimeout(typingStopTimer);
+  typingStopTimer = window.setTimeout(() => {
+    broadcastTyping("stopped_typing");
+  }, 3000);
+}
+
+function getMessageRemaining(message) {
+  if (!message?.expiresAt) return FIVE_HOURS;
+  return Math.max(0, new Date(message.expiresAt).getTime() - Date.now());
+}
+
+function getMessageTimerPercent(message) {
+  const ttl = message?.burnAfterRead ? BURN_TTL_SECONDS : MESSAGE_TTL_SECONDS;
+  return Math.max(0, Math.min(100, (getMessageRemaining(message) / (ttl * 1000)) * 100));
+}
+
+function updateMessageTimers() {
+  document.querySelectorAll(".message-shell[data-message-id]").forEach((shell) => {
+    const message = findMessageById(shell.dataset.messageId);
+    if (!message) return;
+    const bar = shell.querySelector(".message-timer");
+    if (!bar) return;
+    const remaining = getMessageRemaining(message);
+    bar.style.setProperty("--timer-width", `${getMessageTimerPercent(message)}%`);
+    bar.classList.toggle("critical", remaining < 600000);
+    if (remaining <= 0 && !message.expiring) expireMessage(message.id, { natural: true });
+  });
+}
+
+function startMessageTicker() {
+  window.clearInterval(messageTicker);
+  messageTicker = window.setInterval(updateMessageTimers, 1000);
+}
+
+function findMessageById(messageId) {
+  const chat = getChat(activeConversationId || $("chatView")?.dataset.activeChat);
+  return getMessages(chat).find((message) => String(message.id) === String(messageId));
+}
+
+function removeMessageLocally(messageId) {
+  const chat = getChat(activeConversationId || $("chatView")?.dataset.activeChat);
+  if (!chat) return;
+  Object.keys(chat.messages || {}).forEach((key) => {
+    chat.messages[key] = (chat.messages[key] || []).filter((message) => String(message.id) !== String(messageId));
+  });
+  const remainingMessages = getMessages(chat);
+  const latestExpiry = remainingMessages.reduce((latest, message) => {
+    if (!message.expiresAt) return latest;
+    return Math.max(latest, new Date(message.expiresAt).getTime());
+  }, 0);
+  chat.expiresAt = latestExpiry || Date.now();
+}
+
+async function expireMessage(messageId, options = {}) {
+  const message = findMessageById(messageId);
+  if (!message || message.expiring) return;
+  message.expiring = true;
+  vibrate([20, 30, 20]);
+
+  const shell = document.querySelector(`.message-shell[data-message-id="${CSS.escape(String(messageId))}"]`);
+  const finish = async () => {
+    removeMessageLocally(messageId);
+    if (isLiveMode() && messageId) {
+      const { error } = await db.from("messages").delete().eq("id", messageId);
+      if (error) console.warn(error);
+    }
+    const chat = getChat(activeConversationId || $("chatView")?.dataset.activeChat);
+    if (chat) {
+      renderMessages(chat);
+      renderChats();
+      updateChatCountdown(chat);
+    }
+  };
+
+  if (!shell || prefersReducedMotion()) {
+    await finish();
+    return;
+  }
+
+  const text = shell.querySelector(".message-text");
+  if (text && (options.natural || options.swipe)) {
+    const words = (message.text || "").split(" ");
+    text.innerHTML = words.map((word, index) => (
+      `<span class="fade-word" style="animation-delay: ${index * 80}ms">${escapeHtml(word)}</span>`
+    )).join(" ");
+    window.setTimeout(finish, words.length * 80 + 220);
+    return;
+  }
+
+  shell.classList.add("message-expiring");
+  window.setTimeout(finish, 350);
+}
+
+function attachSwipeToMessages() {
+  if (!("ontouchstart" in window)) return;
+  document.querySelectorAll(".message-shell").forEach((shell) => {
+    if (shell.dataset.swipeReady) return;
+    shell.dataset.swipeReady = "true";
+    let startX = 0;
+    let deltaX = 0;
+    const bubble = shell.querySelector(".message");
+
+    shell.addEventListener("touchstart", (event) => {
+      startX = event.touches[0].clientX;
+      deltaX = 0;
+      bubble.classList.remove("swipe-returning");
+    }, { passive: true });
+
+    shell.addEventListener("touchmove", (event) => {
+      deltaX = Math.min(0, event.touches[0].clientX - startX);
+      const distance = Math.min(Math.abs(deltaX), SWIPE_DELETE_THRESHOLD);
+      bubble.style.setProperty("--swipe-x", `${deltaX}px`);
+      bubble.style.setProperty("--delete-opacity", String(distance / SWIPE_DELETE_THRESHOLD));
+    }, { passive: true });
+
+    shell.addEventListener("touchend", () => {
+      if (Math.abs(deltaX) > SWIPE_DELETE_THRESHOLD) {
+        shell.classList.add("message-expiring");
+        expireMessage(shell.dataset.messageId, { swipe: true });
+        return;
+      }
+      bubble.classList.add("swipe-returning");
+      bubble.style.setProperty("--swipe-x", "0px");
+      bubble.style.setProperty("--delete-opacity", "0");
+    });
+  });
 }
 
 async function openChat(chatId) {
@@ -893,6 +1160,14 @@ function setLanguage(lang) {
   $("privacyLabel").textContent = t.privacyLabel;
   $("privacyHint").textContent = t.privacyHint;
   $("saveSettingsBtn").textContent = t.saveSettings;
+  $("panicModeBtn").textContent = t.hideMode;
+  $("shareQrBtn").textContent = t.shareQr;
+  $("burnToggle").setAttribute("aria-label", t.burnToggle);
+  $("burnToggle").title = t.burnToggle;
+  $("qrModalTitle").textContent = t.qrTitle;
+  $("copyQrCodeBtn").textContent = t.copyNumber;
+  $("closeQrModal").setAttribute("aria-label", t.close);
+  $("fakeNotesTitle").textContent = t.fakeNotesTitle;
 
   if (!$("displayNameInput").dataset.edited) {
     displayName = lang === "ar" ? "زائر 27" : "Guest 27";
@@ -964,9 +1239,10 @@ async function handleSendMessage(event) {
       showToast(i18n[currentLang].mediaStorage);
     }
 
-    if (text) await sendMessage(conversationId, text);
+    if (text) await sendMessage(conversationId, text, { burnAfterRead: burnMode });
     input.value = "";
     mediaInput.value = "";
+    setBurnMode(false);
   } catch (error) {
     handleAsyncError(error, i18n[currentLang].errorChats);
   } finally {
@@ -1001,6 +1277,117 @@ async function saveSettings() {
   }
 }
 
+function setBurnMode(enabled) {
+  burnMode = enabled;
+  $("burnToggle").classList.toggle("active", burnMode);
+  $("messageInput").classList.toggle("burn-active", burnMode);
+  $("burnToggle").setAttribute("aria-pressed", String(burnMode));
+}
+
+function setPanicMode(enabled) {
+  panicMode = enabled;
+  $("panicScreen").hidden = !panicMode;
+  document.body.classList.toggle("panic-active", panicMode);
+}
+
+async function openQrModal() {
+  const code = currentProfile?.public_code || $("profileCodeValue")?.textContent?.trim();
+  if (!code || code === "------") return;
+  qrModalOpen = true;
+  $("qrCodeText").textContent = code;
+  $("qrModal").hidden = false;
+
+  try {
+    const qrApi = window.QRCode;
+    if (qrApi?.toDataURL) {
+      $("qrImage").src = await qrApi.toDataURL(code, {
+        margin: 2,
+        width: 220,
+        color: { dark: "#0A0A0F", light: "#FFFFFF" }
+      });
+    }
+  } catch (error) {
+    handleAsyncError(error, i18n[currentLang].errorChats);
+  }
+}
+
+function closeQrModal() {
+  qrModalOpen = false;
+  $("qrModal").hidden = true;
+}
+
+async function registerPwa() {
+  if (!("Notification" in window) || !("serviceWorker" in navigator)) return;
+  if (Notification.permission === "default") {
+    try {
+      await Notification.requestPermission();
+    } catch (error) {
+      console.warn(error);
+    }
+  }
+  if (Notification.permission !== "granted") return;
+
+  try {
+    const registration = await navigator.serviceWorker.register(`${getAppBasePath()}sw.js`);
+    if (VAPID_PUBLIC_KEY && currentProfile?.id && db && registration.pushManager) {
+      const subscription = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+      });
+      await db.from("push_subscriptions").upsert({
+        user_id: currentProfile.id,
+        endpoint: subscription.endpoint,
+        subscription: subscription.toJSON()
+      }, { onConflict: "endpoint" });
+    }
+  } catch (error) {
+    console.warn(error);
+  }
+}
+
+function startOnboarding(onComplete) {
+  const screen = $("onboardingScreen");
+  const code = $("onboardingCode");
+
+  if (localStorage.getItem(ONBOARDING_STORAGE_KEY) === "1" || prefersReducedMotion()) {
+    localStorage.setItem(ONBOARDING_STORAGE_KEY, "1");
+    onComplete();
+    return;
+  }
+
+  const randomCode = randomPublicCode();
+  screen.hidden = false;
+  code.textContent = "";
+  let step = 0;
+
+  const typeNext = () => {
+    if (step < randomCode.length) {
+      code.textContent += randomCode[step];
+      step += 1;
+      window.setTimeout(typeNext, 120);
+      return;
+    }
+    window.setTimeout(eraseNext, 800);
+  };
+
+  const eraseNext = () => {
+    if (code.textContent.length) {
+      code.textContent = code.textContent.slice(0, -1);
+      window.setTimeout(eraseNext, 80);
+      return;
+    }
+    screen.classList.add("done");
+    window.setTimeout(() => {
+      screen.hidden = true;
+      screen.classList.remove("done");
+      localStorage.setItem(ONBOARDING_STORAGE_KEY, "1");
+      onComplete();
+    }, 420);
+  };
+
+  typeNext();
+}
+
 async function boot() {
   setLoading(i18n[currentLang].loadingChats, true);
   chats = demoChats.filter((chat) => chat.expiresAt > Date.now());
@@ -1009,6 +1396,8 @@ async function boot() {
   if (!db) {
     setLoading("", false);
     renderChats();
+    startMessageTicker();
+    registerPwa();
     showToast(i18n[currentLang].demoMode);
     return;
   }
@@ -1018,12 +1407,14 @@ async function boot() {
     displayName = currentProfile.display_name || displayName;
     $("displayNameInput").value = displayName;
     updateProfileCodeUI();
+    registerPwa();
     await loadConversations();
     setLanguage(currentLang);
 
     const route = window.location.hash.replace("#", "");
     if (route.startsWith("chat/")) await openChat(decodeURIComponent(route.slice(5)));
     if (route === "settings") openSettings();
+    startMessageTicker();
   } catch (error) {
     handleAsyncError(error, i18n[currentLang].errorChats);
     renderChats();
@@ -1040,9 +1431,22 @@ $("settingsToggle").addEventListener("click", openSettings);
 $("backFromSettings").addEventListener("click", closeSettings);
 $("saveSettingsBtn").addEventListener("click", saveSettings);
 $("copyCodeBtn").addEventListener("click", copyProfileCode);
+$("panicModeBtn").addEventListener("click", () => setPanicMode(true));
+$("shareQrBtn").addEventListener("click", openQrModal);
+$("closeQrModal").addEventListener("click", closeQrModal);
+$("qrBackdrop").addEventListener("click", closeQrModal);
+$("copyQrCodeBtn").addEventListener("click", copyProfileCode);
+$("burnToggle").addEventListener("click", () => setBurnMode(!burnMode));
 $("displayNameInput").addEventListener("input", () => {
   $("displayNameInput").dataset.edited = "true";
 });
+
+let panicPressTimer = null;
+$("fakeNotesArea").addEventListener("pointerdown", () => {
+  panicPressTimer = window.setTimeout(() => setPanicMode(false), 1500);
+});
+$("fakeNotesArea").addEventListener("pointerup", () => window.clearTimeout(panicPressTimer));
+$("fakeNotesArea").addEventListener("pointerleave", () => window.clearTimeout(panicPressTimer));
 
 $("startBtn").addEventListener("click", handleStartChat);
 $("codeInput").addEventListener("keydown", (event) => {
@@ -1065,6 +1469,7 @@ document.addEventListener("keydown", (event) => {
 
 $("backToChats").addEventListener("click", closeChat);
 $("messageForm").addEventListener("submit", handleSendMessage);
+$("messageInput").addEventListener("input", handleComposerTyping);
 $("mediaInput").addEventListener("change", () => {
   if ($("mediaInput").files?.length) $("messageForm").requestSubmit();
 });
@@ -1087,4 +1492,4 @@ window.setInterval(async () => {
   }
 }, 60000);
 
-boot();
+startOnboarding(() => boot());
