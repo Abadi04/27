@@ -39,9 +39,6 @@ const i18n = {
     heroLine2: "تواصل بدون تسجيل، بدون بريد إلكتروني، وبدون رقم جوال.",
     inputPlaceholder: "أدخل رقم المستخدم المراد التواصل معه",
     startBtn: "بدء المحادثة",
-    profileCodeLabel: "رقمك",
-    copyMyCode: "انسخ رقمي",
-    copied: "تم النسخ",
     chatsHeader: "المحادثات النشطة",
     emptyText: "لا توجد محادثات حالية. ابدأ محادثة جديدة بإدخال رقم مستخدم.",
     footerText: "جميع المحادثات تُحذف تلقائيًا بعد ٥ ساعات من آخر رسالة.",
@@ -61,9 +58,6 @@ const i18n = {
     attach: "إرسال صورة أو فيديو",
     systemNote: "هذه المحادثة مؤقتة ولا تحتاج تسجيل دخول.",
     loadingChats: "جارٍ تحميل المحادثات...",
-    loadingConversation: "جارٍ تحميل المحادثة...",
-    searchingCode: "جارٍ البحث...",
-    sendingMessage: "جارٍ الإرسال...",
     errorChats: "تعذر تحميل المحادثات. حاول مرة أخرى.",
     invalidCode: "أدخل كودًا رقميًا صحيحًا.",
     codeNotFound: "الرقم غير موجود.",
@@ -71,13 +65,6 @@ const i18n = {
     starting: "تم فتح المحادثة.",
     expired: "انتهت مدة هذه المحادثة، وتم حذف جميع الرسائل المرتبطة بها نهائيًا.",
     emptyChat: "لا توجد رسائل بعد. اكتب أول رسالة مؤقتة.",
-    expiresIn: "ينتهي بعد {time}",
-    lessThanMinute: "أقل من دقيقة",
-    hoursUnit: "{count} ساعة",
-    minutesUnit: "{count} دقيقة",
-    realtimeConnecting: "جارٍ تفعيل الاتصال المباشر...",
-    realtimeConnected: "الاتصال المباشر فعّال",
-    mediaStorage: "رفع الوسائط يحتاج Storage لاحقًا. أُرسلت الرسالة النصية فقط.",
     now: "الآن",
     userPrefix: "مستخدم",
     demoMode: "وضع تجريبي: أضف مفاتيح Supabase ليصبح حقيقيًا."
@@ -91,9 +78,6 @@ const i18n = {
     heroLine2: "No sign-up, no email, no phone number.",
     inputPlaceholder: "Enter the user's code to start a chat",
     startBtn: "Start chat",
-    profileCodeLabel: "Your code",
-    copyMyCode: "Copy my code",
-    copied: "Copied",
     chatsHeader: "Active chats",
     emptyText: "No active chats. Start a new one by entering a user code.",
     footerText: "All conversations are automatically deleted 5 hours after the last message.",
@@ -113,9 +97,6 @@ const i18n = {
     attach: "Send photo or video",
     systemNote: "This chat is temporary and requires no login.",
     loadingChats: "Loading active chats...",
-    loadingConversation: "Loading conversation...",
-    searchingCode: "Searching...",
-    sendingMessage: "Sending...",
     errorChats: "Could not load chats. Try again.",
     invalidCode: "Enter a valid numeric code.",
     codeNotFound: "Code not found.",
@@ -123,13 +104,6 @@ const i18n = {
     starting: "Chat opened.",
     expired: "This chat expired, and all linked messages were permanently deleted.",
     emptyChat: "No messages yet. Write the first ephemeral message.",
-    expiresIn: "Expires in {time}",
-    lessThanMinute: "less than a minute",
-    hoursUnit: "{count}h",
-    minutesUnit: "{count}m",
-    realtimeConnecting: "Connecting realtime...",
-    realtimeConnected: "Realtime connected",
-    mediaStorage: "Media upload needs Storage later. Text sent only.",
     now: "Now",
     userPrefix: "User",
     demoMode: "Demo mode: add Supabase keys to make it real."
@@ -162,7 +136,6 @@ let currentProfile = null;
 let chats = [];
 let activeConversationId = "";
 let activeSubscription = null;
-let countdownTimer = null;
 
 const $ = (id) => document.getElementById(id);
 
@@ -213,102 +186,8 @@ function randomPublicCode() {
   return String(Math.floor(Math.random() * 900000) + 100000);
 }
 
-function handleAsyncError(error, fallbackMessage) {
-  console.warn(error);
-  flashError(fallbackMessage || i18n[currentLang].errorChats);
-}
-
-function setLoading(message, visible = true) {
-  const loading = $("loadingState");
-  loading.textContent = message || i18n[currentLang].loadingChats;
-  loading.hidden = !visible;
-}
-
-function setButtonBusy(button, busy, label) {
-  if (!button) return;
-  if (busy) {
-    button.dataset.idleText = button.textContent;
-    button.textContent = label || button.textContent;
-    button.disabled = true;
-    return;
-  }
-
-  button.disabled = false;
-  if (button.dataset.idleText) button.textContent = button.dataset.idleText;
-  delete button.dataset.idleText;
-}
-
-function updateProfileCodeUI() {
-  const card = $("profileCodeCard");
-  if (!card) return;
-
-  const hasCode = Boolean(currentProfile?.public_code);
-  card.hidden = !hasCode;
-  $("profileCodeLabel").textContent = i18n[currentLang].profileCodeLabel;
-  $("copyCodeBtn").textContent = i18n[currentLang].copyMyCode;
-  if (hasCode) $("profileCodeValue").textContent = currentProfile.public_code;
-}
-
-async function copyProfileCode() {
-  if (!currentProfile?.public_code) return;
-  const code = currentProfile.public_code;
-
-  try {
-    let copied = false;
-    if (navigator.clipboard?.writeText) {
-      try {
-        await navigator.clipboard.writeText(code);
-        copied = true;
-      } catch {
-        copied = false;
-      }
-    }
-
-    if (!copied) {
-      const temp = document.createElement("textarea");
-      temp.value = code;
-      temp.setAttribute("readonly", "");
-      temp.style.position = "fixed";
-      temp.style.opacity = "0";
-      document.body.appendChild(temp);
-      temp.select();
-      copied = document.execCommand("copy");
-      temp.remove();
-    }
-
-    showToast(copied ? i18n[currentLang].copied : code);
-  } catch (error) {
-    handleAsyncError(error, i18n[currentLang].errorChats);
-  }
-}
-
 async function getOrCreateProfile() {
   if (!db) return null;
-
-  async function getCurrentAuthUser() {
-    const { data: userData, error: userError } = await db.auth.getUser();
-    if (userError) throw userError;
-    if (!userData?.user) throw new Error("Anonymous auth user was not established.");
-    return userData.user;
-  }
-
-  async function insertProfileForUser(authUser) {
-    for (let attempt = 0; attempt < 8; attempt += 1) {
-      const publicCode = randomPublicCode();
-      const profile = {
-        id: authUser.id,
-        public_code: publicCode,
-        display_name: displayName,
-        avatar_seed: displayName || publicCode
-      };
-
-      const { data, error } = await db.from("profiles").insert(profile).select("*").single();
-      if (!error) return data;
-      if (error.code !== "23505") throw error;
-    }
-
-    throw new Error("Could not generate a unique public_code.");
-  }
 
   let { data: sessionData } = await db.auth.getSession();
   let user = sessionData?.session?.user;
@@ -322,15 +201,12 @@ async function getOrCreateProfile() {
         refresh_token: data.session.refresh_token
       });
     }
+    user = data.user;
   }
 
-  user = await getCurrentAuthUser();
-
   const stored = JSON.parse(localStorage.getItem(PROFILE_STORAGE_KEY) || "null");
-  if (stored?.id && stored.id !== user.id) {
-    localStorage.removeItem(PROFILE_STORAGE_KEY);
-  } else if (stored?.id && stored?.public_code) {
-    const { data } = await db.from("profiles").select("*").eq("id", user.id).maybeSingle();
+  if (stored?.id && stored?.public_code) {
+    const { data } = await db.from("profiles").select("*").eq("id", stored.id).maybeSingle();
     if (data) return data;
   }
 
@@ -340,107 +216,67 @@ async function getOrCreateProfile() {
     return existing;
   }
 
-  try {
-    const created = await insertProfileForUser(user);
-    localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(created));
-    return created;
-  } catch (error) {
-    const message = `${error?.message || ""} ${error?.details || ""}`;
-    const isRlsError = error?.code === "42501" || message.toLowerCase().includes("row-level security");
+  for (let attempt = 0; attempt < 8; attempt += 1) {
+    const publicCode = randomPublicCode();
+    const profile = {
+      id: user.id,
+      public_code: publicCode,
+      display_name: displayName,
+      avatar_seed: displayName || publicCode
+    };
 
-    if (!isRlsError) throw error;
+    const { data, error } = await db.from("profiles").insert(profile).select("*").single();
+    if (!error) {
+      localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(data));
+      return data;
+    }
 
-    console.warn("profiles insert failed with row-level security", error);
-    localStorage.removeItem(PROFILE_STORAGE_KEY);
-    user = await getCurrentAuthUser();
-
-    const created = await insertProfileForUser(user);
-    localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(created));
-    return created;
+    if (error.code !== "23505") throw error;
   }
-}
 
-async function cleanupExpiredMessages(conversationId = "") {
-  if (!isLiveMode()) return;
-
-  const nowIso = new Date().toISOString();
-  let query = db.from("messages").delete().lt("expires_at", nowIso);
-  if (conversationId) query = query.eq("conversation_id", conversationId);
-
-  const { error } = await query;
-  if (error) throw error;
-}
-
-async function deleteConversationIfExpiredAndEmpty(chat) {
-  if (!isLiveMode() || !chat?.id) return false;
-  if (!chat.lastMessageAt || Date.now() - chat.lastMessageAt < FIVE_HOURS) return false;
-
-  const { count, error } = await db
-    .from("messages")
-    .select("id", { count: "exact", head: true })
-    .eq("conversation_id", chat.id)
-    .gt("expires_at", new Date().toISOString());
-
-  if (error) throw error;
-  if (count && count > 0) return false;
-
-  const { error: deleteError } = await db
-    .from("conversations")
-    .delete()
-    .eq("id", chat.id);
-
-  if (deleteError) throw deleteError;
-  chats = chats.filter((item) => item.id !== chat.id);
-  return true;
+  throw new Error("Could not generate a unique public_code.");
 }
 
 async function loadConversations() {
-  setLoading(i18n[currentLang].loadingChats, true);
-  try {
-    if (!isLiveMode()) {
-      chats = demoChats.filter((chat) => chat.expiresAt > Date.now());
-      renderChats();
-      return chats;
-    }
-
-    await cleanupExpiredMessages();
-
-    const { data, error } = await db
-      .from("conversations")
-      .select(`
-        id,
-        user_a_id,
-        user_b_id,
-        created_at,
-        last_message_at,
-        user_a:profiles!conversations_user_a_id_fkey(id, public_code, display_name, avatar_seed),
-        user_b:profiles!conversations_user_b_id_fkey(id, public_code, display_name, avatar_seed)
-      `)
-      .or(`user_a_id.eq.${currentProfile.id},user_b_id.eq.${currentProfile.id}`)
-      .order("last_message_at", { ascending: false, nullsFirst: false });
-
-    if (error) throw error;
-
-    const realChats = (data || []).map((row) => {
-      const otherProfile = row.user_a_id === currentProfile.id ? row.user_b : row.user_a;
-      return {
-        id: row.id,
-        online: true,
-        otherProfile,
-        lastMessageAt: row.last_message_at ? new Date(row.last_message_at).getTime() : 0,
-        messages: { neutral: [] }
-      };
-    });
-
-    chats = realChats.length
-      ? realChats
-      : demoChats.filter((chat) => chat.expiresAt > Date.now()).map((chat) => ({ ...chat, placeholder: true }));
-
+  if (!isLiveMode()) {
+    chats = demoChats.filter((chat) => chat.expiresAt > Date.now());
     renderChats();
     return chats;
-  } finally {
-    setLoading("", false);
   }
+
+  const { data, error } = await db
+    .from("conversations")
+    .select(`
+      id,
+      user_a_id,
+      user_b_id,
+      created_at,
+      last_message_at,
+      user_a:profiles!conversations_user_a_id_fkey(id, public_code, display_name, avatar_seed),
+      user_b:profiles!conversations_user_b_id_fkey(id, public_code, display_name, avatar_seed)
+    `)
+    .or(`user_a_id.eq.${currentProfile.id},user_b_id.eq.${currentProfile.id}`)
+    .order("last_message_at", { ascending: false, nullsFirst: false });
+
+  if (error) throw error;
+
+  const realChats = (data || []).map((row) => {
+    const otherProfile = row.user_a_id === currentProfile.id ? row.user_b : row.user_a;
+    return {
+      id: row.id,
+      online: true,
+      otherProfile,
+      lastMessageAt: row.last_message_at ? new Date(row.last_message_at).getTime() : 0,
+      messages: { neutral: [] }
+    };
+  });
+
+  chats = realChats.length
+    ? realChats
+    : demoChats.filter((chat) => chat.expiresAt > Date.now()).map((chat) => ({ ...chat, placeholder: true }));
+
+  renderChats();
+  return chats;
 }
 
 async function startConversationWithCode(code) {
@@ -472,10 +308,14 @@ async function startConversationWithCode(code) {
     return null;
   }
 
+  const a = currentProfile.id < target.id ? currentProfile.id : target.id;
+  const b = currentProfile.id < target.id ? target.id : currentProfile.id;
+
   const { data: existing, error: findError } = await db
     .from("conversations")
     .select("id")
-    .or(`and(user_a_id.eq.${currentProfile.id},user_b_id.eq.${target.id}),and(user_a_id.eq.${target.id},user_b_id.eq.${currentProfile.id})`)
+    .eq("user_a_id", a)
+    .eq("user_b_id", b)
     .maybeSingle();
 
   if (findError) throw findError;
@@ -487,7 +327,7 @@ async function startConversationWithCode(code) {
 
   const { data: created, error: createError } = await db
     .from("conversations")
-    .insert({ user_a_id: currentProfile.id, user_b_id: target.id, last_message_at: new Date().toISOString() })
+    .insert({ user_a_id: a, user_b_id: b, last_message_at: new Date().toISOString() })
     .select("id")
     .single();
 
@@ -500,74 +340,47 @@ async function startConversationWithCode(code) {
 async function loadConversation(conversationId) {
   activeConversationId = conversationId;
   const chat = getChat(conversationId);
-  setLoading(i18n[currentLang].loadingConversation, true);
 
-  try {
-    if (!isLiveMode() || chat?.placeholder) {
-      renderMessages(chat);
-      startChatCountdown(chat);
-      return;
-    }
-
-    if (activeSubscription) {
-      await db.removeChannel(activeSubscription);
-      activeSubscription = null;
-    }
-
-    await cleanupExpiredMessages(conversationId);
-
-    const { data, error } = await db
-      .from("messages")
-      .select("*")
-      .eq("conversation_id", conversationId)
-      .gt("expires_at", new Date().toISOString())
-      .order("created_at", { ascending: true });
-
-    if (error) throw error;
-
-    chat.messages = { neutral: (data || []).map(mapDbMessage) };
-    const removed = await deleteConversationIfExpiredAndEmpty(chat);
-    if (removed) {
-      renderChats();
-      showToast(i18n[currentLang].expired);
-      showHome();
-      window.location.hash = "";
-      return;
-    }
-
+  if (!isLiveMode() || chat?.placeholder) {
     renderMessages(chat);
-    startChatCountdown(chat);
-
-    activeSubscription = db
-      .channel(`messages:${conversationId}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "messages",
-          filter: `conversation_id=eq.${conversationId}`
-        },
-        (payload) => {
-          const activeChat = getChat(conversationId);
-          if (!activeChat) return;
-          const nextMessage = mapDbMessage(payload.new);
-          const messages = activeChat.messages.neutral || [];
-          if (messages.some((message) => message.id === nextMessage.id)) return;
-          activeChat.messages.neutral = [...messages, nextMessage];
-          activeChat.lastMessageAt = new Date(payload.new.created_at).getTime();
-          activeChat.expiresAt = new Date(payload.new.expires_at).getTime();
-          renderMessages(activeChat);
-          renderChats();
-          updateChatCountdown(activeChat);
-        }
-      )
-      .subscribe((status) => {
-        if (status === "SUBSCRIBED") showToast(i18n[currentLang].realtimeConnected);
-      });
-  } finally {
-    setLoading("", false);
+    return;
   }
+
+  if (activeSubscription) {
+    await db.removeChannel(activeSubscription);
+    activeSubscription = null;
+  }
+
+  const { data, error } = await db
+    .from("messages")
+    .select("*")
+    .eq("conversation_id", conversationId)
+    .gt("expires_at", new Date().toISOString())
+    .order("created_at", { ascending: true });
+
+  if (error) throw error;
+
+  chat.messages = { neutral: (data || []).map(mapDbMessage) };
+  renderMessages(chat);
+
+  activeSubscription = db
+    .channel(`messages:${conversationId}`)
+    .on(
+      "postgres_changes",
+      {
+        event: "INSERT",
+        schema: "public",
+        table: "messages",
+        filter: `conversation_id=eq.${conversationId}`
+      },
+      (payload) => {
+        const activeChat = getChat(conversationId);
+        if (!activeChat) return;
+        activeChat.messages.neutral.push(mapDbMessage(payload.new));
+        renderMessages(activeChat);
+      }
+    )
+    .subscribe();
 }
 
 async function sendMessage(conversationId, content) {
@@ -589,11 +402,10 @@ async function sendMessage(conversationId, content) {
 
   if (error) throw error;
 
-  const { error: updateError } = await db
+  await db
     .from("conversations")
     .update({ last_message_at: now.toISOString() })
     .eq("id", conversationId);
-  if (updateError) throw updateError;
 }
 
 function mapDbMessage(row) {
@@ -601,9 +413,7 @@ function mapDbMessage(row) {
     id: row.id,
     type: row.sender_id === currentProfile.id ? "outgoing" : "incoming",
     text: row.content,
-    time: formatTime(row.created_at),
-    createdAt: row.created_at,
-    expiresAt: row.expires_at
+    time: formatTime(row.created_at)
   };
 }
 
@@ -613,55 +423,6 @@ function formatTime(value) {
     hour: "2-digit",
     minute: "2-digit"
   }).format(new Date(value));
-}
-
-function formatRemaining(ms) {
-  const t = i18n[currentLang];
-  if (ms <= 60000) return t.lessThanMinute;
-
-  const totalMinutes = Math.ceil(ms / 60000);
-  const hours = Math.floor(totalMinutes / 60);
-  const minutes = totalMinutes % 60;
-
-  if (hours > 0 && minutes > 0) {
-    return `${t.hoursUnit.replace("{count}", hours)} ${t.minutesUnit.replace("{count}", minutes)}`;
-  }
-
-  if (hours > 0) return t.hoursUnit.replace("{count}", hours);
-  return t.minutesUnit.replace("{count}", minutes);
-}
-
-function getChatExpiryTime(chat) {
-  if (!chat) return 0;
-  const messages = getMessages(chat);
-  const latestMessageExpiry = messages.reduce((latest, message) => {
-    if (!message.expiresAt) return latest;
-    return Math.max(latest, new Date(message.expiresAt).getTime());
-  }, 0);
-
-  if (latestMessageExpiry) return latestMessageExpiry;
-  if (chat.expiresAt) return chat.expiresAt;
-  if (chat.lastMessageAt) return chat.lastMessageAt + FIVE_HOURS;
-  return Date.now() + FIVE_HOURS;
-}
-
-function updateChatCountdown(chat) {
-  if ($("chatView").hidden || !chat) return;
-  const remaining = getChatExpiryTime(chat) - Date.now();
-  $("chatViewStatus").textContent = remaining <= 0
-    ? i18n[currentLang].expired
-    : i18n[currentLang].expiresIn.replace("{time}", formatRemaining(remaining));
-}
-
-function startChatCountdown(chat) {
-  window.clearInterval(countdownTimer);
-  updateChatCountdown(chat);
-  countdownTimer = window.setInterval(() => updateChatCountdown(chat), 30000);
-}
-
-function stopChatCountdown() {
-  window.clearInterval(countdownTimer);
-  countdownTimer = null;
 }
 
 function createDemoConversationFromCode(code) {
@@ -691,12 +452,11 @@ function appendDemoMessage(conversationId, message) {
     chat.messages.neutral = [];
   }
   const targetMessages = chat.messages.neutral || chat.messages[currentLang];
-  targetMessages.push({ ...message, expiresAt: new Date(Date.now() + FIVE_HOURS).toISOString() });
+  targetMessages.push(message);
   chat.lastMessageAt = Date.now();
   chat.expiresAt = Date.now() + FIVE_HOURS;
   renderMessages(chat);
   renderChats();
-  updateChatCountdown(chat);
 }
 
 function getChat(chatId) {
@@ -754,11 +514,8 @@ function renderMessages(chat) {
     `).join("")
     : `<div class="system-note">${t.emptyChat}</div>`;
 
-  const list = $("messagesList");
-  list.innerHTML = `<div class="system-note">${t.systemNote}</div>${body}`;
-  requestAnimationFrame(() => {
-    list.scrollTop = list.scrollHeight;
-  });
+  $("messagesList").innerHTML = `<div class="system-note">${t.systemNote}</div>${body}`;
+  $("messagesList").scrollTop = $("messagesList").scrollHeight;
 }
 
 function renderMessageContent(message) {
@@ -794,18 +551,18 @@ async function openChat(chatId) {
   $("chatView").hidden = false;
   $("chatView").dataset.activeChat = chat.id;
   $("chatViewName").textContent = getChatName(chat);
-  $("chatViewStatus").textContent = t.loadingConversation;
+  $("chatViewStatus").textContent = t.chatExpiry;
   window.location.hash = `#chat/${encodeURIComponent(chat.id)}`;
 
   try {
     await loadConversation(chat.id);
   } catch (error) {
-    handleAsyncError(error, i18n[currentLang].errorChats);
+    console.error(error);
+    flashError(i18n[currentLang].errorChats);
   }
 }
 
 function showHome() {
-  stopChatCountdown();
   $("heroSection").hidden = false;
   document.querySelector(".section-divider").hidden = false;
   $("chatsSection").hidden = false;
@@ -814,11 +571,6 @@ function showHome() {
 }
 
 function closeChat() {
-  if (activeSubscription && db) {
-    db.removeChannel(activeSubscription).catch(() => {});
-    activeSubscription = null;
-  }
-  activeConversationId = "";
   showHome();
   window.location.hash = "";
 }
@@ -881,7 +633,6 @@ function setLanguage(lang) {
   $("chatViewStatus").textContent = t.chatExpiry;
   $("messageInput").placeholder = t.messagePlaceholder;
   $("sendBtn").textContent = t.send;
-  updateProfileCodeUI();
   $("attachBtn").title = t.attach;
   $("attachBtn").setAttribute("aria-label", t.attach);
   $("loadingState").textContent = t.loadingChats;
@@ -904,7 +655,6 @@ function setLanguage(lang) {
     const active = $("chatView").dataset.activeChat;
     const chat = getChat(active);
     $("chatViewName").textContent = getChatName(chat);
-    updateChatCountdown(chat);
     renderMessages(chat);
   }
 }
@@ -913,7 +663,7 @@ async function handleStartChat() {
   const input = $("codeInput");
   const code = input.value.trim();
 
-  if (!/^\d{6}$/.test(code)) {
+  if (!/^\d{3,12}$/.test(code)) {
     input.focus();
     input.style.borderColor = "rgba(244, 63, 94, 0.5)";
     flashError(i18n[currentLang].invalidCode);
@@ -924,16 +674,17 @@ async function handleStartChat() {
   }
 
   try {
-    setButtonBusy($("startBtn"), true, i18n[currentLang].searchingCode);
+    $("startBtn").disabled = true;
     const conversationId = await startConversationWithCode(code);
     if (conversationId) {
       input.value = "";
       showToast(i18n[currentLang].starting);
     }
   } catch (error) {
-    handleAsyncError(error, i18n[currentLang].errorChats);
+    console.error(error);
+    flashError(i18n[currentLang].errorChats);
   } finally {
-    setButtonBusy($("startBtn"), false);
+    $("startBtn").disabled = false;
   }
 }
 
@@ -948,7 +699,6 @@ async function handleSendMessage(event) {
   if (!text && !file) return;
 
   try {
-    setButtonBusy($("sendBtn"), true, i18n[currentLang].sendingMessage);
     if (file && !isLiveMode()) {
       appendDemoMessage(conversationId, {
         type: "outgoing",
@@ -961,16 +711,15 @@ async function handleSendMessage(event) {
     }
 
     if (file && isLiveMode()) {
-      showToast(i18n[currentLang].mediaStorage);
+      showToast(currentLang === "ar" ? "رفع الوسائط يحتاج Storage لاحقًا. أُرسلت الرسالة النصية فقط." : "Media upload needs Storage later. Text sent only.");
     }
 
     if (text) await sendMessage(conversationId, text);
     input.value = "";
     mediaInput.value = "";
   } catch (error) {
-    handleAsyncError(error, i18n[currentLang].errorChats);
-  } finally {
-    setButtonBusy($("sendBtn"), false);
+    console.error(error);
+    flashError(i18n[currentLang].errorChats);
   }
 }
 
@@ -978,36 +727,30 @@ async function saveSettings() {
   displayName = $("displayNameInput").value.trim() || (currentLang === "ar" ? "زائر 27" : "Guest 27");
   $("displayNameInput").value = displayName;
 
-  try {
-    if (isLiveMode()) {
-      const { data, error } = await db
-        .from("profiles")
-        .update({ display_name: displayName, avatar_seed: displayName })
-        .eq("id", currentProfile.id)
-        .select("*")
-        .single();
+  if (isLiveMode()) {
+    const { data, error } = await db
+      .from("profiles")
+      .update({ display_name: displayName, avatar_seed: displayName })
+      .eq("id", currentProfile.id)
+      .select("*")
+      .single();
 
-      if (error) throw error;
-      if (data) {
-        currentProfile = data;
-        localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(data));
-      }
+    if (!error && data) {
+      currentProfile = data;
+      localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(data));
     }
-
-    showToast(i18n[currentLang].settingsSaved);
-    renderChats();
-  } catch (error) {
-    handleAsyncError(error, i18n[currentLang].errorChats);
   }
+
+  showToast(i18n[currentLang].settingsSaved);
 }
 
 async function boot() {
-  setLoading(i18n[currentLang].loadingChats, true);
+  $("loadingState").hidden = false;
   chats = demoChats.filter((chat) => chat.expiresAt > Date.now());
   setLanguage(currentLang);
 
   if (!db) {
-    setLoading("", false);
+    $("loadingState").hidden = true;
     renderChats();
     showToast(i18n[currentLang].demoMode);
     return;
@@ -1017,7 +760,6 @@ async function boot() {
     currentProfile = await getOrCreateProfile();
     displayName = currentProfile.display_name || displayName;
     $("displayNameInput").value = displayName;
-    updateProfileCodeUI();
     await loadConversations();
     setLanguage(currentLang);
 
@@ -1025,10 +767,11 @@ async function boot() {
     if (route.startsWith("chat/")) await openChat(decodeURIComponent(route.slice(5)));
     if (route === "settings") openSettings();
   } catch (error) {
-    handleAsyncError(error, i18n[currentLang].errorChats);
+    console.error(error);
+    flashError(i18n[currentLang].errorChats);
     renderChats();
   } finally {
-    setLoading("", false);
+    $("loadingState").hidden = true;
   }
 }
 
@@ -1039,7 +782,6 @@ $("langToggle").addEventListener("click", () => {
 $("settingsToggle").addEventListener("click", openSettings);
 $("backFromSettings").addEventListener("click", closeSettings);
 $("saveSettingsBtn").addEventListener("click", saveSettings);
-$("copyCodeBtn").addEventListener("click", copyProfileCode);
 $("displayNameInput").addEventListener("input", () => {
   $("displayNameInput").dataset.edited = "true";
 });
@@ -1070,21 +812,17 @@ $("mediaInput").addEventListener("change", () => {
 });
 
 window.setInterval(async () => {
-  try {
-    if (isLiveMode()) {
-      await cleanupExpiredMessages();
-      if (!$("chatView").hidden && activeConversationId) await loadConversation(activeConversationId);
-      await loadConversations();
-      return;
-    }
-
-    const before = chats.length;
-    chats = chats.filter((chat) => !chat.expiresAt || chat.expiresAt > Date.now());
-    renderChats();
-    if (before !== chats.length) showToast(i18n[currentLang].expired);
-  } catch (error) {
-    console.warn(error);
+  if (isLiveMode()) {
+    await db.rpc("delete_expired_messages").catch(() => {});
+    if (!$("chatView").hidden && activeConversationId) await loadConversation(activeConversationId);
+    await loadConversations();
+    return;
   }
+
+  const before = chats.length;
+  chats = chats.filter((chat) => !chat.expiresAt || chat.expiresAt > Date.now());
+  renderChats();
+  if (before !== chats.length) showToast(i18n[currentLang].expired);
 }, 60000);
 
 boot();

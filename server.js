@@ -14,12 +14,28 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const MONGODB_URI = process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/veil";
 const JWT_SECRET = process.env.JWT_SECRET || "dev-only-veil-secret-change-me";
+const ROOM_ACCESS_CODE_TTL_SECONDS = 60 * 60;
+const SECRET_MESSAGE_TTL_SECONDS = 5 * 60 * 60;
+
+const debug = {
+  info(label, details) {
+    if (process.env.NODE_ENV === "test") return;
+    console.groupCollapsed(`[veil] ${label}`);
+    if (details) console.info(details);
+    console.groupEnd();
+  },
+  error(label, error) {
+    console.groupCollapsed(`[veil:error] ${label}`);
+    console.error(error?.message || error);
+    console.groupEnd();
+  }
+};
 
 mongoose
   .connect(MONGODB_URI)
-  .then(() => console.log("MongoDB connected"))
+  .then(() => debug.info("MongoDB connected"))
   .catch((error) => {
-    console.error("MongoDB connection error:", error.message);
+    debug.error("MongoDB connection error", error);
   });
 
 const userSchema = new mongoose.Schema({
@@ -60,11 +76,27 @@ const userSchema = new mongoose.Schema({
 });
 
 const messageSchema = new mongoose.Schema({
+  roomId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Room",
+    index: true
+  },
   recipientId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
-    required: true,
     index: true
+  },
+  senderAlias: {
+    type: String,
+    default: "Anonymous Signal",
+    maxlength: 48,
+    trim: true
+  },
+  senderColor: {
+    type: String,
+    default: "#7B61FF",
+    maxlength: 32,
+    trim: true
   },
   content: {
     type: String,
@@ -82,6 +114,63 @@ const messageSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+  deliveryStatus: {
+    type: String,
+    enum: ["sent", "delivered", "read", "burned"],
+    default: "sent"
+  },
+  timerSeconds: {
+    type: Number,
+    default: SECRET_MESSAGE_TTL_SECONDS,
+    min: SECRET_MESSAGE_TTL_SECONDS,
+    max: SECRET_MESSAGE_TTL_SECONDS
+  },
+  burnAfterRead: {
+    type: Boolean,
+    default: false
+  },
+  readAt: Date,
+  expiresAt: {
+    type: Date,
+    index: true
+  },
+  burnedAt: Date,
+  createdAt: {
+    type: Date,
+    default: Date.now
+  }
+});
+
+const roomSchema = new mongoose.Schema({
+  slug: {
+    type: String,
+    required: true,
+    unique: true,
+    lowercase: true,
+    trim: true,
+    minlength: 4,
+    maxlength: 48,
+    match: /^[a-z0-9-]+$/
+  },
+  accessCodeHash: {
+    type: String,
+    required: true
+  },
+  codeExpiresAt: {
+    type: Date,
+    required: true,
+    index: true
+  },
+  creatorId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    index: true
+  },
+  expiresAt: {
+    type: Date,
+    required: true,
+    index: true
+  },
   createdAt: {
     type: Date,
     default: Date.now
@@ -90,6 +179,7 @@ const messageSchema = new mongoose.Schema({
 
 const User = mongoose.model("User", userSchema);
 const Message = mongoose.model("Message", messageSchema);
+const Room = mongoose.model("Room", roomSchema);
 
 app.use(helmet({
   contentSecurityPolicy: false
@@ -140,6 +230,33 @@ function authRequired(req, res, next) {
 
 function cleanString(value) {
   return typeof value === "string" ? value.trim() : "";
+}
+
+function anonymousIdentity(seed = Date.now()) {
+  const left = ["Velvet", "Cipher", "Ghost", "Nova", "Obsidian", "Echo"];
+  const right = ["Signal", "Drift", "Orbit", "Whisper", "Key", "Pulse"];
+  const hue = 225 + (Number(seed) % 94);
+
+  return {
+    alias: `${left[seed % left.length]} ${right[Math.floor(seed / 3) % right.length]}`,
+    color: `hsl(${hue} 92% 66%)`
+  };
+}
+
+function addSeconds(date, seconds) {
+  return new Date(date.getTime() + seconds * 1000);
+}
+
+function generateAccessCode() {
+  return String(Math.floor(100000 + Math.random() * 900000));
+}
+
+async function verifyRoom(slug, accessCode) {
+  const room = await Room.findOne({ slug: cleanString(slug).toLowerCase(), expiresAt: { $gt: new Date() } });
+  if (!room) return null;
+  if (room.codeExpiresAt <= new Date()) return null;
+  const ok = await bcrypt.compare(cleanString(accessCode).replace(/\D/g, ""), room.accessCodeHash);
+  return ok ? room : null;
 }
 
 app.post("/api/auth/register", async (req, res) => {
@@ -222,6 +339,134 @@ app.put("/api/me", authRequired, async (req, res) => {
   }
 });
 
+app.post("/api/rooms", authRequired, async (req, res) => {
+  try {
+    const slug = cleanString(req.body.slug).toLowerCase();
+    const ttlMinutes = Math.min(Math.max(Number(req.body.ttlMinutes) || 1440, 60), 10080);
+    const accessCode = generateAccessCode();
+
+    if (!/^[a-z0-9-]{4,48}$/.test(slug)) {
+      return res.status(400).json({ error: "Room slug must be 4-48 lowercase letters, numbers, or dashes." });
+    }
+
+    const accessCodeHash = await bcrypt.hash(accessCode, 12);
+    const room = await Room.create({
+      slug,
+      accessCodeHash,
+      codeExpiresAt: addSeconds(new Date(), ROOM_ACCESS_CODE_TTL_SECONDS),
+      creatorId: req.user.userId,
+      expiresAt: addSeconds(new Date(), ttlMinutes * 60)
+    });
+
+    return res.status(201).json({
+      room: {
+        slug: room.slug,
+        accessCode,
+        codeExpiresAt: room.codeExpiresAt,
+        expiresAt: room.expiresAt,
+        createdAt: room.createdAt
+      }
+    });
+  } catch (error) {
+    if (error.code === 11000) {
+      return res.status(409).json({ error: "That secret room already exists." });
+    }
+    return res.status(500).json({ error: "Could not create the secret room." });
+  }
+});
+
+app.post("/api/rooms/:slug/verify", async (req, res) => {
+  const room = await verifyRoom(req.params.slug, req.body.accessCode);
+  if (!room) {
+    return res.status(401).json({ error: "Room access code is invalid or expired." });
+  }
+  return res.json({ ok: true, room: { slug: room.slug, codeExpiresAt: room.codeExpiresAt, expiresAt: room.expiresAt } });
+});
+
+app.post("/api/rooms/:slug/access-code", authRequired, async (req, res) => {
+  const room = await Room.findOne({
+    slug: cleanString(req.params.slug).toLowerCase(),
+    creatorId: req.user.userId,
+    expiresAt: { $gt: new Date() }
+  });
+
+  if (!room) {
+    return res.status(404).json({ error: "Room not found." });
+  }
+
+  const accessCode = generateAccessCode();
+  room.accessCodeHash = await bcrypt.hash(accessCode, 12);
+  room.codeExpiresAt = addSeconds(new Date(), ROOM_ACCESS_CODE_TTL_SECONDS);
+  await room.save();
+
+  return res.json({ accessCode, codeExpiresAt: room.codeExpiresAt });
+});
+
+app.post("/api/rooms/:slug/messages", async (req, res) => {
+  try {
+    const room = await verifyRoom(req.params.slug, req.body.accessCode);
+    if (!room) {
+      return res.status(401).json({ error: "Room access code is invalid or expired." });
+    }
+
+    const content = cleanString(req.body.content);
+    const identity = anonymousIdentity(Date.now());
+
+    if (!content || content.length > 800) {
+      return res.status(400).json({ error: "Write a message between 1 and 800 characters." });
+    }
+
+    const message = await Message.create({
+      roomId: room._id,
+      senderAlias: cleanString(req.body.senderAlias) || identity.alias,
+      senderColor: cleanString(req.body.senderColor) || identity.color,
+      content,
+      timerSeconds: SECRET_MESSAGE_TTL_SECONDS,
+      burnAfterRead: false,
+      deliveryStatus: "delivered",
+      expiresAt: addSeconds(new Date(), SECRET_MESSAGE_TTL_SECONDS)
+    });
+
+    return res.status(201).json({ message });
+  } catch (error) {
+    return res.status(500).json({ error: "Could not send the secret message." });
+  }
+});
+
+app.get("/api/rooms/:slug/messages", async (req, res) => {
+  const room = await verifyRoom(req.params.slug, req.query.accessCode);
+  if (!room) {
+    return res.status(401).json({ error: "Room access code is invalid or expired." });
+  }
+
+  const messages = await Message.find({
+    roomId: room._id,
+    burnedAt: { $exists: false },
+    expiresAt: { $gt: new Date() }
+  }).sort({ createdAt: 1 });
+
+  return res.json({ messages, room: { slug: room.slug, codeExpiresAt: room.codeExpiresAt, expiresAt: room.expiresAt } });
+});
+
+app.post("/api/rooms/:slug/messages/:id/read", async (req, res) => {
+  const room = await verifyRoom(req.params.slug, req.body.accessCode);
+  if (!room) {
+    return res.status(401).json({ error: "Room access code is invalid or expired." });
+  }
+
+  const message = await Message.findOne({ _id: req.params.id, roomId: room._id });
+  if (!message) {
+    return res.status(404).json({ error: "Message not found." });
+  }
+
+  message.isRead = true;
+  message.readAt = new Date();
+  message.deliveryStatus = "read";
+  await message.save();
+
+  return res.json({ message });
+});
+
 app.get("/api/user/:username", async (req, res) => {
   const username = cleanString(req.params.username).toLowerCase();
   const user = await User.findOne({ username }).select("-password -email");
@@ -260,7 +505,13 @@ app.post("/api/messages/:username", messageLimiter, async (req, res) => {
       return res.status(404).json({ error: "هذا الحساب غير موجود." });
     }
 
-    await Message.create({ recipientId: user._id, content });
+    await Message.create({
+      recipientId: user._id,
+      content,
+      timerSeconds: SECRET_MESSAGE_TTL_SECONDS,
+      expiresAt: addSeconds(new Date(), SECRET_MESSAGE_TTL_SECONDS),
+      deliveryStatus: "delivered"
+    });
 
     return res.status(201).json({ ok: true });
   } catch (error) {
@@ -320,5 +571,5 @@ app.get("*", (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`Veil is running on http://localhost:${PORT}`);
+  debug.info(`Veil is running on http://localhost:${PORT}`);
 });
