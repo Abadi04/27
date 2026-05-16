@@ -253,6 +253,10 @@ function isLiveMode() {
   return Boolean(db && currentProfile);
 }
 
+function isUuid(value = "") {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+}
+
 function escapeHtml(value = "") {
   return String(value).replace(/[&<>"']/g, (char) => ({
     "&": "&amp;",
@@ -316,6 +320,8 @@ function updateProfileCodeUI() {
   card.hidden = !hasCode;
   $("profileCodeLabel").textContent = i18n[currentLang].profileCodeLabel;
   $("copyCodeBtn").textContent = i18n[currentLang].copyMyCode;
+  $("profileQrBtn").setAttribute("aria-label", i18n[currentLang].shareQr);
+  $("profileQrBtn").title = i18n[currentLang].shareQr;
   if (hasCode) $("profileCodeValue").textContent = currentProfile.public_code;
 }
 
@@ -654,8 +660,9 @@ async function loadConversation(conversationId) {
 async function sendMessage(conversationId, content, options = {}) {
   if (!content.trim()) return;
   const ttlMs = options.burnAfterRead ? BURN_TTL_SECONDS * 1000 : FIVE_HOURS;
+  const chat = getChat(conversationId);
 
-  if (!isLiveMode()) {
+  if (!isLiveMode() || chat?.placeholder || !isUuid(conversationId)) {
     appendDemoMessage(conversationId, {
       type: "outgoing",
       text: content,
@@ -1008,7 +1015,6 @@ async function expireMessage(messageId, options = {}) {
 }
 
 function attachSwipeToMessages() {
-  if (!("ontouchstart" in window)) return;
   document.querySelectorAll(".message-shell").forEach((shell) => {
     if (shell.dataset.swipeReady) return;
     shell.dataset.swipeReady = "true";
@@ -1311,6 +1317,20 @@ async function openQrModal() {
   }
 }
 
+async function openRouteFromHash() {
+  const route = window.location.hash.replace("#", "");
+  if (route.startsWith("chat/")) {
+    const chatId = decodeURIComponent(route.slice(5));
+    if (!getChat(chatId) && demoChats.some((chat) => chat.id === chatId)) {
+      chats.unshift(demoChats.find((chat) => chat.id === chatId));
+      renderChats();
+    }
+    await openChat(chatId);
+    return;
+  }
+  if (route === "settings") openSettings();
+}
+
 function closeQrModal() {
   qrModalOpen = false;
   $("qrModal").hidden = true;
@@ -1411,9 +1431,7 @@ async function boot() {
     await loadConversations();
     setLanguage(currentLang);
 
-    const route = window.location.hash.replace("#", "");
-    if (route.startsWith("chat/")) await openChat(decodeURIComponent(route.slice(5)));
-    if (route === "settings") openSettings();
+    await openRouteFromHash();
     startMessageTicker();
   } catch (error) {
     handleAsyncError(error, i18n[currentLang].errorChats);
@@ -1431,6 +1449,7 @@ $("settingsToggle").addEventListener("click", openSettings);
 $("backFromSettings").addEventListener("click", closeSettings);
 $("saveSettingsBtn").addEventListener("click", saveSettings);
 $("copyCodeBtn").addEventListener("click", copyProfileCode);
+$("profileQrBtn").addEventListener("click", openQrModal);
 $("panicModeBtn").addEventListener("click", () => setPanicMode(true));
 $("shareQrBtn").addEventListener("click", openQrModal);
 $("closeQrModal").addEventListener("click", closeQrModal);
