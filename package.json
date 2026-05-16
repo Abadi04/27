@@ -2,6 +2,7 @@
   "name": "27",
   "version": "1.0.0",
   "description": "27 ephemeral private chat app.",
+  "homepage": "https://abadi04.github.io/27/",
   "main": "server.js",
   "scripts": {
     "dev": "next dev",
