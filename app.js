@@ -1,706 +1,1090 @@
-const state = {
-  token: localStorage.getItem("veil_token") || localStorage.getItem("wishlistic_token") || "",
-  user: JSON.parse(localStorage.getItem("veil_user") || localStorage.getItem("wishlistic_user") || "null"),
-  lang: localStorage.getItem("veil_lang") || "ar",
-  theme: localStorage.getItem("veil_theme") || "dark"
-};
+/*
+  27 Supabase integration
 
-const copy = {
+  ضع مفاتيح Supabase هنا:
+  - SUPABASE_URL
+  - SUPABASE_ANON_KEY
+
+  الدوال الرئيسية:
+  - getOrCreateProfile(): ينشئ/يجلب ملف المستخدم وكوده public_code.
+  - startConversationWithCode(code): يبحث عن مستخدم بالكود ويفتح/ينشئ محادثة.
+  - loadConversation(conversationId): يجلب الرسائل ويفعل Realtime.
+  - sendMessage(conversationId, content): يرسل رسالة تنتهي بعد 5 ساعات.
+
+  مهم: فعّل Anonymous Sign-ins في Supabase Auth حتى يبقى التطبيق بدون تسجيل ظاهر للمستخدم.
+*/
+
+const SUPABASE_URL = "https://rndwafkuqavqabpywosa.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJuZHdhZmt1cWF2cWFicHl3b3NhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg4NzkxOTEsImV4cCI6MjA5NDQ1NTE5MX0.tIrLqYHsK-qpvzlZBdPRRFNZZKhX445tE7xxsjZeceM";
+const FIVE_HOURS = 5 * 60 * 60 * 1000;
+const PROFILE_STORAGE_KEY = "twentyseven_profile";
+
+const supabaseReady =
+  typeof window.supabase !== "undefined" &&
+  SUPABASE_URL.startsWith("https://") &&
+  !SUPABASE_URL.includes("PASTE_") &&
+  !SUPABASE_ANON_KEY.includes("PASTE_");
+
+const db = supabaseReady
+  ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+  : null;
+
+const i18n = {
   ar: {
-    login: "دخول",
-    logout: "خروج",
-    dashboard: "لوحتي",
-    home: "الرئيسية",
-    start: "ابدأ الآن",
-    profile: "رابطي",
+    headerStatus: "مشفّر · بدون تسجيل",
+    headerStatusLive: "متصل · Supabase Realtime",
+    langToggle: "العربية / English",
+    heroTagline: "خاص. سريع. يختفي.",
+    heroLine1: "محادثات سريعة، خصوصية عالية، وحذف تلقائي بعد ٥ ساعات.",
+    heroLine2: "تواصل بدون تسجيل، بدون بريد إلكتروني، وبدون رقم جوال.",
+    inputPlaceholder: "أدخل رقم المستخدم المراد التواصل معه",
+    startBtn: "بدء المحادثة",
+    profileCodeLabel: "رقمك",
+    copyMyCode: "انسخ رقمي",
+    copied: "تم النسخ",
+    chatsHeader: "المحادثات النشطة",
+    emptyText: "لا توجد محادثات حالية. ابدأ محادثة جديدة بإدخال رقم مستخدم.",
+    footerText: "جميع المحادثات تُحذف تلقائيًا بعد ٥ ساعات من آخر رسالة.",
+    footerTextWithCode: "رقمك: {code} · جميع المحادثات تُحذف تلقائيًا بعد ٥ ساعات.",
+    back: "رجوع",
     settings: "الإعدادات",
-    heroBadge: "مصمم لمتصفح الجوال",
-    heroTitle: "Veil",
-    heroSub: "تلق رسائل مجهولة صادقة، أجب عليها علنا، وشارك رابطك في أي تطبيق اجتماعي خلال ثوان.",
-    searchPlaceholder: "ابحث عن @username",
-    search: "بحث",
-    createLink: "أنشئ رابطك",
-    previewTitle: "صندوق وارد مجهول",
-    previewUser: "@veil",
-    previewOne: "أنت شخص مريح بالكلام، كيف تحافظ على هدوئك؟",
-    previewReply: "أحاول أسمع أكثر مما أتكلم، والباقي يتعلم مع الوقت.",
-    previewTwo: "فيه شيء كنت أود أقوله لك من زمان.",
-    featureOneTitle: "رابط واحد",
-    featureOneText: "انسخه وضعه في البايو أو الستوري واستقبل الرسائل بدون كشف الهوية.",
-    featureTwoTitle: "ردود عامة",
-    featureTwoText: "اختر الرسائل التي تستحق الرد، وانشر السؤال مع إجابتك في ملفك.",
-    featureThreeTitle: "تجربة جوال",
-    featureThreeText: "أزرار كبيرة، حقول واضحة، وتصفح سريع من أسفل الشاشة.",
-    register: "تسجيل",
-    username: "اسم المستخدم",
-    email: "البريد الإلكتروني",
-    password: "كلمة المرور",
-    identifier: "البريد أو اسم المستخدم",
-    show: "إظهار",
-    hide: "إخفاء",
-    askPlaceholder: "اكتب رسالتك المجهولة هنا...",
+    settingsSubtitle: "تحكم بتجربة 27 بدون حساب.",
+    displayNameLabel: "اسم العرض",
+    displayNameHint: "يُستخدم لتوليد الأفاتار فقط.",
+    privacyLabel: "حذف تلقائي",
+    privacyHint: "كل محادثة تُزال بعد 5 ساعات من آخر رسالة.",
+    saveSettings: "حفظ",
+    settingsSaved: "تم حفظ الإعدادات.",
+    chatExpiry: "تنتهي بعد ٥ ساعات من آخر رسالة",
+    messagePlaceholder: "اكتب رسالة مؤقتة...",
     send: "إرسال",
-    sent: "تم إرسال الرسالة بسرية.",
-    limit: "حرف",
-    answers: "إجابات عامة",
-    noAnswers: "لا توجد إجابات بعد.",
-    greeting: "أهلا",
-    statsTotal: "الكل",
-    statsUnread: "جديدة",
-    statsReplied: "مجابة",
-    reply: "رد",
-    sendReply: "نشر الرد",
-    delete: "حذف",
-    empty: "صندوقك هادئ الآن",
-    emptySub: "شارك رابطك لتبدأ الرسائل بالوصول.",
-    bio: "النبذة",
-    avatar: "رابط الصورة",
-    save: "حفظ",
-    profileLink: "رابط ملفك",
-    copyLink: "نسخ",
-    copied: "تم نسخ الرابط.",
-    saved: "تم الحفظ.",
-    needLogin: "سجل الدخول أولا.",
-    notFound: "لم نجد هذه الصفحة.",
-    userNotFound: "لم نصل لهذا المستخدم بعد."
+    attach: "إرسال صورة أو فيديو",
+    systemNote: "هذه المحادثة مؤقتة ولا تحتاج تسجيل دخول.",
+    loadingChats: "جارٍ تحميل المحادثات...",
+    loadingConversation: "جارٍ تحميل المحادثة...",
+    searchingCode: "جارٍ البحث...",
+    sendingMessage: "جارٍ الإرسال...",
+    errorChats: "تعذر تحميل المحادثات. حاول مرة أخرى.",
+    invalidCode: "أدخل كودًا رقميًا صحيحًا.",
+    codeNotFound: "الرقم غير موجود.",
+    cannotChatSelf: "لا يمكنك بدء محادثة مع رقمك.",
+    starting: "تم فتح المحادثة.",
+    expired: "انتهت مدة هذه المحادثة، وتم حذف جميع الرسائل المرتبطة بها نهائيًا.",
+    emptyChat: "لا توجد رسائل بعد. اكتب أول رسالة مؤقتة.",
+    expiresIn: "ينتهي بعد {time}",
+    lessThanMinute: "أقل من دقيقة",
+    hoursUnit: "{count} ساعة",
+    minutesUnit: "{count} دقيقة",
+    realtimeConnecting: "جارٍ تفعيل الاتصال المباشر...",
+    realtimeConnected: "الاتصال المباشر فعّال",
+    mediaStorage: "رفع الوسائط يحتاج Storage لاحقًا. أُرسلت الرسالة النصية فقط.",
+    now: "الآن",
+    userPrefix: "مستخدم",
+    demoMode: "وضع تجريبي: أضف مفاتيح Supabase ليصبح حقيقيًا."
   },
   en: {
-    login: "Login",
-    logout: "Logout",
-    dashboard: "Inbox",
-    home: "Home",
-    start: "Start",
-    profile: "My link",
+    headerStatus: "Encrypted · No login",
+    headerStatusLive: "Connected · Supabase Realtime",
+    langToggle: "English / العربية",
+    heroTagline: "خاص. سريع. يختفي.",
+    heroLine1: "Fast chats, maximum privacy, auto-deleted after 5 hours.",
+    heroLine2: "No sign-up, no email, no phone number.",
+    inputPlaceholder: "Enter the user's code to start a chat",
+    startBtn: "Start chat",
+    profileCodeLabel: "Your code",
+    copyMyCode: "Copy my code",
+    copied: "Copied",
+    chatsHeader: "Active chats",
+    emptyText: "No active chats. Start a new one by entering a user code.",
+    footerText: "All conversations are automatically deleted 5 hours after the last message.",
+    footerTextWithCode: "Your code: {code} · All conversations auto-delete after 5 hours.",
+    back: "Back",
     settings: "Settings",
-    heroBadge: "Built for mobile browsers",
-    heroTitle: "Veil",
-    heroSub: "Receive honest anonymous messages, reply publicly, and share your link anywhere in seconds.",
-    searchPlaceholder: "Search @username",
-    search: "Search",
-    createLink: "Create my link",
-    previewTitle: "Anonymous inbox",
-    previewUser: "@veil",
-    previewOne: "You are easy to talk to. How do you stay this calm?",
-    previewReply: "I try to listen more than I speak, then learn the rest slowly.",
-    previewTwo: "There is something I have wanted to say for a while.",
-    featureOneTitle: "One link",
-    featureOneText: "Add it to a bio or story and receive messages without revealing senders.",
-    featureTwoTitle: "Public replies",
-    featureTwoText: "Choose the messages worth answering and publish the question with your reply.",
-    featureThreeTitle: "Mobile first",
-    featureThreeText: "Large controls, clear fields, and quick navigation from the bottom bar.",
-    register: "Register",
-    username: "Username",
-    email: "Email",
-    password: "Password",
-    identifier: "Email or username",
-    show: "Show",
-    hide: "Hide",
-    askPlaceholder: "Write your anonymous message here...",
+    settingsSubtitle: "Control 27 without creating an account.",
+    displayNameLabel: "Display name",
+    displayNameHint: "Used only to generate your avatar.",
+    privacyLabel: "Auto-delete",
+    privacyHint: "Each chat is removed 5 hours after the last message.",
+    saveSettings: "Save",
+    settingsSaved: "Settings saved.",
+    chatExpiry: "Expires 5 hours after the last message",
+    messagePlaceholder: "Write an ephemeral message...",
     send: "Send",
-    sent: "Message sent anonymously.",
-    limit: "chars",
-    answers: "Public answers",
-    noAnswers: "No answers yet.",
-    greeting: "Hi",
-    statsTotal: "Total",
-    statsUnread: "New",
-    statsReplied: "Replied",
-    reply: "Reply",
-    sendReply: "Publish reply",
-    delete: "Delete",
-    empty: "Your inbox is quiet",
-    emptySub: "Share your link to start receiving messages.",
-    bio: "Bio",
-    avatar: "Avatar URL",
-    save: "Save",
-    profileLink: "Profile link",
-    copyLink: "Copy",
-    copied: "Link copied.",
-    saved: "Saved.",
-    needLogin: "Please log in first.",
-    notFound: "We could not find that page.",
-    userNotFound: "We have not found that user yet."
+    attach: "Send photo or video",
+    systemNote: "This chat is temporary and requires no login.",
+    loadingChats: "Loading active chats...",
+    loadingConversation: "Loading conversation...",
+    searchingCode: "Searching...",
+    sendingMessage: "Sending...",
+    errorChats: "Could not load chats. Try again.",
+    invalidCode: "Enter a valid numeric code.",
+    codeNotFound: "Code not found.",
+    cannotChatSelf: "You cannot start a chat with your own code.",
+    starting: "Chat opened.",
+    expired: "This chat expired, and all linked messages were permanently deleted.",
+    emptyChat: "No messages yet. Write the first ephemeral message.",
+    expiresIn: "Expires in {time}",
+    lessThanMinute: "less than a minute",
+    hoursUnit: "{count}h",
+    minutesUnit: "{count}m",
+    realtimeConnecting: "Connecting realtime...",
+    realtimeConnected: "Realtime connected",
+    mediaStorage: "Media upload needs Storage later. Text sent only.",
+    now: "Now",
+    userPrefix: "User",
+    demoMode: "Demo mode: add Supabase keys to make it real."
   }
 };
 
-const app = document.getElementById("app");
-const mobileNav = document.getElementById("mobileNav");
-const t = (key) => copy[state.lang][key] || key;
+const demoChats = [
+  createDemoChat("sara", "سارة", "Sara", true, [
+    { type: "incoming", text: "جاهز؟ الرسالة تختفي بعد خمس ساعات.", time: "قبل 2 د" },
+    { type: "outgoing", text: "تمام، هذا بالضبط اللي أحتاجه.", time: "الآن" }
+  ], [
+    { type: "incoming", text: "Ready? This message disappears after five hours.", time: "2m ago" },
+    { type: "outgoing", text: "Perfect, that is exactly what I need.", time: "Now" }
+  ]),
+  createDemoChat("khaled", "خالد", "Khaled", true, [
+    { type: "incoming", text: "أرسل الرقم فقط وندخل مباشرة.", time: "قبل 8 د" }
+  ], [
+    { type: "incoming", text: "Send the code only and we jump straight in.", time: "8m ago" }
+  ]),
+  createDemoChat("noura", "نورة", "Noura", false, [
+    { type: "incoming", text: "بدون تسجيل؟ ممتاز.", time: "قبل 45 د" }
+  ], [
+    { type: "incoming", text: "No login? Nice.", time: "45m ago" }
+  ])
+];
 
-const icons = {
-  home: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 10.5 9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/></svg>',
-  inbox: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11Z"/></svg>',
-  user: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21a8 8 0 0 0-16 0"/><circle cx="12" cy="7" r="4"/></svg>',
-  send: '<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>',
-  copy: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>',
-  link: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>',
-  message: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a4 4 0 0 1-4 4H7l-4 4V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4Z"/></svg>',
-  phone: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="14" height="20" x="5" y="2" rx="2"/><path d="M12 18h.01"/></svg>'
-};
+let currentLang = "ar";
+let displayName = "زائر 27";
+let currentProfile = null;
+let chats = [];
+let activeConversationId = "";
+let activeSubscription = null;
+let countdownTimer = null;
 
-function applyPreferences() {
-  document.documentElement.dataset.theme = state.theme;
-  document.body.dir = state.lang === "ar" ? "rtl" : "ltr";
-  document.documentElement.dir = state.lang === "ar" ? "rtl" : "ltr";
-  document.documentElement.lang = state.lang;
+const $ = (id) => document.getElementById(id);
 
-  const authLink = document.querySelector("[data-auth-link]");
-  authLink.textContent = state.user ? t("dashboard") : t("login");
-  authLink.href = state.user ? "/dashboard" : "/auth";
-  document.getElementById("languageToggle").textContent = state.lang === "ar" ? "EN" : "ع";
-  renderMobileNav();
+function createDemoChat(id, arName, enName, online, arMessages, enMessages) {
+  const lastMessageAt = Date.now() - Math.floor(Math.random() * 25 + 1) * 60 * 1000;
+  return {
+    id,
+    online,
+    names: { ar: arName, en: enName },
+    otherProfile: { id, display_name: arName, public_code: id, avatar_seed: arName },
+    lastMessageAt,
+    expiresAt: lastMessageAt + FIVE_HOURS,
+    messages: { ar: arMessages, en: enMessages }
+  };
 }
 
-function renderMobileNav() {
-  const current = location.pathname;
-  const profileHref = state.user ? `/u/${state.user.username}` : "/auth";
-  const items = [
-    { href: "/", label: t("home"), icon: icons.home, active: current === "/" },
-    { href: state.user ? "/dashboard" : "/auth", label: state.user ? t("dashboard") : t("login"), icon: icons.inbox, active: current === "/dashboard" || current === "/auth" },
-    { href: profileHref, label: t("profile"), icon: icons.user, active: current.startsWith("/u/") || current === "/settings" }
-  ];
-
-  mobileNav.innerHTML = items.map((item) => `
-    <a href="${item.href}" data-link class="${item.active ? "active" : ""}" aria-label="${escapeAttr(item.label)}">
-      ${item.icon}
-    </a>
-  `).join("");
-}
-
-async function api(path, options = {}) {
-  const headers = { "Content-Type": "application/json", ...(options.headers || {}) };
-  if (state.token) headers.Authorization = `Bearer ${state.token}`;
-
-  const response = await fetch(path, { ...options, headers });
-  const data = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(data.error || "Request failed");
-  return data;
-}
-
-function setSession(token, user) {
-  state.token = token;
-  state.user = user;
-  localStorage.setItem("veil_token", token);
-  localStorage.setItem("veil_user", JSON.stringify(user));
-  applyPreferences();
-}
-
-function clearSession() {
-  state.token = "";
-  state.user = null;
-  localStorage.removeItem("veil_token");
-  localStorage.removeItem("veil_user");
-  localStorage.removeItem("wishlistic_token");
-  localStorage.removeItem("wishlistic_user");
-  applyPreferences();
-  navigate("/");
-}
-
-function navigate(path) {
-  history.pushState({}, "", path);
-  render();
-}
-
-function toast(message, type = "success") {
-  const node = document.createElement("div");
-  node.className = `toast ${type}`;
-  node.textContent = message;
-  document.getElementById("toastHost").appendChild(node);
-  setTimeout(() => node.remove(), 3000);
-}
-
-function escapeAttr(value = "") {
-  return String(value).replaceAll("&", "&amp;").replaceAll('"', "&quot;").replaceAll("<", "&lt;");
+function isLiveMode() {
+  return Boolean(db && currentProfile);
 }
 
 function escapeHtml(value = "") {
-  return String(value)
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
+  return String(value).replace(/[&<>"']/g, (char) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#039;"
+  }[char]));
 }
 
-function avatar(user, size = "avatar") {
-  if (user?.avatarUrl) {
-    return `<span class="${size}"><img src="${escapeAttr(user.avatarUrl)}" alt="${escapeAttr(user.username)}"></span>`;
+function getInitials(name = "") {
+  const clean = name.replace(/[^\p{L}\p{N}\s#]/gu, "").trim();
+  if (!clean) return "27";
+  const parts = clean.split(/\s+/).filter(Boolean);
+  if (parts.length === 1) return parts[0].replace("#", "").slice(0, 2).toUpperCase();
+  return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+}
+
+function hashHue(value = "") {
+  let hash = 0;
+  for (let index = 0; index < value.length; index += 1) {
+    hash = (hash * 31 + value.charCodeAt(index)) % 360;
   }
-  return `<span class="${size}">${(user?.username || "V").slice(0, 1).toUpperCase()}</span>`;
+  return hash;
 }
 
-function formatDate(value) {
-  return new Intl.DateTimeFormat(state.lang === "ar" ? "ar-SA" : "en", {
-    dateStyle: "medium",
-    timeStyle: "short"
+function randomPublicCode() {
+  return String(Math.floor(Math.random() * 900000) + 100000);
+}
+
+function handleAsyncError(error, fallbackMessage) {
+  console.warn(error);
+  flashError(fallbackMessage || i18n[currentLang].errorChats);
+}
+
+function setLoading(message, visible = true) {
+  const loading = $("loadingState");
+  loading.textContent = message || i18n[currentLang].loadingChats;
+  loading.hidden = !visible;
+}
+
+function setButtonBusy(button, busy, label) {
+  if (!button) return;
+  if (busy) {
+    button.dataset.idleText = button.textContent;
+    button.textContent = label || button.textContent;
+    button.disabled = true;
+    return;
+  }
+
+  button.disabled = false;
+  if (button.dataset.idleText) button.textContent = button.dataset.idleText;
+  delete button.dataset.idleText;
+}
+
+function updateProfileCodeUI() {
+  const card = $("profileCodeCard");
+  if (!card) return;
+
+  const hasCode = Boolean(currentProfile?.public_code);
+  card.hidden = !hasCode;
+  $("profileCodeLabel").textContent = i18n[currentLang].profileCodeLabel;
+  $("copyCodeBtn").textContent = i18n[currentLang].copyMyCode;
+  if (hasCode) $("profileCodeValue").textContent = currentProfile.public_code;
+}
+
+async function copyProfileCode() {
+  if (!currentProfile?.public_code) return;
+  const code = currentProfile.public_code;
+
+  try {
+    let copied = false;
+    if (navigator.clipboard?.writeText) {
+      try {
+        await navigator.clipboard.writeText(code);
+        copied = true;
+      } catch {
+        copied = false;
+      }
+    }
+
+    if (!copied) {
+      const temp = document.createElement("textarea");
+      temp.value = code;
+      temp.setAttribute("readonly", "");
+      temp.style.position = "fixed";
+      temp.style.opacity = "0";
+      document.body.appendChild(temp);
+      temp.select();
+      copied = document.execCommand("copy");
+      temp.remove();
+    }
+
+    showToast(copied ? i18n[currentLang].copied : code);
+  } catch (error) {
+    handleAsyncError(error, i18n[currentLang].errorChats);
+  }
+}
+
+async function getOrCreateProfile() {
+  if (!db) return null;
+
+  async function getCurrentAuthUser() {
+    const { data: userData, error: userError } = await db.auth.getUser();
+    if (userError) throw userError;
+    if (!userData?.user) throw new Error("Anonymous auth user was not established.");
+    return userData.user;
+  }
+
+  async function insertProfileForUser(authUser) {
+    for (let attempt = 0; attempt < 8; attempt += 1) {
+      const publicCode = randomPublicCode();
+      const profile = {
+        id: authUser.id,
+        public_code: publicCode,
+        display_name: displayName,
+        avatar_seed: displayName || publicCode
+      };
+
+      const { data, error } = await db.from("profiles").insert(profile).select("*").single();
+      if (!error) return data;
+      if (error.code !== "23505") throw error;
+    }
+
+    throw new Error("Could not generate a unique public_code.");
+  }
+
+  let { data: sessionData } = await db.auth.getSession();
+  let user = sessionData?.session?.user;
+
+  if (!user) {
+    const { data, error } = await db.auth.signInAnonymously();
+    if (error) throw error;
+    if (data.session?.access_token && data.session?.refresh_token) {
+      await db.auth.setSession({
+        access_token: data.session.access_token,
+        refresh_token: data.session.refresh_token
+      });
+    }
+  }
+
+  user = await getCurrentAuthUser();
+
+  const stored = JSON.parse(localStorage.getItem(PROFILE_STORAGE_KEY) || "null");
+  if (stored?.id && stored.id !== user.id) {
+    localStorage.removeItem(PROFILE_STORAGE_KEY);
+  } else if (stored?.id && stored?.public_code) {
+    const { data } = await db.from("profiles").select("*").eq("id", user.id).maybeSingle();
+    if (data) return data;
+  }
+
+  const { data: existing } = await db.from("profiles").select("*").eq("id", user.id).maybeSingle();
+  if (existing) {
+    localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(existing));
+    return existing;
+  }
+
+  try {
+    const created = await insertProfileForUser(user);
+    localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(created));
+    return created;
+  } catch (error) {
+    const message = `${error?.message || ""} ${error?.details || ""}`;
+    const isRlsError = error?.code === "42501" || message.toLowerCase().includes("row-level security");
+
+    if (!isRlsError) throw error;
+
+    console.warn("profiles insert failed with row-level security", error);
+    localStorage.removeItem(PROFILE_STORAGE_KEY);
+    user = await getCurrentAuthUser();
+
+    const created = await insertProfileForUser(user);
+    localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(created));
+    return created;
+  }
+}
+
+async function cleanupExpiredMessages(conversationId = "") {
+  if (!isLiveMode()) return;
+
+  const nowIso = new Date().toISOString();
+  let query = db.from("messages").delete().lt("expires_at", nowIso);
+  if (conversationId) query = query.eq("conversation_id", conversationId);
+
+  const { error } = await query;
+  if (error) throw error;
+}
+
+async function deleteConversationIfExpiredAndEmpty(chat) {
+  if (!isLiveMode() || !chat?.id) return false;
+  if (!chat.lastMessageAt || Date.now() - chat.lastMessageAt < FIVE_HOURS) return false;
+
+  const { count, error } = await db
+    .from("messages")
+    .select("id", { count: "exact", head: true })
+    .eq("conversation_id", chat.id)
+    .gt("expires_at", new Date().toISOString());
+
+  if (error) throw error;
+  if (count && count > 0) return false;
+
+  const { error: deleteError } = await db
+    .from("conversations")
+    .delete()
+    .eq("id", chat.id);
+
+  if (deleteError) throw deleteError;
+  chats = chats.filter((item) => item.id !== chat.id);
+  return true;
+}
+
+async function loadConversations() {
+  setLoading(i18n[currentLang].loadingChats, true);
+  try {
+    if (!isLiveMode()) {
+      chats = demoChats.filter((chat) => chat.expiresAt > Date.now());
+      renderChats();
+      return chats;
+    }
+
+    await cleanupExpiredMessages();
+
+    const { data, error } = await db
+      .from("conversations")
+      .select(`
+        id,
+        user_a_id,
+        user_b_id,
+        created_at,
+        last_message_at,
+        user_a:profiles!conversations_user_a_id_fkey(id, public_code, display_name, avatar_seed),
+        user_b:profiles!conversations_user_b_id_fkey(id, public_code, display_name, avatar_seed)
+      `)
+      .or(`user_a_id.eq.${currentProfile.id},user_b_id.eq.${currentProfile.id}`)
+      .order("last_message_at", { ascending: false, nullsFirst: false });
+
+    if (error) throw error;
+
+    const realChats = (data || []).map((row) => {
+      const otherProfile = row.user_a_id === currentProfile.id ? row.user_b : row.user_a;
+      return {
+        id: row.id,
+        online: true,
+        otherProfile,
+        lastMessageAt: row.last_message_at ? new Date(row.last_message_at).getTime() : 0,
+        messages: { neutral: [] }
+      };
+    });
+
+    chats = realChats.length
+      ? realChats
+      : demoChats.filter((chat) => chat.expiresAt > Date.now()).map((chat) => ({ ...chat, placeholder: true }));
+
+    renderChats();
+    return chats;
+  } finally {
+    setLoading("", false);
+  }
+}
+
+async function startConversationWithCode(code) {
+  if (!/^\d{6}$/.test(code)) {
+    flashError(i18n[currentLang].invalidCode);
+    return null;
+  }
+
+  if (!isLiveMode()) {
+    const chat = createDemoConversationFromCode(code);
+    renderChats();
+    openChat(chat.id);
+    return chat.id;
+  }
+
+  const { data: target, error: targetError } = await db
+    .from("profiles")
+    .select("*")
+    .eq("public_code", code)
+    .maybeSingle();
+
+  if (targetError) throw targetError;
+  if (!target) {
+    flashError(i18n[currentLang].codeNotFound);
+    return null;
+  }
+  if (target.id === currentProfile.id) {
+    flashError(i18n[currentLang].cannotChatSelf);
+    return null;
+  }
+
+  const { data: existing, error: findError } = await db
+    .from("conversations")
+    .select("id")
+    .or(`and(user_a_id.eq.${currentProfile.id},user_b_id.eq.${target.id}),and(user_a_id.eq.${target.id},user_b_id.eq.${currentProfile.id})`)
+    .maybeSingle();
+
+  if (findError) throw findError;
+  if (existing?.id) {
+    await loadConversations();
+    openChat(existing.id);
+    return existing.id;
+  }
+
+  const { data: created, error: createError } = await db
+    .from("conversations")
+    .insert({ user_a_id: currentProfile.id, user_b_id: target.id, last_message_at: new Date().toISOString() })
+    .select("id")
+    .single();
+
+  if (createError) throw createError;
+  await loadConversations();
+  openChat(created.id);
+  return created.id;
+}
+
+async function loadConversation(conversationId) {
+  activeConversationId = conversationId;
+  const chat = getChat(conversationId);
+  setLoading(i18n[currentLang].loadingConversation, true);
+
+  try {
+    if (!isLiveMode() || chat?.placeholder) {
+      renderMessages(chat);
+      startChatCountdown(chat);
+      return;
+    }
+
+    if (activeSubscription) {
+      await db.removeChannel(activeSubscription);
+      activeSubscription = null;
+    }
+
+    await cleanupExpiredMessages(conversationId);
+
+    const { data, error } = await db
+      .from("messages")
+      .select("*")
+      .eq("conversation_id", conversationId)
+      .gt("expires_at", new Date().toISOString())
+      .order("created_at", { ascending: true });
+
+    if (error) throw error;
+
+    chat.messages = { neutral: (data || []).map(mapDbMessage) };
+    const removed = await deleteConversationIfExpiredAndEmpty(chat);
+    if (removed) {
+      renderChats();
+      showToast(i18n[currentLang].expired);
+      showHome();
+      window.location.hash = "";
+      return;
+    }
+
+    renderMessages(chat);
+    startChatCountdown(chat);
+
+    activeSubscription = db
+      .channel(`messages:${conversationId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "messages",
+          filter: `conversation_id=eq.${conversationId}`
+        },
+        (payload) => {
+          const activeChat = getChat(conversationId);
+          if (!activeChat) return;
+          const nextMessage = mapDbMessage(payload.new);
+          const messages = activeChat.messages.neutral || [];
+          if (messages.some((message) => message.id === nextMessage.id)) return;
+          activeChat.messages.neutral = [...messages, nextMessage];
+          activeChat.lastMessageAt = new Date(payload.new.created_at).getTime();
+          activeChat.expiresAt = new Date(payload.new.expires_at).getTime();
+          renderMessages(activeChat);
+          renderChats();
+          updateChatCountdown(activeChat);
+        }
+      )
+      .subscribe((status) => {
+        if (status === "SUBSCRIBED") showToast(i18n[currentLang].realtimeConnected);
+      });
+  } finally {
+    setLoading("", false);
+  }
+}
+
+async function sendMessage(conversationId, content) {
+  if (!content.trim()) return;
+
+  if (!isLiveMode()) {
+    appendDemoMessage(conversationId, { type: "outgoing", text: content, time: i18n[currentLang].now });
+    return;
+  }
+
+  const now = new Date();
+  const expiresAt = new Date(now.getTime() + FIVE_HOURS).toISOString();
+  const { error } = await db.from("messages").insert({
+    conversation_id: conversationId,
+    sender_id: currentProfile.id,
+    content,
+    expires_at: expiresAt
+  });
+
+  if (error) throw error;
+
+  const { error: updateError } = await db
+    .from("conversations")
+    .update({ last_message_at: now.toISOString() })
+    .eq("id", conversationId);
+  if (updateError) throw updateError;
+}
+
+function mapDbMessage(row) {
+  return {
+    id: row.id,
+    type: row.sender_id === currentProfile.id ? "outgoing" : "incoming",
+    text: row.content,
+    time: formatTime(row.created_at),
+    createdAt: row.created_at,
+    expiresAt: row.expires_at
+  };
+}
+
+function formatTime(value) {
+  if (!value) return i18n[currentLang].now;
+  return new Intl.DateTimeFormat(currentLang === "ar" ? "ar-SA" : "en", {
+    hour: "2-digit",
+    minute: "2-digit"
   }).format(new Date(value));
 }
 
-function page(html) {
-  app.innerHTML = html;
-  bindRipples();
-  applyPreferences();
+function formatRemaining(ms) {
+  const t = i18n[currentLang];
+  if (ms <= 60000) return t.lessThanMinute;
+
+  const totalMinutes = Math.ceil(ms / 60000);
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+
+  if (hours > 0 && minutes > 0) {
+    return `${t.hoursUnit.replace("{count}", hours)} ${t.minutesUnit.replace("{count}", minutes)}`;
+  }
+
+  if (hours > 0) return t.hoursUnit.replace("{count}", hours);
+  return t.minutesUnit.replace("{count}", minutes);
 }
 
-function renderLanding() {
-  page(`
-    <section class="hero">
-      <div class="hero-copy animate-in">
-        <span class="badge"><span class="dot"></span>${t("heroBadge")}</span>
-        <h1><span class="gradient-text">${t("heroTitle")}</span></h1>
-        <p class="subtitle">${t("heroSub")}</p>
-        <div class="search-card">
-          <form class="search-form" id="userSearch">
-            <input class="search-input" name="username" autocomplete="off" placeholder="${t("searchPlaceholder")}" />
-            <button class="button button-primary" type="submit">${t("search")}</button>
-          </form>
-        </div>
-        <div class="hero-actions">
-          <a class="button button-primary" href="/auth" data-link>${t("createLink")}</a>
-          <a class="button button-soft" href="#features">${t("settings")}</a>
-        </div>
-      </div>
+function getChatExpiryTime(chat) {
+  if (!chat) return 0;
+  const messages = getMessages(chat);
+  const latestMessageExpiry = messages.reduce((latest, message) => {
+    if (!message.expiresAt) return latest;
+    return Math.max(latest, new Date(message.expiresAt).getTime());
+  }, 0);
 
-      <div class="phone-card animate-in delay-1">
-        <div class="phone-screen">
-          <div class="mini-row">
-            <div class="mini-profile">
-              <span class="avatar">V</span>
-              <div>
-                <strong>${t("previewTitle")}</strong>
-                <div class="tiny">${t("previewUser")}</div>
-              </div>
-            </div>
-            <span class="badge"><span class="dot"></span>live</span>
-          </div>
-          <article class="mock-message">
-            <p>${t("previewOne")}</p>
-            <div class="mock-reply">${t("previewReply")}</div>
-          </article>
-          <article class="mock-message">
-            <p>${t("previewTwo")}</p>
-          </article>
-          <div class="features" id="features">
-            ${feature(icons.link, t("featureOneTitle"), t("featureOneText"))}
-            ${feature(icons.message, t("featureTwoTitle"), t("featureTwoText"))}
-            ${feature(icons.phone, t("featureThreeTitle"), t("featureThreeText"))}
-          </div>
-        </div>
-      </div>
-    </section>
-  `);
-
-  document.getElementById("userSearch").addEventListener("submit", (event) => {
-    event.preventDefault();
-    const username = new FormData(event.currentTarget).get("username").replace(/^@/, "").trim().toLowerCase();
-    if (!username) return;
-    navigate(`/u/${encodeURIComponent(username)}`);
-  });
+  if (latestMessageExpiry) return latestMessageExpiry;
+  if (chat.expiresAt) return chat.expiresAt;
+  if (chat.lastMessageAt) return chat.lastMessageAt + FIVE_HOURS;
+  return Date.now() + FIVE_HOURS;
 }
 
-function feature(icon, title, text) {
-  return `
-    <article class="feature-row">
-      <span class="feature-icon">${icon}</span>
-      <div>
-        <h3>${title}</h3>
-        <p>${text}</p>
-      </div>
-    </article>
-  `;
+function updateChatCountdown(chat) {
+  if ($("chatView").hidden || !chat) return;
+  const remaining = getChatExpiryTime(chat) - Date.now();
+  $("chatViewStatus").textContent = remaining <= 0
+    ? i18n[currentLang].expired
+    : i18n[currentLang].expiresIn.replace("{time}", formatRemaining(remaining));
 }
 
-function renderAuth() {
-  if (state.user) {
-    navigate("/dashboard");
+function startChatCountdown(chat) {
+  window.clearInterval(countdownTimer);
+  updateChatCountdown(chat);
+  countdownTimer = window.setInterval(() => updateChatCountdown(chat), 30000);
+}
+
+function stopChatCountdown() {
+  window.clearInterval(countdownTimer);
+  countdownTimer = null;
+}
+
+function createDemoConversationFromCode(code) {
+  const id = `code-${code}`;
+  const existing = getChat(id);
+  if (existing) return existing;
+
+  const name = currentLang === "ar" ? `${i18n.ar.userPrefix} ${code}` : `${i18n.en.userPrefix} ${code}`;
+  const chat = {
+    id,
+    online: true,
+    name,
+    otherProfile: { id, display_name: name, public_code: code, avatar_seed: name },
+    lastMessageAt: Date.now(),
+    expiresAt: Date.now() + FIVE_HOURS,
+    messages: { neutral: [] }
+  };
+
+  chats.unshift(chat);
+  return chat;
+}
+
+function appendDemoMessage(conversationId, message) {
+  const chat = getChat(conversationId);
+  if (!chat) return;
+  if (!chat.messages.neutral && !chat.messages[currentLang]) {
+    chat.messages.neutral = [];
+  }
+  const targetMessages = chat.messages.neutral || chat.messages[currentLang];
+  targetMessages.push({ ...message, expiresAt: new Date(Date.now() + FIVE_HOURS).toISOString() });
+  chat.lastMessageAt = Date.now();
+  chat.expiresAt = Date.now() + FIVE_HOURS;
+  renderMessages(chat);
+  renderChats();
+  updateChatCountdown(chat);
+}
+
+function getChat(chatId) {
+  return chats.find((chat) => chat.id === chatId);
+}
+
+function getChatName(chat) {
+  if (!chat) return "";
+  return chat.names?.[currentLang] || chat.otherProfile?.display_name || chat.name || chat.id;
+}
+
+function getMessages(chat) {
+  if (!chat) return [];
+  if (chat.messages?.[currentLang]) return chat.messages[currentLang];
+  return chat.messages?.neutral || [];
+}
+
+function renderChats() {
+  const list = $("chatsList");
+  const empty = $("emptyState");
+
+  if (!chats.length) {
+    list.innerHTML = "";
+    empty.hidden = false;
     return;
   }
 
-  page(`
-    <section class="auth-card animate-in">
-      <div class="auth-tabs">
-        <button class="auth-tab active" type="button" data-mode="login">${t("login")}</button>
-        <button class="auth-tab" type="button" data-mode="register">${t("register")}</button>
+  empty.hidden = true;
+  list.innerHTML = chats.map((chat) => {
+    const name = getChatName(chat);
+    const hue = hashHue(chat.otherProfile?.avatar_seed || name);
+    const statusClass = chat.online ? "online" : "offline";
+
+    return `
+      <div class="chat-item" role="button" tabindex="0" data-chat-id="${escapeHtml(chat.id)}" aria-label="${escapeHtml(name)}">
+        <div class="chat-avatar" style="--avatar-hue: ${hue}">${escapeHtml(getInitials(name))}</div>
+        <div class="chat-info">
+          <div class="chat-name">${escapeHtml(name)}</div>
+        </div>
+        <div class="chat-status ${statusClass}" aria-hidden="true"></div>
       </div>
-      <form id="authForm">
-        <div id="registerFields" hidden>
-          <label class="field">${t("username")}<input name="username" autocomplete="username" inputmode="latin" /></label>
-          <label class="field">${t("email")}<input name="email" type="email" autocomplete="email" /></label>
-        </div>
-        <div id="loginFields">
-          <label class="field">${t("identifier")}<input name="identifier" autocomplete="username" /></label>
-        </div>
-        <label class="field">${t("password")}
-          <span class="input-wrap">
-            <input name="password" type="password" autocomplete="current-password" />
-            <button class="password-toggle" type="button">${t("show")}</button>
-          </span>
-        </label>
-        <button class="button button-primary button-full" type="submit">${t("login")}</button>
-      </form>
-    </section>
-  `);
+    `;
+  }).join("");
+}
 
-  let mode = "login";
-  const form = document.getElementById("authForm");
-  const submit = form.querySelector("[type='submit']");
+function renderMessages(chat) {
+  const t = i18n[currentLang];
+  const messages = getMessages(chat);
+  const body = messages.length
+    ? messages.map((message) => `
+      <div class="message ${message.type}">
+        ${renderMessageContent(message)}
+        <span class="message-time">${escapeHtml(message.time || t.now)}</span>
+      </div>
+    `).join("")
+    : `<div class="system-note">${t.emptyChat}</div>`;
 
-  document.querySelectorAll(".auth-tab").forEach((tab) => {
-    tab.addEventListener("click", () => {
-      mode = tab.dataset.mode;
-      document.querySelectorAll(".auth-tab").forEach((item) => item.classList.toggle("active", item === tab));
-      document.getElementById("registerFields").hidden = mode !== "register";
-      document.getElementById("loginFields").hidden = mode !== "login";
-      submit.textContent = t(mode === "login" ? "login" : "register");
-    });
+  const list = $("messagesList");
+  list.innerHTML = `<div class="system-note">${t.systemNote}</div>${body}`;
+  requestAnimationFrame(() => {
+    list.scrollTop = list.scrollHeight;
   });
+}
 
-  document.querySelector(".password-toggle").addEventListener("click", (event) => {
-    const input = form.password;
-    input.type = input.type === "password" ? "text" : "password";
-    event.currentTarget.textContent = input.type === "password" ? t("show") : t("hide");
-  });
+function renderMessageContent(message) {
+  if (message.mediaUrl && message.mediaType?.startsWith("image/")) {
+    const caption = message.text ? `<span class="media-caption">${escapeHtml(message.text)}</span>` : "";
+    return `<img class="message-media" src="${escapeHtml(message.mediaUrl)}" alt="${escapeHtml(message.fileName || "")}" />${caption}`;
+  }
 
-  form.addEventListener("submit", async (event) => {
-    event.preventDefault();
-    const body = Object.fromEntries(new FormData(form).entries());
+  if (message.mediaUrl && message.mediaType?.startsWith("video/")) {
+    const caption = message.text ? `<span class="media-caption">${escapeHtml(message.text)}</span>` : "";
+    return `<video class="message-media" src="${escapeHtml(message.mediaUrl)}" controls playsinline></video>${caption}`;
+  }
 
-    try {
-      const data = await api(mode === "login" ? "/api/auth/login" : "/api/auth/register", {
-        method: "POST",
-        body: JSON.stringify(body)
+  return escapeHtml(message.text || "");
+}
+
+async function openChat(chatId) {
+  const chat = getChat(chatId);
+  const t = i18n[currentLang];
+
+  if (!chat) {
+    showToast(t.expired);
+    showHome();
+    renderChats();
+    window.location.hash = "";
+    return;
+  }
+
+  $("heroSection").hidden = true;
+  document.querySelector(".section-divider").hidden = true;
+  $("chatsSection").hidden = true;
+  $("settingsView").hidden = true;
+  $("chatView").hidden = false;
+  $("chatView").dataset.activeChat = chat.id;
+  $("chatViewName").textContent = getChatName(chat);
+  $("chatViewStatus").textContent = t.loadingConversation;
+  window.location.hash = `#chat/${encodeURIComponent(chat.id)}`;
+
+  try {
+    await loadConversation(chat.id);
+  } catch (error) {
+    handleAsyncError(error, i18n[currentLang].errorChats);
+  }
+}
+
+function showHome() {
+  stopChatCountdown();
+  $("heroSection").hidden = false;
+  document.querySelector(".section-divider").hidden = false;
+  $("chatsSection").hidden = false;
+  $("chatView").hidden = true;
+  $("settingsView").hidden = true;
+}
+
+function closeChat() {
+  if (activeSubscription && db) {
+    db.removeChannel(activeSubscription).catch(() => {});
+    activeSubscription = null;
+  }
+  activeConversationId = "";
+  showHome();
+  window.location.hash = "";
+}
+
+function openSettings() {
+  $("heroSection").hidden = true;
+  document.querySelector(".section-divider").hidden = true;
+  $("chatsSection").hidden = true;
+  $("chatView").hidden = true;
+  $("settingsView").hidden = false;
+  window.location.hash = "#settings";
+}
+
+function closeSettings() {
+  showHome();
+  window.location.hash = "";
+}
+
+function showToast(message) {
+  const toast = $("toast");
+  toast.textContent = message;
+  toast.classList.add("show");
+  window.clearTimeout(showToast.timer);
+  showToast.timer = window.setTimeout(() => toast.classList.remove("show"), 2800);
+}
+
+function flashError(message) {
+  $("errorState").textContent = message;
+  $("errorState").hidden = false;
+  window.clearTimeout(flashError.timer);
+  flashError.timer = window.setTimeout(() => {
+    $("errorState").hidden = true;
+    $("errorState").textContent = i18n[currentLang].errorChats;
+  }, 2400);
+}
+
+function setLanguage(lang) {
+  currentLang = lang;
+  const t = i18n[lang];
+  const root = document.documentElement;
+
+  root.lang = lang;
+  root.dir = lang === "ar" ? "rtl" : "ltr";
+
+  $("headerStatus").textContent = isLiveMode() ? t.headerStatusLive : t.headerStatus;
+  $("langToggle").textContent = t.langToggle;
+  $("settingsToggle").textContent = t.settings;
+  $("heroTagline").textContent = t.heroTagline;
+  $("heroLine1").textContent = t.heroLine1;
+  $("heroLine2").textContent = t.heroLine2;
+  $("codeInput").placeholder = t.inputPlaceholder;
+  $("startBtn").textContent = t.startBtn;
+  $("chatsHeader").textContent = t.chatsHeader;
+  $("emptyText").textContent = t.emptyText;
+  $("footerText").textContent = currentProfile?.public_code
+    ? t.footerTextWithCode.replace("{code}", currentProfile.public_code)
+    : t.footerText;
+  $("backToChats").textContent = t.back;
+  $("backFromSettings").textContent = t.back;
+  $("chatViewStatus").textContent = t.chatExpiry;
+  $("messageInput").placeholder = t.messagePlaceholder;
+  $("sendBtn").textContent = t.send;
+  updateProfileCodeUI();
+  $("attachBtn").title = t.attach;
+  $("attachBtn").setAttribute("aria-label", t.attach);
+  $("loadingState").textContent = t.loadingChats;
+  $("errorState").textContent = t.errorChats;
+  $("settingsTitle").textContent = t.settings;
+  $("settingsSubtitle").textContent = t.settingsSubtitle;
+  $("displayNameLabel").textContent = t.displayNameLabel;
+  $("displayNameHint").textContent = t.displayNameHint;
+  $("privacyLabel").textContent = t.privacyLabel;
+  $("privacyHint").textContent = t.privacyHint;
+  $("saveSettingsBtn").textContent = t.saveSettings;
+
+  if (!$("displayNameInput").dataset.edited) {
+    displayName = lang === "ar" ? "زائر 27" : "Guest 27";
+    $("displayNameInput").value = currentProfile?.display_name || displayName;
+  }
+
+  renderChats();
+  if (!$("chatView").hidden) {
+    const active = $("chatView").dataset.activeChat;
+    const chat = getChat(active);
+    $("chatViewName").textContent = getChatName(chat);
+    updateChatCountdown(chat);
+    renderMessages(chat);
+  }
+}
+
+async function handleStartChat() {
+  const input = $("codeInput");
+  const code = input.value.trim();
+
+  if (!/^\d{6}$/.test(code)) {
+    input.focus();
+    input.style.borderColor = "rgba(244, 63, 94, 0.5)";
+    flashError(i18n[currentLang].invalidCode);
+    window.setTimeout(() => {
+      input.style.borderColor = "";
+    }, 1200);
+    return;
+  }
+
+  try {
+    setButtonBusy($("startBtn"), true, i18n[currentLang].searchingCode);
+    const conversationId = await startConversationWithCode(code);
+    if (conversationId) {
+      input.value = "";
+      showToast(i18n[currentLang].starting);
+    }
+  } catch (error) {
+    handleAsyncError(error, i18n[currentLang].errorChats);
+  } finally {
+    setButtonBusy($("startBtn"), false);
+  }
+}
+
+async function handleSendMessage(event) {
+  event.preventDefault();
+  const input = $("messageInput");
+  const mediaInput = $("mediaInput");
+  const text = input.value.trim();
+  const file = mediaInput.files?.[0];
+  const conversationId = $("chatView").dataset.activeChat;
+
+  if (!text && !file) return;
+
+  try {
+    setButtonBusy($("sendBtn"), true, i18n[currentLang].sendingMessage);
+    if (file && !isLiveMode()) {
+      appendDemoMessage(conversationId, {
+        type: "outgoing",
+        text,
+        time: i18n[currentLang].now,
+        mediaUrl: URL.createObjectURL(file),
+        mediaType: file.type,
+        fileName: file.name
       });
-      setSession(data.token, data.user);
-      navigate("/dashboard");
-    } catch (error) {
-      toast(error.message, "error");
     }
-  });
-}
 
-async function renderProfile(username) {
-  page(`
-    <section class="profile-head animate-in">
-      <span class="avatar-large skeleton"></span>
-      <h1>@${escapeHtml(username)}</h1>
-      <p class="subtitle">${t("answers")}</p>
-    </section>
-    <section class="glass-card composer skeleton"></section>
-  `);
+    if (file && isLiveMode()) {
+      showToast(i18n[currentLang].mediaStorage);
+    }
 
-  try {
-    const data = await api(`/api/user/${username}`);
-    page(`
-      <section class="profile-head animate-in">
-        ${avatar(data.user, "avatar-large")}
-        <h1>@${escapeHtml(data.user.username)}</h1>
-        <p class="subtitle">${escapeHtml(data.user.bio || "")}</p>
-      </section>
-      <section class="glass-card composer animate-in delay-1" id="composerCard">
-        <textarea id="messageContent" maxlength="300" placeholder="${t("askPlaceholder")}"></textarea>
-        <div class="counter-row">
-          <span><strong id="charCount">0</strong>/300 ${t("limit")}</span>
-          <button class="button button-primary" id="sendMessage" type="button">${icons.send}${t("send")}</button>
-        </div>
-      </section>
-      <section class="feed animate-in delay-2">
-        <h2 class="section-title">${t("answers")}</h2>
-        ${data.answered.length ? data.answered.map((message) => `
-          <article class="message-card">
-            <div class="message-head">
-              <span class="anon-avatar">?</span>
-              <span class="message-meta">${formatDate(message.createdAt)}</span>
-            </div>
-            <p>${escapeHtml(message.content)}</p>
-            <span class="reply-label">${t("reply")}</span>
-            <p>${escapeHtml(message.reply)}</p>
-          </article>
-        `).join("") : `<article class="glass-card empty-state">${t("noAnswers")}</article>`}
-      </section>
-    `);
-
-    const textarea = document.getElementById("messageContent");
-    const count = document.getElementById("charCount");
-    textarea.addEventListener("input", () => {
-      count.textContent = textarea.value.length;
-      count.classList.toggle("danger", textarea.value.length > 260);
-    });
-
-    document.getElementById("sendMessage").addEventListener("click", async () => {
-      try {
-        await api(`/api/messages/${data.user.username}`, {
-          method: "POST",
-          body: JSON.stringify({ content: textarea.value })
-        });
-        burstConfetti(document.getElementById("sendMessage"));
-        document.getElementById("composerCard").classList.add("sent-pop");
-        toast(t("sent"));
-        setTimeout(() => renderProfile(data.user.username), 650);
-      } catch (error) {
-        toast(error.message, "error");
-      }
-    });
+    if (text) await sendMessage(conversationId, text);
+    input.value = "";
+    mediaInput.value = "";
   } catch (error) {
-    page(`<section class="glass-card empty-state animate-in"><div class="empty-illustration">?</div><h1>${t("userNotFound")}</h1><p>${escapeHtml(error.message)}</p></section>`);
+    handleAsyncError(error, i18n[currentLang].errorChats);
+  } finally {
+    setButtonBusy($("sendBtn"), false);
   }
 }
 
-async function renderDashboard() {
-  if (!state.user) {
-    toast(t("needLogin"), "error");
-    navigate("/auth");
+async function saveSettings() {
+  displayName = $("displayNameInput").value.trim() || (currentLang === "ar" ? "زائر 27" : "Guest 27");
+  $("displayNameInput").value = displayName;
+
+  try {
+    if (isLiveMode()) {
+      const { data, error } = await db
+        .from("profiles")
+        .update({ display_name: displayName, avatar_seed: displayName })
+        .eq("id", currentProfile.id)
+        .select("*")
+        .single();
+
+      if (error) throw error;
+      if (data) {
+        currentProfile = data;
+        localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(data));
+      }
+    }
+
+    showToast(i18n[currentLang].settingsSaved);
+    renderChats();
+  } catch (error) {
+    handleAsyncError(error, i18n[currentLang].errorChats);
+  }
+}
+
+async function boot() {
+  setLoading(i18n[currentLang].loadingChats, true);
+  chats = demoChats.filter((chat) => chat.expiresAt > Date.now());
+  setLanguage(currentLang);
+
+  if (!db) {
+    setLoading("", false);
+    renderChats();
+    showToast(i18n[currentLang].demoMode);
     return;
   }
 
-  const link = `${location.origin}/u/${state.user.username}`;
-  page(`
-    <section class="dashboard-head animate-in">
-      <h1>${t("greeting")} ${escapeHtml(state.user.username)}</h1>
-      <p>${escapeHtml(link)}</p>
-      <div class="cta-row">
-        <button class="button button-primary" id="copyProfileLink" type="button">${icons.copy}${t("copyLink")}</button>
-        <a class="button button-soft" href="/settings" data-link>${t("settings")}</a>
-        <button class="button button-danger" id="logoutButton" type="button">${t("logout")}</button>
-      </div>
-    </section>
-    <section class="stats-grid">
-      <article class="stat-card skeleton"></article>
-      <article class="stat-card skeleton"></article>
-      <article class="stat-card skeleton"></article>
-    </section>
-  `);
-  bindDashboardHeader(link);
-
   try {
-    const data = await api("/api/messages/inbox");
-    page(`
-      <section class="dashboard-head animate-in">
-        <h1>${t("greeting")} ${escapeHtml(state.user.username)}</h1>
-        <p>${escapeHtml(link)}</p>
-        <div class="cta-row">
-          <button class="button button-primary" id="copyProfileLink" type="button">${icons.copy}${t("copyLink")}</button>
-          <a class="button button-soft" href="/settings" data-link>${t("settings")}</a>
-          <button class="button button-danger" id="logoutButton" type="button">${t("logout")}</button>
-        </div>
-      </section>
-      <section class="stats-grid animate-in delay-1">
-        <article class="stat-card"><span class="stat-number">${data.stats.total}</span><span class="stat-label">${t("statsTotal")}</span></article>
-        <article class="stat-card"><span class="stat-number">${data.stats.unread}</span><span class="stat-label">${t("statsUnread")}</span></article>
-        <article class="stat-card"><span class="stat-number">${data.stats.replied}</span><span class="stat-label">${t("statsReplied")}</span></article>
-      </section>
-      <section class="messages-list animate-in delay-2">
-        ${data.messages.length ? data.messages.map((message) => messageCard(message)).join("") : emptyState()}
-      </section>
-    `);
-    bindDashboardHeader(link);
-    bindMessageActions();
+    currentProfile = await getOrCreateProfile();
+    displayName = currentProfile.display_name || displayName;
+    $("displayNameInput").value = displayName;
+    updateProfileCodeUI();
+    await loadConversations();
+    setLanguage(currentLang);
+
+    const route = window.location.hash.replace("#", "");
+    if (route.startsWith("chat/")) await openChat(decodeURIComponent(route.slice(5)));
+    if (route === "settings") openSettings();
   } catch (error) {
-    toast(error.message, "error");
+    handleAsyncError(error, i18n[currentLang].errorChats);
+    renderChats();
+  } finally {
+    setLoading("", false);
   }
 }
 
-function bindDashboardHeader(link) {
-  document.getElementById("logoutButton")?.addEventListener("click", clearSession);
-  document.getElementById("copyProfileLink")?.addEventListener("click", async () => {
-    await navigator.clipboard.writeText(link);
-    toast(t("copied"));
-  });
-}
+$("langToggle").addEventListener("click", () => {
+  setLanguage(currentLang === "ar" ? "en" : "ar");
+});
 
-function messageCard(message) {
-  return `
-    <article class="message-card ${message.isRead ? "" : "unread"}" data-id="${message._id}">
-      <div class="message-head">
-        <span class="anon-avatar">?</span>
-        <span class="message-meta">${formatDate(message.createdAt)}</span>
-      </div>
-      <p>${escapeHtml(message.content)}</p>
-      ${message.reply ? `<span class="reply-label">${t("reply")}</span><p>${escapeHtml(message.reply)}</p>` : ""}
-      <div class="card-actions">
-        <button class="button button-primary" type="button" data-action="toggle">${t("reply")}</button>
-        <button class="button button-danger" type="button" data-action="delete">${t("delete")}</button>
-      </div>
-      <div class="reply-box">
-        <div class="reply-inner">
-          <textarea maxlength="800">${escapeHtml(message.reply || "")}</textarea>
-          <div class="card-actions">
-            <button class="button button-primary button-full" type="button" data-action="reply">${t("sendReply")}</button>
-          </div>
-        </div>
-      </div>
-    </article>
-  `;
-}
+$("settingsToggle").addEventListener("click", openSettings);
+$("backFromSettings").addEventListener("click", closeSettings);
+$("saveSettingsBtn").addEventListener("click", saveSettings);
+$("copyCodeBtn").addEventListener("click", copyProfileCode);
+$("displayNameInput").addEventListener("input", () => {
+  $("displayNameInput").dataset.edited = "true";
+});
 
-function emptyState() {
-  return `
-    <article class="glass-card empty-state">
-      <div class="empty-illustration">${icons.inbox}</div>
-      <h2>${t("empty")}</h2>
-      <p class="muted">${t("emptySub")}</p>
-    </article>
-  `;
-}
-
-function bindMessageActions() {
-  document.querySelectorAll("[data-action]").forEach((button) => {
-    button.addEventListener("click", async () => {
-      const card = button.closest(".message-card");
-      const id = card.dataset.id;
-      const action = button.dataset.action;
-
-      if (action === "toggle") {
-        card.querySelector(".reply-box").classList.toggle("open");
-        return;
-      }
-
-      try {
-        if (action === "delete") {
-          await api(`/api/messages/${id}`, { method: "DELETE" });
-          card.remove();
-          toast(t("delete"));
-        }
-
-        if (action === "reply") {
-          const reply = card.querySelector("textarea").value;
-          await api(`/api/messages/${id}/reply`, {
-            method: "POST",
-            body: JSON.stringify({ reply })
-          });
-          toast(t("saved"));
-          renderDashboard();
-        }
-      } catch (error) {
-        toast(error.message, "error");
-      }
-    });
-  });
-  bindRipples();
-}
-
-function renderSettings() {
-  if (!state.user) {
-    toast(t("needLogin"), "error");
-    navigate("/auth");
-    return;
-  }
-
-  const link = `${location.origin}/u/${state.user.username}`;
-  page(`
-    <section class="settings-card glass-card animate-in">
-      <div class="profile-head">
-        ${avatar(state.user, "avatar-large")}
-        <h1>${t("settings")}</h1>
-      </div>
-      <form id="settingsForm">
-        <label class="field">${t("bio")}<textarea name="bio" maxlength="180">${escapeHtml(state.user.bio || "")}</textarea></label>
-        <label class="field">${t("avatar")}<input name="avatarUrl" value="${escapeAttr(state.user.avatarUrl || "")}" inputmode="url" /></label>
-        <button class="button button-primary button-full" type="submit">${t("save")}</button>
-      </form>
-      <div class="field" style="margin-top: 20px;">
-        ${t("profileLink")}
-        <div class="profile-link-box">
-          <input id="profileLink" readonly value="${escapeAttr(link)}" />
-          <button class="button button-soft" id="copySettingsLink" type="button">${icons.copy}${t("copyLink")}</button>
-        </div>
-      </div>
-    </section>
-  `);
-
-  document.getElementById("settingsForm").addEventListener("submit", async (event) => {
-    event.preventDefault();
-    try {
-      const body = Object.fromEntries(new FormData(event.currentTarget).entries());
-      const data = await api("/api/me", { method: "PUT", body: JSON.stringify(body) });
-      state.user = data.user;
-      localStorage.setItem("veil_user", JSON.stringify(data.user));
-      toast(t("saved"));
-      renderSettings();
-    } catch (error) {
-      toast(error.message, "error");
-    }
-  });
-
-  document.getElementById("copySettingsLink").addEventListener("click", async () => {
-    await navigator.clipboard.writeText(link);
-    toast(t("copied"));
-  });
-}
-
-function renderNotFound() {
-  page(`<section class="glass-card empty-state animate-in"><div class="empty-illustration">?</div><h1>${t("notFound")}</h1></section>`);
-}
-
-function render() {
-  applyPreferences();
-  const path = location.pathname;
-
-  if (path === "/") return renderLanding();
-  if (path === "/auth") return renderAuth();
-  if (path === "/dashboard") return renderDashboard();
-  if (path === "/settings") return renderSettings();
-  if (path.startsWith("/u/")) return renderProfile(decodeURIComponent(path.split("/u/")[1] || ""));
-  return renderNotFound();
-}
-
-function bindRipples() {
-  document.querySelectorAll(".button, .icon-button, .pill-link").forEach((button) => {
-    if (button.dataset.rippleBound) return;
-    button.dataset.rippleBound = "true";
-    button.addEventListener("click", (event) => {
-      const rect = button.getBoundingClientRect();
-      const ripple = document.createElement("span");
-      const size = Math.max(rect.width, rect.height);
-      ripple.className = "ripple";
-      ripple.style.width = `${size}px`;
-      ripple.style.height = `${size}px`;
-      ripple.style.left = `${event.clientX - rect.left - size / 2}px`;
-      ripple.style.top = `${event.clientY - rect.top - size / 2}px`;
-      button.appendChild(ripple);
-      setTimeout(() => ripple.remove(), 560);
-    });
-  });
-}
-
-function burstConfetti(anchor) {
-  const rect = anchor.getBoundingClientRect();
-  const colors = ["#6366f1", "#8b5cf6", "#10b981", "#f59e0b"];
-
-  for (let index = 0; index < 20; index += 1) {
-    const piece = document.createElement("span");
-    piece.className = "confetti";
-    piece.style.left = `${rect.left + rect.width / 2}px`;
-    piece.style.top = `${rect.top}px`;
-    piece.style.background = colors[index % colors.length];
-    piece.style.setProperty("--x", `${Math.random() * 220 - 110}px`);
-    piece.style.setProperty("--y", `${Math.random() * -150 - 40}px`);
-    document.body.appendChild(piece);
-    setTimeout(() => piece.remove(), 920);
-  }
-}
+$("startBtn").addEventListener("click", handleStartChat);
+$("codeInput").addEventListener("keydown", (event) => {
+  if (event.key === "Enter") handleStartChat();
+});
 
 document.addEventListener("click", (event) => {
-  const link = event.target.closest("[data-link]");
-  if (!link) return;
-  const url = new URL(link.href);
-  if (url.origin !== location.origin) return;
+  const item = event.target.closest(".chat-item");
+  if (!item) return;
+  openChat(item.dataset.chatId);
+});
+
+document.addEventListener("keydown", (event) => {
+  if (event.key !== "Enter" && event.key !== " ") return;
+  const item = event.target.closest(".chat-item");
+  if (!item) return;
   event.preventDefault();
-  navigate(url.pathname + url.search);
+  item.click();
 });
 
-document.getElementById("themeToggle").addEventListener("click", () => {
-  state.theme = state.theme === "dark" ? "light" : "dark";
-  localStorage.setItem("veil_theme", state.theme);
-  applyPreferences();
+$("backToChats").addEventListener("click", closeChat);
+$("messageForm").addEventListener("submit", handleSendMessage);
+$("mediaInput").addEventListener("change", () => {
+  if ($("mediaInput").files?.length) $("messageForm").requestSubmit();
 });
 
-document.getElementById("languageToggle").addEventListener("click", () => {
-  state.lang = state.lang === "ar" ? "en" : "ar";
-  localStorage.setItem("veil_lang", state.lang);
-  render();
-});
+window.setInterval(async () => {
+  try {
+    if (isLiveMode()) {
+      await cleanupExpiredMessages();
+      if (!$("chatView").hidden && activeConversationId) await loadConversation(activeConversationId);
+      await loadConversations();
+      return;
+    }
 
-window.addEventListener("popstate", render);
-applyPreferences();
-render();
+    const before = chats.length;
+    chats = chats.filter((chat) => !chat.expiresAt || chat.expiresAt > Date.now());
+    renderChats();
+    if (before !== chats.length) showToast(i18n[currentLang].expired);
+  } catch (error) {
+    console.warn(error);
+  }
+}, 60000);
+
+boot();

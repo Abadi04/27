@@ -2,36 +2,127 @@
 <html lang="ar" dir="rtl">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="theme-color" content="#050505" />
-    <title>Veil | رسائل مجهولة للجوال</title>
-    <meta name="description" content="Veil منصة رسائل مجهولة مصممة أولاً لمتصفح الجوال." />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="/styles.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="27 — محادثات خاصة، سريعة، وتُحذف تلقائيًا. تواصل بدون تسجيل." />
+    <meta name="theme-color" content="#000000" />
+    <title>27</title>
+    <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <div class="noise"></div>
-    <header class="topbar">
-      <a class="brand" href="/" data-link aria-label="Veil home">
-        <span class="brand-mark">V</span>
-        <span>Veil</span>
-      </a>
-      <nav class="top-actions">
-        <button class="icon-button" id="languageToggle" type="button" aria-label="Toggle language">EN</button>
-        <button class="icon-button" id="themeToggle" type="button" aria-label="Toggle color mode">
-          <span class="sun">☼</span>
-          <span class="moon">◐</span>
+    <div class="bg-glow" aria-hidden="true"></div>
+
+    <header class="app-header" id="appHeader">
+      <div class="header-logo">27</div>
+      <div class="header-right">
+        <span class="header-status" id="headerStatus">مشفّر · بدون تسجيل</span>
+        <button class="settings-toggle" id="settingsToggle" type="button">الإعدادات</button>
+        <button class="lang-toggle" id="langToggle" type="button" aria-label="Switch language">
+          العربية / English
         </button>
-        <a class="pill-link" href="/auth" data-link data-auth-link>دخول</a>
-      </nav>
+      </div>
     </header>
 
-    <main id="app" class="app-shell"></main>
-    <nav id="mobileNav" class="mobile-nav" aria-label="Primary"></nav>
-    <div id="toastHost" class="toast-host" aria-live="polite"></div>
+    <main class="main-content">
+      <section class="hero" id="heroSection">
+        <h1 class="hero-title" aria-label="27">
+          <img class="hero-mark" src="cat-logo.jpg" alt="" aria-hidden="true" />
+          <span class="sr-only">27</span>
+        </h1>
+        <p class="hero-tagline" id="heroTagline">خاص. سريع. يختفي.</p>
+        <div class="hero-desc" id="heroDesc">
+          <p id="heroLine1">محادثات سريعة، خصوصية عالية، وحذف تلقائي بعد ٥ ساعات.</p>
+          <p id="heroLine2">تواصل بدون تسجيل، بدون بريد إلكتروني، وبدون رقم جوال.</p>
+        </div>
+        <div class="input-group">
+          <input
+            type="text"
+            class="code-input"
+            id="codeInput"
+            placeholder="أدخل رقم المستخدم المراد التواصل معه"
+            autocomplete="off"
+            inputmode="numeric"
+          />
+          <button class="start-btn" id="startBtn" type="button">بدء المحادثة</button>
+        </div>
+        <div class="profile-code-card" id="profileCodeCard" hidden>
+          <span class="profile-code-label" id="profileCodeLabel">رقمك</span>
+          <strong class="profile-code-value" id="profileCodeValue">------</strong>
+          <button class="copy-code-btn" id="copyCodeBtn" type="button">انسخ رقمي</button>
+        </div>
+      </section>
 
-    <script src="/app.js" defer></script>
+      <div class="section-divider"></div>
+
+      <section class="chats-section" id="chatsSection">
+        <h2 class="chats-header" id="chatsHeader">المحادثات النشطة</h2>
+        <div class="state-card loading-state" id="loadingState" hidden>جارٍ تحميل المحادثات...</div>
+        <div class="state-card error-state" id="errorState" hidden>تعذر تحميل المحادثات. حاول مرة أخرى.</div>
+        <div class="chats-list" id="chatsList"></div>
+        <div class="empty-state" id="emptyState" hidden>
+          <p id="emptyText">لا توجد محادثات حالية. ابدأ محادثة جديدة بإدخال رقم مستخدم.</p>
+        </div>
+      </section>
+
+      <section class="chat-view" id="chatView" hidden>
+        <div class="chat-view-header">
+          <button class="back-btn" id="backToChats" type="button">رجوع</button>
+          <div>
+            <h2 class="chat-view-name" id="chatViewName">سارة</h2>
+            <p class="chat-view-status" id="chatViewStatus">تنتهي بعد ٥ ساعات من آخر رسالة</p>
+          </div>
+        </div>
+        <div class="messages-list" id="messagesList"></div>
+        <form class="message-form" id="messageForm">
+          <label class="attach-btn" id="attachBtn" for="mediaInput" aria-label="إرسال صورة أو فيديو" title="إرسال صورة أو فيديو">
+            +
+          </label>
+          <input class="media-input" id="mediaInput" type="file" accept="image/*,video/*" />
+          <input
+            class="message-input"
+            id="messageInput"
+            type="text"
+            autocomplete="off"
+            placeholder="اكتب رسالة مؤقتة..."
+          />
+          <button class="send-btn" id="sendBtn" type="submit">إرسال</button>
+        </form>
+      </section>
+
+      <section class="settings-view" id="settingsView" hidden>
+        <div class="settings-header">
+          <button class="back-btn" id="backFromSettings" type="button">رجوع</button>
+          <div>
+            <h2 class="chat-view-name" id="settingsTitle">الإعدادات</h2>
+            <p class="chat-view-status" id="settingsSubtitle">تحكم بتجربة 27 بدون حساب.</p>
+          </div>
+        </div>
+        <div class="settings-list">
+          <label class="setting-row">
+            <span>
+              <strong id="displayNameLabel">اسم العرض</strong>
+              <small id="displayNameHint">يُستخدم لتوليد الأفاتار فقط.</small>
+            </span>
+            <input class="settings-input" id="displayNameInput" type="text" autocomplete="off" value="زائر 27" />
+          </label>
+          <label class="setting-row">
+            <span>
+              <strong id="privacyLabel">حذف تلقائي</strong>
+              <small id="privacyHint">كل محادثة تُزال بعد 5 ساعات من آخر رسالة.</small>
+            </span>
+            <input class="settings-input" id="ttlInput" type="text" value="5h" disabled />
+          </label>
+          <button class="start-btn save-settings" id="saveSettingsBtn" type="button">حفظ</button>
+        </div>
+      </section>
+    </main>
+
+    <footer class="app-footer" id="appFooter">
+      <span id="footerText">جميع المحادثات تُحذف تلقائيًا بعد ٥ ساعات من آخر رسالة.</span>
+    </footer>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="app.js"></script>
   </body>
 </html>
