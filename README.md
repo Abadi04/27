@@ -1,28 +1,33 @@
-# Veil Anonymous Messaging
+# 27
 
-Responsive anonymous messaging product UI built with Next.js, React, and Tailwind CSS.
+Private, fast, ephemeral chat for the web.
 
-## Preview
+## Live Preview
 
-Local preview:
-
-```bash
-npm install
-npm run dev
-```
-
-GitHub Pages preview after publishing:
+GitHub Pages:
 
 ```text
-https://Abadi04.github.io/veil-anonymous-messaging/
+https://Abadi04.github.io/27/
 ```
 
-## Deployment
+## Local Preview
 
-The app is configured for static export so it can be hosted on GitHub Pages from the `gh-pages` branch.
+The production-ready static app is in `public/`.
 
 ```bash
-NEXT_PUBLIC_BASE_PATH=/veil-anonymous-messaging npm run build
+cd public
+python3 -m http.server 4188
 ```
 
-The generated static site is written to `out/`.
+Then open:
+
+```text
+http://localhost:4188/
+```
+
+## Notes
+
+- No sign-up, email, or phone number.
+- Users connect through a numeric public code.
+- Messages expire after 5 hours.
+- Supabase Anonymous Auth and Realtime are used by `public/app.js`.
