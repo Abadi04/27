@@ -7,6 +7,10 @@
   "scripts": {
     "serve": "cd public && python3 -m http.server 4188"
   },
+  "dependencies": {
+    "qrcode": "^1.5.4",
+    "web-push": "^3.6.7"
+  },
   "keywords": [
     "ephemeral-chat",
     "supabase",

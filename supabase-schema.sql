@@ -28,9 +28,22 @@ create table if not exists public.messages (
   conversation_id uuid not null references public.conversations(id) on delete cascade,
   sender_id uuid not null references public.profiles(id) on delete cascade,
   content text not null,
+  burn_after_read boolean not null default false,
   created_at timestamptz not null default now(),
   expires_at timestamptz not null default (now() + interval '5 hours')
 );
+
+create table if not exists public.push_subscriptions (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references public.profiles(id) on delete cascade,
+  endpoint text unique not null,
+  subscription jsonb not null,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+alter table public.messages
+  add column if not exists burn_after_read boolean not null default false;
 
 create index if not exists messages_conversation_created_idx
   on public.messages (conversation_id, created_at);
@@ -98,6 +111,7 @@ $$;
 alter table public.profiles enable row level security;
 alter table public.conversations enable row level security;
 alter table public.messages enable row level security;
+alter table public.push_subscriptions enable row level security;
 
 drop policy if exists "profiles select authenticated" on public.profiles;
 create policy "profiles select authenticated"
@@ -117,6 +131,13 @@ on public.profiles for update
 to authenticated
 using (id = auth.uid())
 with check (id = auth.uid());
+
+drop policy if exists "push subscriptions manage own" on public.push_subscriptions;
+create policy "push subscriptions manage own"
+on public.push_subscriptions for all
+to authenticated
+using (user_id = auth.uid())
+with check (user_id = auth.uid());
 
 drop policy if exists "conversations select participant" on public.conversations;
 create policy "conversations select participant"
@@ -157,6 +178,19 @@ to authenticated
 with check (
   sender_id = auth.uid()
   and exists (
+    select 1
+    from public.conversations c
+    where c.id = messages.conversation_id
+      and (c.user_a_id = auth.uid() or c.user_b_id = auth.uid())
+  )
+);
+
+drop policy if exists "messages delete conversation participant" on public.messages;
+create policy "messages delete conversation participant"
+on public.messages for delete
+to authenticated
+using (
+  exists (
     select 1
     from public.conversations c
     where c.id = messages.conversation_id
