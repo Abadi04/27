@@ -6,10 +6,14 @@ create extension if not exists pgcrypto;
 create table if not exists public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,
   public_code text unique not null,
+  code_visible boolean not null default true,
   display_name text,
   avatar_seed text,
   created_at timestamptz not null default now()
 );
+
+alter table public.profiles
+  add column if not exists code_visible boolean not null default true;
 
 create table if not exists public.conversations (
   id uuid primary key default gen_random_uuid(),
@@ -17,8 +21,14 @@ create table if not exists public.conversations (
   user_b_id uuid not null references public.profiles(id) on delete cascade,
   created_at timestamptz not null default now(),
   last_message_at timestamptz,
+  privacy_mode text not null default '5h',
+  status text not null default 'active',
   constraint conversations_two_distinct_users check (user_a_id <> user_b_id)
 );
+
+alter table public.conversations
+  add column if not exists privacy_mode text not null default '5h',
+  add column if not exists status text not null default 'active';
 
 create unique index if not exists conversations_unique_pair
   on public.conversations (least(user_a_id, user_b_id), greatest(user_a_id, user_b_id));
@@ -28,6 +38,9 @@ create table if not exists public.messages (
   conversation_id uuid not null references public.conversations(id) on delete cascade,
   sender_id uuid not null references public.profiles(id) on delete cascade,
   content text not null,
+  message_type text not null default 'text',
+  privacy_mode text not null default '5h',
+  read_at timestamptz,
   burn_after_read boolean not null default false,
   created_at timestamptz not null default now(),
   expires_at timestamptz not null default (now() + interval '5 hours')
@@ -43,13 +56,72 @@ create table if not exists public.push_subscriptions (
 );
 
 alter table public.messages
-  add column if not exists burn_after_read boolean not null default false;
+  add column if not exists burn_after_read boolean not null default false,
+  add column if not exists message_type text not null default 'text',
+  add column if not exists privacy_mode text not null default '5h',
+  add column if not exists read_at timestamptz;
+
+create table if not exists public.conversation_requests (
+  id uuid primary key default gen_random_uuid(),
+  requester_id uuid not null references public.profiles(id) on delete cascade,
+  target_id uuid not null references public.profiles(id) on delete cascade,
+  status text not null default 'pending',
+  created_at timestamptz not null default now(),
+  responded_at timestamptz,
+  constraint conversation_requests_two_distinct_users check (requester_id <> target_id)
+);
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_constraint
+    where conname = 'conversation_requests_requester_id_fkey'
+  ) then
+    alter table public.conversation_requests
+      add constraint conversation_requests_requester_id_fkey
+      foreign key (requester_id) references public.profiles(id) on delete cascade;
+  end if;
+  if not exists (
+    select 1 from pg_constraint
+    where conname = 'conversation_requests_target_id_fkey'
+  ) then
+    alter table public.conversation_requests
+      add constraint conversation_requests_target_id_fkey
+      foreign key (target_id) references public.profiles(id) on delete cascade;
+  end if;
+end $$;
+
+create unique index if not exists conversation_requests_open_pair
+  on public.conversation_requests (least(requester_id, target_id), greatest(requester_id, target_id))
+  where status = 'pending';
+
+create table if not exists public.blocked_profiles (
+  blocker_id uuid not null references public.profiles(id) on delete cascade,
+  blocked_id uuid not null references public.profiles(id) on delete cascade,
+  created_at timestamptz not null default now(),
+  primary key (blocker_id, blocked_id),
+  constraint blocked_profiles_two_distinct_users check (blocker_id <> blocked_id)
+);
+
+create table if not exists public.message_receipts (
+  message_id uuid not null references public.messages(id) on delete cascade,
+  user_id uuid not null references public.profiles(id) on delete cascade,
+  delivered_at timestamptz not null default now(),
+  read_at timestamptz,
+  primary key (message_id, user_id)
+);
 
 create index if not exists messages_conversation_created_idx
   on public.messages (conversation_id, created_at);
 
 create index if not exists messages_expires_at_idx
   on public.messages (expires_at);
+
+create index if not exists conversation_requests_target_status_idx
+  on public.conversation_requests (target_id, status, created_at);
+
+create index if not exists conversation_requests_requester_status_idx
+  on public.conversation_requests (requester_id, status, created_at);
 
 create or replace function public.set_message_expiry()
 returns trigger
@@ -112,6 +184,9 @@ alter table public.profiles enable row level security;
 alter table public.conversations enable row level security;
 alter table public.messages enable row level security;
 alter table public.push_subscriptions enable row level security;
+alter table public.conversation_requests enable row level security;
+alter table public.blocked_profiles enable row level security;
+alter table public.message_receipts enable row level security;
 
 drop policy if exists "profiles select authenticated" on public.profiles;
 create policy "profiles select authenticated"
@@ -158,6 +233,72 @@ to authenticated
 using (auth.uid() = user_a_id or auth.uid() = user_b_id)
 with check (auth.uid() = user_a_id or auth.uid() = user_b_id);
 
+drop policy if exists "conversations delete participant" on public.conversations;
+create policy "conversations delete participant"
+on public.conversations for delete
+to authenticated
+using (auth.uid() = user_a_id or auth.uid() = user_b_id);
+
+drop policy if exists "requests select participant" on public.conversation_requests;
+create policy "requests select participant"
+on public.conversation_requests for select
+to authenticated
+using (auth.uid() = requester_id or auth.uid() = target_id);
+
+drop policy if exists "requests insert requester" on public.conversation_requests;
+create policy "requests insert requester"
+on public.conversation_requests for insert
+to authenticated
+with check (
+  auth.uid() = requester_id
+  and not exists (
+    select 1 from public.blocked_profiles b
+    where (b.blocker_id = target_id and b.blocked_id = requester_id)
+       or (b.blocker_id = requester_id and b.blocked_id = target_id)
+  )
+);
+
+drop policy if exists "requests update target" on public.conversation_requests;
+create policy "requests update target"
+on public.conversation_requests for update
+to authenticated
+using (auth.uid() = target_id or auth.uid() = requester_id)
+with check (auth.uid() = target_id or auth.uid() = requester_id);
+
+drop policy if exists "blocks manage own" on public.blocked_profiles;
+create policy "blocks manage own"
+on public.blocked_profiles for all
+to authenticated
+using (blocker_id = auth.uid())
+with check (blocker_id = auth.uid());
+
+drop policy if exists "receipts select conversation participant" on public.message_receipts;
+create policy "receipts select conversation participant"
+on public.message_receipts for select
+to authenticated
+using (
+  exists (
+    select 1
+    from public.messages m
+    join public.conversations c on c.id = m.conversation_id
+    where m.id = message_receipts.message_id
+      and (c.user_a_id = auth.uid() or c.user_b_id = auth.uid())
+  )
+);
+
+drop policy if exists "receipts upsert own" on public.message_receipts;
+create policy "receipts upsert own"
+on public.message_receipts for insert
+to authenticated
+with check (user_id = auth.uid());
+
+drop policy if exists "receipts update own" on public.message_receipts;
+create policy "receipts update own"
+on public.message_receipts for update
+to authenticated
+using (user_id = auth.uid())
+with check (user_id = auth.uid());
+
 drop policy if exists "messages select conversation participant" on public.messages;
 create policy "messages select conversation participant"
 on public.messages for select
@@ -198,6 +339,27 @@ using (
   )
 );
 
+drop policy if exists "messages update conversation participant" on public.messages;
+create policy "messages update conversation participant"
+on public.messages for update
+to authenticated
+using (
+  exists (
+    select 1
+    from public.conversations c
+    where c.id = messages.conversation_id
+      and (c.user_a_id = auth.uid() or c.user_b_id = auth.uid())
+  )
+)
+with check (
+  exists (
+    select 1
+    from public.conversations c
+    where c.id = messages.conversation_id
+      and (c.user_a_id = auth.uid() or c.user_b_id = auth.uid())
+  )
+);
+
 do $$
 begin
   if not exists (
@@ -208,5 +370,17 @@ begin
       and tablename = 'messages'
   ) then
     alter publication supabase_realtime add table public.messages;
+  end if;
+end $$;
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime'
+      and schemaname = 'public'
+      and tablename = 'conversation_requests'
+  ) then
+    alter publication supabase_realtime add table public.conversation_requests;
   end if;
 end $$;

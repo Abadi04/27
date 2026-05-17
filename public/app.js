@@ -20,6 +20,13 @@ const VAPID_PUBLIC_KEY = "";
 const MESSAGE_TTL_SECONDS = 5 * 60 * 60;
 const BURN_TTL_SECONDS = 10;
 const FIVE_HOURS = 5 * 60 * 60 * 1000;
+const PRIVACY_MODES = {
+  "10s_read": { seconds: 10, burnAfterRead: true },
+  "5m": { seconds: 5 * 60, burnAfterRead: false },
+  "1h": { seconds: 60 * 60, burnAfterRead: false },
+  "5h": { seconds: MESSAGE_TTL_SECONDS, burnAfterRead: false },
+  "close": { seconds: MESSAGE_TTL_SECONDS, burnAfterRead: false, closeDelete: true }
+};
 const PROFILE_STORAGE_KEY = "twentyseven_profile";
 const ONBOARDING_STORAGE_KEY = "veil_seen";
 const SWIPE_DELETE_THRESHOLD = 80;
@@ -46,6 +53,7 @@ const i18n = {
     startBtn: "بدء المحادثة",
     profileCodeLabel: "رقمك",
     copyMyCode: "انسخ رقمي",
+    copyMyLink: "انسخ الرابط",
     copied: "تم النسخ",
     chatsHeader: "المحادثات النشطة",
     emptyText: "لا توجد محادثات حالية. ابدأ محادثة جديدة بإدخال رقم مستخدم.",
@@ -60,6 +68,36 @@ const i18n = {
     privacyHint: "كل محادثة تُزال بعد 5 ساعات من آخر رسالة.",
     saveSettings: "حفظ",
     settingsSaved: "تم حفظ الإعدادات.",
+    requestSent: "تم إرسال طلب المحادثة.",
+    requestExists: "يوجد طلب محادثة بانتظار الرد.",
+    requestIncoming: "{name} يريد محادثتك",
+    accept: "قبول",
+    reject: "رفض",
+    block: "حظر",
+    blocked: "تم الحظر.",
+    rejected: "تم الرفض.",
+    accepted: "تم قبول الطلب.",
+    requestsHeader: "طلبات جديدة",
+    expiringHeader: "قريبة من الانتهاء",
+    activeHeader: "نشطة",
+    burnedHeader: "منتهية",
+    privacyModeLabel: "وضع الاختفاء",
+    privacy10s: "10 ثوانٍ بعد القراءة",
+    privacy5m: "5 دقائق",
+    privacy1h: "ساعة",
+    privacy5h: "5 ساعات",
+    privacyClose: "عند إغلاق المحادثة",
+    sentStatus: "تم الإرسال",
+    deliveredStatus: "تم الوصول",
+    readStatus: "تمت القراءة",
+    noAccount: "بدون حساب مرتبط",
+    onlineNow: "متصل الآن",
+    hideCode: "إخفاء رقمي",
+    showCode: "إظهار رقمي",
+    regenerateCode: "تجديد رقمي",
+    codeRegenerated: "تم تجديد رقمك.",
+    deleteAll: "مسح كل المحادثات الآن",
+    deletedAll: "تم مسح المحادثات.",
     chatExpiry: "تنتهي بعد ٥ ساعات من آخر رسالة",
     messagePlaceholder: "اكتب رسالة مؤقتة...",
     send: "إرسال",
@@ -107,6 +145,7 @@ const i18n = {
     startBtn: "Start chat",
     profileCodeLabel: "Your code",
     copyMyCode: "Copy my code",
+    copyMyLink: "Copy link",
     copied: "Copied",
     chatsHeader: "Active chats",
     emptyText: "No active chats. Start a new one by entering a user code.",
@@ -121,6 +160,36 @@ const i18n = {
     privacyHint: "Each chat is removed 5 hours after the last message.",
     saveSettings: "Save",
     settingsSaved: "Settings saved.",
+    requestSent: "Chat request sent.",
+    requestExists: "A chat request is already waiting.",
+    requestIncoming: "{name} wants to chat",
+    accept: "Accept",
+    reject: "Reject",
+    block: "Block",
+    blocked: "Blocked.",
+    rejected: "Rejected.",
+    accepted: "Request accepted.",
+    requestsHeader: "New requests",
+    expiringHeader: "Expiring soon",
+    activeHeader: "Active",
+    burnedHeader: "Burned",
+    privacyModeLabel: "Disappears",
+    privacy10s: "10s after read",
+    privacy5m: "5 minutes",
+    privacy1h: "1 hour",
+    privacy5h: "5 hours",
+    privacyClose: "On close",
+    sentStatus: "Sent",
+    deliveredStatus: "Delivered",
+    readStatus: "Read",
+    noAccount: "No linked account",
+    onlineNow: "Online now",
+    hideCode: "Hide my code",
+    showCode: "Show my code",
+    regenerateCode: "Regenerate code",
+    codeRegenerated: "Your code was regenerated.",
+    deleteAll: "Delete all chats now",
+    deletedAll: "Chats deleted.",
     chatExpiry: "Expires 5 hours after the last message",
     messagePlaceholder: "Write an ephemeral message...",
     send: "Send",
@@ -183,16 +252,20 @@ let currentLang = "ar";
 let displayName = "زائر 27";
 let currentProfile = null;
 let chats = [];
+let conversationRequests = [];
+let burnedChats = [];
 let activeConversationId = "";
 let activeSubscription = null;
+let requestsSubscription = null;
 let countdownTimer = null;
 let messageTicker = null;
-let burnMode = false;
+let privacyMode = "5h";
 let panicMode = false;
 let typing = false;
 let typingLastSentAt = 0;
 let typingStopTimer = null;
 let qrModalOpen = false;
+let idleLockTimer = null;
 
 const $ = (id) => document.getElementById(id);
 
@@ -287,9 +360,39 @@ function randomPublicCode() {
   return String(Math.floor(Math.random() * 900000) + 100000);
 }
 
+function getPrivacyConfig(mode = privacyMode) {
+  return PRIVACY_MODES[mode] || PRIVACY_MODES["5h"];
+}
+
+function getPrivacyLabel(mode = privacyMode) {
+  const t = i18n[currentLang];
+  return ({
+    "10s_read": t.privacy10s,
+    "5m": t.privacy5m,
+    "1h": t.privacy1h,
+    "5h": t.privacy5h,
+    "close": t.privacyClose
+  })[mode] || t.privacy5h;
+}
+
+function getShareLink() {
+  const code = currentProfile?.public_code || $("profileCodeValue")?.textContent?.trim() || "";
+  const base = `${window.location.origin}${getAppBasePath()}`;
+  return code ? `${base}?code=${encodeURIComponent(code)}` : base;
+}
+
 function handleAsyncError(error, fallbackMessage) {
   console.warn(error);
   flashError(fallbackMessage || i18n[currentLang].errorChats);
+}
+
+function isMissingRelationError(error) {
+  const message = `${error?.message || ""} ${error?.details || ""}`.toLowerCase();
+  return ["42P01", "42703", "PGRST200", "PGRST204"].includes(error?.code)
+    || message.includes("does not exist")
+    || message.includes("schema cache")
+    || message.includes("could not find")
+    || message.includes("relationship");
 }
 
 function setLoading(message, visible = true) {
@@ -320,13 +423,14 @@ function updateProfileCodeUI() {
   card.hidden = !hasCode;
   $("profileCodeLabel").textContent = i18n[currentLang].profileCodeLabel;
   $("copyCodeBtn").textContent = i18n[currentLang].copyMyCode;
+  $("copyLinkBtn").textContent = i18n[currentLang].copyMyLink;
   $("profileQrBtn").setAttribute("aria-label", i18n[currentLang].shareQr);
   $("profileQrBtn").title = i18n[currentLang].shareQr;
-  if (hasCode) $("profileCodeValue").textContent = currentProfile.public_code;
+  if (hasCode) $("profileCodeValue").textContent = currentProfile.code_visible === false ? "••••••" : currentProfile.public_code;
 }
 
 async function copyProfileCode() {
-  if (!currentProfile?.public_code) return;
+  if (!currentProfile?.public_code || currentProfile.code_visible === false) return;
   const code = currentProfile.public_code;
 
   try {
@@ -358,6 +462,17 @@ async function copyProfileCode() {
   }
 }
 
+async function copyProfileLink() {
+  if (!currentProfile?.public_code || currentProfile.code_visible === false) return;
+  const link = getShareLink();
+  try {
+    if (navigator.clipboard?.writeText) await navigator.clipboard.writeText(link);
+    showToast(i18n[currentLang].copied);
+  } catch (error) {
+    handleAsyncError(error, link);
+  }
+}
+
 async function getOrCreateProfile() {
   if (!db) return null;
 
@@ -374,6 +489,7 @@ async function getOrCreateProfile() {
       const profile = {
         id: authUser.id,
         public_code: publicCode,
+        code_visible: true,
         display_name: displayName,
         avatar_seed: displayName || publicCode
       };
@@ -457,7 +573,12 @@ async function deleteConversationIfExpiredAndEmpty(chat) {
     .eq("conversation_id", chat.id)
     .gt("expires_at", new Date().toISOString());
 
-  if (error) throw error;
+  if (error) {
+    if (isMissingRelationError(error)) {
+      return false;
+    }
+    throw error;
+  }
   if (count && count > 0) return false;
 
   const { error: deleteError } = await db
@@ -468,6 +589,42 @@ async function deleteConversationIfExpiredAndEmpty(chat) {
   if (deleteError) throw deleteError;
   chats = chats.filter((item) => item.id !== chat.id);
   return true;
+}
+
+async function loadConversationRequests() {
+  if (!isLiveMode()) {
+    conversationRequests = [];
+    return [];
+  }
+
+  const { data, error } = await db
+    .from("conversation_requests")
+    .select(`
+      id,
+      requester_id,
+      target_id,
+      status,
+      created_at,
+      requester:profiles!conversation_requests_requester_id_fkey(id, public_code, display_name, avatar_seed),
+      target:profiles!conversation_requests_target_id_fkey(id, public_code, display_name, avatar_seed)
+    `)
+    .or(`requester_id.eq.${currentProfile.id},target_id.eq.${currentProfile.id}`)
+    .eq("status", "pending")
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    if (isMissingRelationError(error)) {
+      conversationRequests = [];
+      return [];
+    }
+    throw error;
+  }
+  conversationRequests = data || [];
+  return conversationRequests;
+}
+
+function isIncomingRequest(request) {
+  return request.target_id === currentProfile?.id;
 }
 
 async function loadConversations() {
@@ -481,7 +638,7 @@ async function loadConversations() {
 
     await cleanupExpiredMessages();
 
-    const { data, error } = await db
+    let { data, error } = await db
       .from("conversations")
       .select(`
         id,
@@ -489,11 +646,32 @@ async function loadConversations() {
         user_b_id,
         created_at,
         last_message_at,
+        privacy_mode,
+        status,
         user_a:profiles!conversations_user_a_id_fkey(id, public_code, display_name, avatar_seed),
         user_b:profiles!conversations_user_b_id_fkey(id, public_code, display_name, avatar_seed)
       `)
       .or(`user_a_id.eq.${currentProfile.id},user_b_id.eq.${currentProfile.id}`)
+      .eq("status", "active")
       .order("last_message_at", { ascending: false, nullsFirst: false });
+
+    if (error && isMissingRelationError(error)) {
+      const fallback = await db
+        .from("conversations")
+        .select(`
+          id,
+          user_a_id,
+          user_b_id,
+          created_at,
+          last_message_at,
+          user_a:profiles!conversations_user_a_id_fkey(id, public_code, display_name, avatar_seed),
+          user_b:profiles!conversations_user_b_id_fkey(id, public_code, display_name, avatar_seed)
+        `)
+        .or(`user_a_id.eq.${currentProfile.id},user_b_id.eq.${currentProfile.id}`)
+        .order("last_message_at", { ascending: false, nullsFirst: false });
+      data = fallback.data;
+      error = fallback.error;
+    }
 
     if (error) throw error;
 
@@ -504,13 +682,14 @@ async function loadConversations() {
         online: true,
         otherProfile,
         lastMessageAt: row.last_message_at ? new Date(row.last_message_at).getTime() : 0,
+        privacyMode: row.privacy_mode || "5h",
         messages: { neutral: [] }
       };
     });
 
-    chats = realChats.length
-      ? realChats
-      : demoChats.filter((chat) => chat.expiresAt > Date.now()).map((chat) => ({ ...chat, placeholder: true }));
+    chats = realChats;
+    burnedChats = burnedChats.slice(0, 12);
+    await loadConversationRequests();
 
     renderChats();
     return chats;
@@ -532,11 +711,22 @@ async function startConversationWithCode(code) {
     return chat.id;
   }
 
-  const { data: target, error: targetError } = await db
+  let { data: target, error: targetError } = await db
     .from("profiles")
     .select("*")
     .eq("public_code", code)
+    .eq("code_visible", true)
     .maybeSingle();
+
+  if (targetError && isMissingRelationError(targetError)) {
+    const fallback = await db
+      .from("profiles")
+      .select("*")
+      .eq("public_code", code)
+      .maybeSingle();
+    target = fallback.data;
+    targetError = fallback.error;
+  }
 
   if (targetError) throw targetError;
   if (!target) {
@@ -545,6 +735,18 @@ async function startConversationWithCode(code) {
   }
   if (target.id === currentProfile.id) {
     flashError(i18n[currentLang].cannotChatSelf);
+    return null;
+  }
+
+  const { data: blocked, error: blockError } = await db
+    .from("blocked_profiles")
+    .select("blocker_id")
+    .or(`and(blocker_id.eq.${currentProfile.id},blocked_id.eq.${target.id}),and(blocker_id.eq.${target.id},blocked_id.eq.${currentProfile.id})`)
+    .maybeSingle();
+
+  if (blockError && !isMissingRelationError(blockError)) throw blockError;
+  if (blocked) {
+    flashError(i18n[currentLang].blocked);
     return null;
   }
 
@@ -561,16 +763,72 @@ async function startConversationWithCode(code) {
     return existing.id;
   }
 
-  const { data: created, error: createError } = await db
+  const { data: existingRequest, error: requestFindError } = await db
+    .from("conversation_requests")
+    .select("id, status")
+    .or(`and(requester_id.eq.${currentProfile.id},target_id.eq.${target.id}),and(requester_id.eq.${target.id},target_id.eq.${currentProfile.id})`)
+    .eq("status", "pending")
+    .maybeSingle();
+
+  if (requestFindError && !isMissingRelationError(requestFindError)) throw requestFindError;
+  if (existingRequest) {
+    showToast(i18n[currentLang].requestExists);
+    return null;
+  }
+
+  const { error: createError } = await db
+    .from("conversation_requests")
+    .insert({ requester_id: currentProfile.id, target_id: target.id, status: "pending" });
+
+  if (createError) {
+    if (isMissingRelationError(createError)) {
+      const directId = await createConversationDirectly(target.id);
+      if (directId) {
+        await loadConversations();
+        openChat(directId);
+        return directId;
+      }
+      flashError(i18n[currentLang].errorChats);
+      return null;
+    }
+    throw createError;
+  }
+  await loadConversationRequests();
+  renderChats();
+  showToast(i18n[currentLang].requestSent);
+  return null;
+}
+
+async function createConversationDirectly(targetId, mode = privacyMode) {
+  const now = new Date().toISOString();
+  let { data, error } = await db
     .from("conversations")
-    .insert({ user_a_id: currentProfile.id, user_b_id: target.id, last_message_at: new Date().toISOString() })
+    .insert({
+      user_a_id: currentProfile.id,
+      user_b_id: targetId,
+      privacy_mode: mode,
+      last_message_at: now,
+      status: "active"
+    })
     .select("id")
     .single();
 
-  if (createError) throw createError;
-  await loadConversations();
-  openChat(created.id);
-  return created.id;
+  if (error && isMissingRelationError(error)) {
+    const fallback = await db
+      .from("conversations")
+      .insert({
+        user_a_id: currentProfile.id,
+        user_b_id: targetId,
+        last_message_at: now
+      })
+      .select("id")
+      .single();
+    data = fallback.data;
+    error = fallback.error;
+  }
+
+  if (error) throw error;
+  return data?.id || null;
 }
 
 async function loadConversation(conversationId) {
@@ -602,6 +860,7 @@ async function loadConversation(conversationId) {
     if (error) throw error;
 
     chat.messages = { neutral: (data || []).map(mapDbMessage) };
+    await markIncomingMessagesRead(chat);
     const removed = await deleteConversationIfExpiredAndEmpty(chat);
     if (removed) {
       renderChats();
@@ -657,9 +916,35 @@ async function loadConversation(conversationId) {
   }
 }
 
+async function markIncomingMessagesRead(chat) {
+  if (!isLiveMode() || !chat?.id || !isUuid(chat.id)) return;
+  const unreadIncoming = getMessages(chat).filter((message) => (
+    message.type === "incoming" && !message.readAt && isUuid(message.id)
+  ));
+  if (!unreadIncoming.length) return;
+
+  const readAt = new Date().toISOString();
+  const ids = unreadIncoming.map((message) => message.id);
+  const { error } = await db
+    .from("messages")
+    .update({ read_at: readAt })
+    .in("id", ids);
+
+  if (error) {
+    console.warn(error);
+    return;
+  }
+
+  unreadIncoming.forEach((message) => {
+    message.readAt = readAt;
+  });
+}
+
 async function sendMessage(conversationId, content, options = {}) {
   if (!content.trim()) return;
-  const ttlMs = options.burnAfterRead ? BURN_TTL_SECONDS * 1000 : FIVE_HOURS;
+  const mode = options.privacyMode || privacyMode;
+  const config = getPrivacyConfig(mode);
+  const ttlMs = config.seconds * 1000;
   const chat = getChat(conversationId);
 
   if (!isLiveMode() || chat?.placeholder || !isUuid(conversationId)) {
@@ -667,7 +952,8 @@ async function sendMessage(conversationId, content, options = {}) {
       type: "outgoing",
       text: content,
       time: i18n[currentLang].now,
-      burnAfterRead: Boolean(options.burnAfterRead),
+      privacyMode: mode,
+      burnAfterRead: Boolean(config.burnAfterRead),
       expiresAt: new Date(Date.now() + ttlMs).toISOString()
     });
     vibrate(30);
@@ -676,13 +962,25 @@ async function sendMessage(conversationId, content, options = {}) {
 
   const now = new Date();
   const expiresAt = new Date(now.getTime() + ttlMs).toISOString();
-  const { error } = await db.from("messages").insert({
+  let { error } = await db.from("messages").insert({
     conversation_id: conversationId,
     sender_id: currentProfile.id,
     content,
     expires_at: expiresAt,
-    burn_after_read: Boolean(options.burnAfterRead)
+    privacy_mode: mode,
+    burn_after_read: Boolean(config.burnAfterRead)
   });
+
+  if (error && isMissingRelationError(error)) {
+    const fallback = await db.from("messages").insert({
+      conversation_id: conversationId,
+      sender_id: currentProfile.id,
+      content,
+      expires_at: expiresAt,
+      burn_after_read: Boolean(config.burnAfterRead)
+    });
+    error = fallback.error;
+  }
 
   if (error) throw error;
   vibrate(30);
@@ -702,7 +1000,12 @@ function mapDbMessage(row) {
     time: formatTime(row.created_at),
     createdAt: row.created_at,
     expiresAt: row.expires_at,
-    burnAfterRead: Boolean(row.burn_after_read)
+    privacyMode: row.privacy_mode || "5h",
+    burnAfterRead: Boolean(row.burn_after_read),
+    readAt: row.read_at,
+    status: row.sender_id === currentProfile.id
+      ? (row.read_at ? "read" : "sent")
+      : ""
   };
 }
 
@@ -822,29 +1125,141 @@ function getMessages(chat) {
 function renderChats() {
   const list = $("chatsList");
   const empty = $("emptyState");
+  const t = i18n[currentLang];
 
-  if (!chats.length) {
+  if (!chats.length && !conversationRequests.length && !burnedChats.length) {
     list.innerHTML = "";
     empty.hidden = false;
     return;
   }
 
   empty.hidden = true;
-  list.innerHTML = chats.map((chat) => {
+  const requestsMarkup = conversationRequests.length ? `
+    <div class="inbox-group">
+      <div class="inbox-group-title">${escapeHtml(t.requestsHeader)}</div>
+      ${conversationRequests.map(renderRequestItem).join("")}
+    </div>
+  ` : "";
+
+  const expiring = chats.filter((chat) => getChatExpiryTime(chat) - Date.now() < 30 * 60 * 1000);
+  const active = chats.filter((chat) => !expiring.includes(chat));
+  const expiringMarkup = expiring.length ? renderChatGroup(t.expiringHeader, expiring) : "";
+  const activeMarkup = active.length ? renderChatGroup(t.activeHeader, active) : "";
+  const burnedMarkup = burnedChats.length ? renderChatGroup(t.burnedHeader, burnedChats, true) : "";
+
+  list.innerHTML = `${requestsMarkup}${expiringMarkup}${activeMarkup}${burnedMarkup}`;
+}
+
+function renderChatGroup(title, items, disabled = false) {
+  return `
+    <div class="inbox-group">
+      <div class="inbox-group-title">${escapeHtml(title)}</div>
+      ${items.map((chat) => renderChatItem(chat, disabled)).join("")}
+    </div>
+  `;
+}
+
+function renderChatItem(chat, disabled = false) {
     const name = getChatName(chat);
     const hue = hashHue(chat.otherProfile?.avatar_seed || name);
     const statusClass = chat.online ? "online" : "offline";
 
     return `
-      <div class="chat-item" role="button" tabindex="0" data-chat-id="${escapeHtml(chat.id)}" aria-label="${escapeHtml(name)}">
+      <div class="chat-item ${disabled ? "disabled" : ""}" role="button" tabindex="0" data-chat-id="${escapeHtml(chat.id)}" aria-label="${escapeHtml(name)}">
         <div class="chat-avatar" style="--avatar-hue: ${hue}">${escapeHtml(getInitials(name))}</div>
         <div class="chat-info">
           <div class="chat-name">${escapeHtml(name)}</div>
+          <div class="chat-meta">${escapeHtml(chat.burned ? i18n[currentLang].expired : getPrivacyLabel(chat.privacyMode || "5h"))}</div>
         </div>
         <div class="chat-status ${statusClass}" aria-hidden="true"></div>
       </div>
     `;
-  }).join("");
+}
+
+function renderRequestItem(request) {
+  const profile = isIncomingRequest(request) ? request.requester : request.target;
+  const name = profile?.display_name || profile?.public_code || "27";
+  const hue = hashHue(profile?.avatar_seed || name);
+  const incoming = isIncomingRequest(request);
+  return `
+    <div class="request-item" data-request-id="${escapeHtml(request.id)}">
+      <div class="chat-avatar" style="--avatar-hue: ${hue}">${escapeHtml(getInitials(name))}</div>
+      <div class="chat-info">
+        <div class="chat-name">${escapeHtml(incoming ? i18n[currentLang].requestIncoming.replace("{name}", name) : i18n[currentLang].requestSent)}</div>
+        <div class="chat-meta">${escapeHtml(profile?.public_code || "")}</div>
+      </div>
+      ${incoming ? `
+        <button class="mini-action accept-request" type="button">${escapeHtml(i18n[currentLang].accept)}</button>
+        <button class="mini-action reject-request" type="button">${escapeHtml(i18n[currentLang].reject)}</button>
+        <button class="mini-action danger reject-block-request" type="button">${escapeHtml(i18n[currentLang].block)}</button>
+      ` : ""}
+    </div>
+  `;
+}
+
+async function acceptConversationRequest(requestId) {
+  const request = conversationRequests.find((item) => item.id === requestId);
+  if (!request || !isIncomingRequest(request)) return;
+
+  let { data: created, error: createError } = await db
+    .from("conversations")
+    .insert({
+      user_a_id: request.requester_id,
+      user_b_id: request.target_id,
+      privacy_mode: privacyMode,
+      last_message_at: new Date().toISOString(),
+      status: "active"
+    })
+    .select("id")
+    .single();
+
+  if (createError && isMissingRelationError(createError)) {
+    const fallback = await db
+      .from("conversations")
+      .insert({
+        user_a_id: request.requester_id,
+        user_b_id: request.target_id,
+        last_message_at: new Date().toISOString()
+      })
+      .select("id")
+      .single();
+    created = fallback.data;
+    createError = fallback.error;
+  }
+
+  if (createError) throw createError;
+
+  const { error: updateError } = await db
+    .from("conversation_requests")
+    .update({ status: "accepted", responded_at: new Date().toISOString() })
+    .eq("id", requestId);
+
+  if (updateError && !isMissingRelationError(updateError)) throw updateError;
+  await loadConversations();
+  showToast(i18n[currentLang].accepted);
+  if (created?.id) openChat(created.id);
+}
+
+async function rejectConversationRequest(requestId, block = false) {
+  const request = conversationRequests.find((item) => item.id === requestId);
+  if (!request || !isIncomingRequest(request)) return;
+
+  if (block) {
+    const { error: blockError } = await db
+      .from("blocked_profiles")
+      .upsert({ blocker_id: currentProfile.id, blocked_id: request.requester_id });
+    if (blockError && !isMissingRelationError(blockError)) throw blockError;
+  }
+
+  const { error } = await db
+    .from("conversation_requests")
+    .update({ status: block ? "blocked" : "rejected", responded_at: new Date().toISOString() })
+    .eq("id", requestId);
+
+  if (error && !isMissingRelationError(error)) throw error;
+  await loadConversationRequests();
+  renderChats();
+  showToast(block ? i18n[currentLang].blocked : i18n[currentLang].rejected);
 }
 
 function renderMessages(chat) {
@@ -858,13 +1273,16 @@ function renderMessages(chat) {
       const burnLabel = message.burnAfterRead
         ? `<span class="burn-label">${escapeHtml(t.burnAfterRead)}</span>`
         : "";
+      const statusLabel = message.type === "outgoing"
+        ? `<span class="message-status">${escapeHtml(getMessageStatusLabel(message))}</span>`
+        : "";
       return `
       <div class="message-shell ${message.type}" data-message-id="${escapeHtml(message.id || "")}">
         <div class="swipe-delete-cue" aria-hidden="true">🔥</div>
         <div class="message ${message.type}" style="--swipe-x: 0px; --delete-opacity: 0;">
           ${renderMessageContent(message)}
           ${burnLabel}
-          <span class="message-time">${escapeHtml(message.time || t.now)}</span>
+          <span class="message-time">${escapeHtml(message.time || t.now)} ${statusLabel}</span>
           <span class="message-timer${criticalClass}" style="--timer-width: ${percent}%"></span>
         </div>
       </div>
@@ -879,6 +1297,14 @@ function renderMessages(chat) {
   requestAnimationFrame(() => {
     list.scrollTop = list.scrollHeight;
   });
+}
+
+function getMessageStatusLabel(message) {
+  const t = i18n[currentLang];
+  if (message.burnAfterRead && message.readAt) return t.burnAfterRead;
+  if (message.status === "read" || message.readAt) return t.readStatus;
+  if (message.status === "delivered") return t.deliveredStatus;
+  return t.sentStatus;
 }
 
 function renderMessageContent(message) {
@@ -933,7 +1359,7 @@ function getMessageRemaining(message) {
 }
 
 function getMessageTimerPercent(message) {
-  const ttl = message?.burnAfterRead ? BURN_TTL_SECONDS : MESSAGE_TTL_SECONDS;
+  const ttl = getPrivacyConfig(message?.privacyMode || (message?.burnAfterRead ? "10s_read" : "5h")).seconds;
   return Math.max(0, Math.min(100, (getMessageRemaining(message) / (ttl * 1000)) * 100));
 }
 
@@ -1068,6 +1494,8 @@ async function openChat(chatId) {
   $("chatView").dataset.activeChat = chat.id;
   $("chatViewName").textContent = getChatName(chat);
   $("chatViewStatus").textContent = t.loadingConversation;
+  privacyMode = chat.privacyMode || "5h";
+  $("privacyModeSelect").value = privacyMode;
   window.location.hash = `#chat/${encodeURIComponent(chat.id)}`;
 
   try {
@@ -1086,7 +1514,18 @@ function showHome() {
   $("settingsView").hidden = true;
 }
 
-function closeChat() {
+async function closeChat() {
+  const chat = getChat(activeConversationId);
+  if (chat?.privacyMode === "close") {
+    if (isLiveMode() && isUuid(chat.id)) {
+      await db.from("messages").delete().eq("conversation_id", chat.id);
+    } else {
+      chat.messages = { neutral: [] };
+    }
+    chat.burned = true;
+    burnedChats.unshift({ ...chat, burned: true });
+    chats = chats.filter((item) => item.id !== chat.id);
+  }
   if (activeSubscription && db) {
     db.removeChannel(activeSubscription).catch(() => {});
     activeSubscription = null;
@@ -1168,6 +1607,17 @@ function setLanguage(lang) {
   $("saveSettingsBtn").textContent = t.saveSettings;
   $("panicModeBtn").textContent = t.hideMode;
   $("shareQrBtn").textContent = t.shareQr;
+  $("toggleCodeBtn").textContent = currentProfile?.code_visible === false ? t.showCode : t.hideCode;
+  $("regenerateCodeBtn").textContent = t.regenerateCode;
+  $("deleteAllBtn").textContent = t.deleteAll;
+  $("blockChatBtn").textContent = t.block;
+  $("copyLinkBtn").textContent = t.copyMyLink;
+  $("privacyModeLabel").textContent = t.privacyModeLabel;
+  $("privacyModeSelect").options[0].textContent = t.privacy10s;
+  $("privacyModeSelect").options[1].textContent = t.privacy5m;
+  $("privacyModeSelect").options[2].textContent = t.privacy1h;
+  $("privacyModeSelect").options[3].textContent = t.privacy5h;
+  $("privacyModeSelect").options[4].textContent = t.privacyClose;
   $("burnToggle").setAttribute("aria-label", t.burnToggle);
   $("burnToggle").title = t.burnToggle;
   $("qrModalTitle").textContent = t.qrTitle;
@@ -1186,6 +1636,7 @@ function setLanguage(lang) {
     const chat = getChat(active);
     $("chatViewName").textContent = getChatName(chat);
     updateChatCountdown(chat);
+    updatePrivacyModeUI();
     renderMessages(chat);
   }
 }
@@ -1245,10 +1696,10 @@ async function handleSendMessage(event) {
       showToast(i18n[currentLang].mediaStorage);
     }
 
-    if (text) await sendMessage(conversationId, text, { burnAfterRead: burnMode });
+    if (text) await sendMessage(conversationId, text, { privacyMode });
     input.value = "";
     mediaInput.value = "";
-    setBurnMode(false);
+    if (privacyMode === "10s_read") setBurnMode(false);
   } catch (error) {
     handleAsyncError(error, i18n[currentLang].errorChats);
   } finally {
@@ -1284,10 +1735,28 @@ async function saveSettings() {
 }
 
 function setBurnMode(enabled) {
-  burnMode = enabled;
-  $("burnToggle").classList.toggle("active", burnMode);
-  $("messageInput").classList.toggle("burn-active", burnMode);
-  $("burnToggle").setAttribute("aria-pressed", String(burnMode));
+  privacyMode = enabled ? "10s_read" : ($("privacyModeSelect").value === "10s_read" ? "5h" : $("privacyModeSelect").value);
+  $("privacyModeSelect").value = privacyMode;
+  updatePrivacyModeUI();
+}
+
+function updatePrivacyModeUI() {
+  const isBurn = privacyMode === "10s_read";
+  $("burnToggle").classList.toggle("active", isBurn);
+  $("messageInput").classList.toggle("burn-active", isBurn);
+  $("burnToggle").setAttribute("aria-pressed", String(isBurn));
+  $("privacyModeLabel").textContent = i18n[currentLang].privacyModeLabel;
+}
+
+async function changePrivacyMode(mode) {
+  privacyMode = mode;
+  updatePrivacyModeUI();
+  const chat = getChat($("chatView").dataset.activeChat);
+  if (chat) chat.privacyMode = mode;
+  if (isLiveMode() && chat?.id && isUuid(chat.id)) {
+    const { error } = await db.from("conversations").update({ privacy_mode: mode }).eq("id", chat.id);
+    if (error) console.warn(error);
+  }
 }
 
 function setPanicMode(enabled) {
@@ -1296,7 +1765,15 @@ function setPanicMode(enabled) {
   document.body.classList.toggle("panic-active", panicMode);
 }
 
+function resetIdleLock() {
+  window.clearTimeout(idleLockTimer);
+  idleLockTimer = window.setTimeout(() => {
+    if (!$("chatView").hidden) setPanicMode(true);
+  }, 60000);
+}
+
 async function openQrModal() {
+  if (currentProfile?.code_visible === false) return;
   const code = currentProfile?.public_code || $("profileCodeValue")?.textContent?.trim();
   if (!code || code === "------") return;
   qrModalOpen = true;
@@ -1334,6 +1811,112 @@ async function openRouteFromHash() {
 function closeQrModal() {
   qrModalOpen = false;
   $("qrModal").hidden = true;
+}
+
+function subscribeToRequests() {
+  if (!isLiveMode() || requestsSubscription) return;
+  requestsSubscription = db
+    .channel(`requests:${currentProfile.id}`)
+    .on(
+      "postgres_changes",
+      { event: "*", schema: "public", table: "conversation_requests" },
+      async () => {
+        await loadConversationRequests();
+        renderChats();
+      }
+    )
+    .subscribe((status) => {
+      if (status === "CHANNEL_ERROR") {
+        db.removeChannel(requestsSubscription).catch(() => {});
+        requestsSubscription = null;
+      }
+    });
+}
+
+async function toggleCodeVisibility() {
+  if (!isLiveMode() || !currentProfile) return;
+  const nextVisible = currentProfile.code_visible === false;
+  const { data, error } = await db
+    .from("profiles")
+    .update({ code_visible: nextVisible })
+    .eq("id", currentProfile.id)
+    .select("*")
+    .single();
+  if (error && !isMissingRelationError(error)) throw error;
+  currentProfile = error ? { ...currentProfile, code_visible: nextVisible } : data;
+  localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(currentProfile));
+  updateProfileCodeUI();
+  setLanguage(currentLang);
+}
+
+async function regenerateCode() {
+  if (!isLiveMode() || !currentProfile) return;
+  for (let attempt = 0; attempt < 8; attempt += 1) {
+    const publicCode = randomPublicCode();
+    const { data, error } = await db
+      .from("profiles")
+      .update({ public_code: publicCode, code_visible: true })
+      .eq("id", currentProfile.id)
+      .select("*")
+      .single();
+    if (!error || isMissingRelationError(error)) {
+      if (error) {
+        const fallback = await db
+          .from("profiles")
+          .update({ public_code: publicCode })
+          .eq("id", currentProfile.id)
+          .select("*")
+          .single();
+        if (fallback.error) {
+          if (fallback.error.code !== "23505") throw fallback.error;
+          continue;
+        }
+        currentProfile = { ...fallback.data, code_visible: true };
+      } else {
+        currentProfile = data;
+      }
+      localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(currentProfile));
+      updateProfileCodeUI();
+      setLanguage(currentLang);
+      showToast(i18n[currentLang].codeRegenerated);
+      return;
+    }
+    if (error.code !== "23505") throw error;
+  }
+}
+
+async function deleteAllConversationsNow() {
+  if (!isLiveMode() || !currentProfile) {
+    chats = [];
+    renderChats();
+    showHome();
+    return;
+  }
+  const { error } = await db
+    .from("conversations")
+    .delete()
+    .or(`user_a_id.eq.${currentProfile.id},user_b_id.eq.${currentProfile.id}`);
+  if (error) throw error;
+  chats = [];
+  burnedChats = [];
+  renderChats();
+  showHome();
+  showToast(i18n[currentLang].deletedAll);
+}
+
+async function blockActiveChat() {
+  const chat = getChat($("chatView").dataset.activeChat);
+  const otherId = chat?.otherProfile?.id;
+  if (!otherId || !isLiveMode()) return;
+  const { error } = await db
+    .from("blocked_profiles")
+    .upsert({ blocker_id: currentProfile.id, blocked_id: otherId });
+  if (error) throw error;
+  await db.from("conversations").update({ status: "blocked" }).eq("id", chat.id);
+  chats = chats.filter((item) => item.id !== chat.id);
+  await closeChat();
+  renderChats();
+  showToast(i18n[currentLang].blocked);
 }
 
 async function registerPwa() {
@@ -1412,6 +1995,8 @@ async function boot() {
   setLoading(i18n[currentLang].loadingChats, true);
   chats = demoChats.filter((chat) => chat.expiresAt > Date.now());
   setLanguage(currentLang);
+  const sharedCode = new URLSearchParams(window.location.search).get("code");
+  if (sharedCode && /^\d{6}$/.test(sharedCode)) $("codeInput").value = sharedCode;
 
   if (!db) {
     setLoading("", false);
@@ -1429,6 +2014,7 @@ async function boot() {
     updateProfileCodeUI();
     registerPwa();
     await loadConversations();
+    subscribeToRequests();
     setLanguage(currentLang);
 
     await openRouteFromHash();
@@ -1449,13 +2035,21 @@ $("settingsToggle").addEventListener("click", openSettings);
 $("backFromSettings").addEventListener("click", closeSettings);
 $("saveSettingsBtn").addEventListener("click", saveSettings);
 $("copyCodeBtn").addEventListener("click", copyProfileCode);
+$("copyLinkBtn").addEventListener("click", copyProfileLink);
 $("profileQrBtn").addEventListener("click", openQrModal);
 $("panicModeBtn").addEventListener("click", () => setPanicMode(true));
 $("shareQrBtn").addEventListener("click", openQrModal);
+$("toggleCodeBtn").addEventListener("click", () => toggleCodeVisibility().catch((error) => handleAsyncError(error, i18n[currentLang].errorChats)));
+$("regenerateCodeBtn").addEventListener("click", () => regenerateCode().catch((error) => handleAsyncError(error, i18n[currentLang].errorChats)));
+$("deleteAllBtn").addEventListener("click", () => deleteAllConversationsNow().catch((error) => handleAsyncError(error, i18n[currentLang].errorChats)));
+$("blockChatBtn").addEventListener("click", () => blockActiveChat().catch((error) => handleAsyncError(error, i18n[currentLang].errorChats)));
 $("closeQrModal").addEventListener("click", closeQrModal);
 $("qrBackdrop").addEventListener("click", closeQrModal);
 $("copyQrCodeBtn").addEventListener("click", copyProfileCode);
-$("burnToggle").addEventListener("click", () => setBurnMode(!burnMode));
+$("burnToggle").addEventListener("click", () => setBurnMode(privacyMode !== "10s_read"));
+$("privacyModeSelect").addEventListener("change", (event) => {
+  changePrivacyMode(event.target.value).catch((error) => handleAsyncError(error, i18n[currentLang].errorChats));
+});
 $("displayNameInput").addEventListener("input", () => {
   $("displayNameInput").dataset.edited = "true";
 });
@@ -1473,8 +2067,26 @@ $("codeInput").addEventListener("keydown", (event) => {
 });
 
 document.addEventListener("click", (event) => {
+  const requestItem = event.target.closest(".request-item");
+  if (requestItem) {
+    const requestId = requestItem.dataset.requestId;
+    if (event.target.closest(".accept-request")) {
+      acceptConversationRequest(requestId).catch((error) => handleAsyncError(error, i18n[currentLang].errorChats));
+      return;
+    }
+    if (event.target.closest(".reject-request")) {
+      rejectConversationRequest(requestId).catch((error) => handleAsyncError(error, i18n[currentLang].errorChats));
+      return;
+    }
+    if (event.target.closest(".reject-block-request")) {
+      rejectConversationRequest(requestId, true).catch((error) => handleAsyncError(error, i18n[currentLang].errorChats));
+      return;
+    }
+  }
+
   const item = event.target.closest(".chat-item");
   if (!item) return;
+  if (item.classList.contains("disabled")) return;
   openChat(item.dataset.chatId);
 });
 
@@ -1486,11 +2098,27 @@ document.addEventListener("keydown", (event) => {
   item.click();
 });
 
-$("backToChats").addEventListener("click", closeChat);
+$("backToChats").addEventListener("click", () => closeChat().catch((error) => handleAsyncError(error, i18n[currentLang].errorChats)));
 $("messageForm").addEventListener("submit", handleSendMessage);
 $("messageInput").addEventListener("input", handleComposerTyping);
 $("mediaInput").addEventListener("change", () => {
   if ($("mediaInput").files?.length) $("messageForm").requestSubmit();
+});
+
+["pointerdown", "keydown", "touchstart"].forEach((eventName) => {
+  document.addEventListener(eventName, resetIdleLock, { passive: true });
+});
+
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden && !$("chatView").hidden) setPanicMode(true);
+});
+
+window.addEventListener("blur", () => {
+  if (!$("chatView").hidden) setPanicMode(true);
+});
+
+window.addEventListener("hashchange", () => {
+  openRouteFromHash().catch((error) => handleAsyncError(error, i18n[currentLang].errorChats));
 });
 
 window.setInterval(async () => {
