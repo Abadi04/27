@@ -92,9 +92,13 @@
         </div>
         <div class="messages-list" id="messagesList"></div>
         <form class="message-form" id="messageForm">
-          <label class="attach-btn" id="attachBtn" for="mediaInput" aria-label="إرسال صورة أو فيديو" title="إرسال صورة أو فيديو">
+          <div class="reply-composer" id="replyComposer" hidden>
+            <span id="replyComposerText"></span>
+            <button id="cancelReplyBtn" type="button" aria-label="إلغاء الرد">×</button>
+          </div>
+          <button class="attach-btn" id="attachBtn" type="button" aria-label="إرسال صورة أو فيديو" title="إرسال صورة أو فيديو">
             +
-          </label>
+          </button>
           <input class="media-input" id="mediaInput" type="file" accept="image/*,video/*" />
           <input
             class="message-input"
@@ -104,6 +108,8 @@
             placeholder="اكتب رسالة مؤقتة..."
           />
           <button class="burn-toggle" id="burnToggle" type="button" aria-label="رسالة تحترق" title="رسالة تحترق">🔥</button>
+          <button class="hidden-toggle" id="hiddenToggle" type="button" aria-label="رسالة مخفية" title="رسالة مخفية">◐</button>
+          <button class="voice-btn" id="voiceBtn" type="button" aria-label="تسجيل صوتي" title="تسجيل صوتي">●</button>
           <button class="send-btn" id="sendBtn" type="submit">إرسال</button>
         </form>
       </section>
@@ -162,6 +168,34 @@
         <img id="qrImage" alt="" />
         <strong id="qrCodeText">------</strong>
         <button class="start-btn" id="copyQrCodeBtn" type="button">نسخ الرقم</button>
+      </div>
+    </div>
+    <div class="message-actions" id="messageActions" hidden>
+      <div class="message-actions-backdrop" id="messageActionsBackdrop"></div>
+      <div class="message-actions-sheet" role="dialog" aria-modal="true" aria-labelledby="messageActionsTitle">
+        <div class="sheet-handle" aria-hidden="true"></div>
+        <h2 id="messageActionsTitle">إجراءات الرسالة</h2>
+        <div class="reaction-row" aria-label="تفاعلات سريعة">
+          <button type="button" data-reaction="🔥">🔥</button>
+          <button type="button" data-reaction="❤️">❤️</button>
+          <button type="button" data-reaction="😂">😂</button>
+          <button type="button" data-reaction="👀">👀</button>
+          <button type="button" data-reaction="✅">✅</button>
+        </div>
+        <button class="message-action-btn" id="replyActionBtn" type="button">رد</button>
+        <button class="message-action-btn" id="copyMessageBtn" type="button">نسخ</button>
+        <button class="message-action-btn danger" id="burnMessageNowBtn" type="button">إحراق الآن</button>
+      </div>
+    </div>
+    <div class="media-sheet" id="mediaSheet" hidden>
+      <div class="media-sheet-backdrop" id="mediaSheetBackdrop"></div>
+      <div class="media-sheet-panel" role="dialog" aria-modal="true" aria-labelledby="mediaSheetTitle">
+        <div class="sheet-handle" aria-hidden="true"></div>
+        <h2 id="mediaSheetTitle">إرسال سريع</h2>
+        <button id="pickMediaBtn" type="button">صورة أو فيديو</button>
+        <button class="gif-choice" type="button" data-gif="✨">GIF ✨</button>
+        <button class="gif-choice" type="button" data-gif="🔥">GIF 🔥</button>
+        <button class="gif-choice" type="button" data-gif="👀">GIF 👀</button>
       </div>
     </div>
     <div class="onboarding-screen" id="onboardingScreen" hidden>

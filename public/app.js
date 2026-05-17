@@ -30,6 +30,8 @@ const PRIVACY_MODES = {
 const PROFILE_STORAGE_KEY = "twentyseven_profile";
 const ONBOARDING_STORAGE_KEY = "veil_seen";
 const SWIPE_DELETE_THRESHOLD = 80;
+const SWIPE_REPLY_THRESHOLD = 56;
+const DEMO_PROFILE_ID = "demo-self";
 
 const supabaseReady =
   typeof window.supabase !== "undefined" &&
@@ -78,9 +80,20 @@ const i18n = {
     rejected: "تم الرفض.",
     accepted: "تم قبول الطلب.",
     requestsHeader: "طلبات جديدة",
+    pendingHeader: "بانتظار الرد",
     expiringHeader: "قريبة من الانتهاء",
+    expiringStripOne: "محادثة ستنتهي قريبًا · خلال {time}",
+    expiringStrip: "{count} محادثات ستنتهي قريبًا · أقربها خلال {time}",
     activeHeader: "نشطة",
     burnedHeader: "منتهية",
+    blockedHeader: "محظورة",
+    pendingState: "بانتظار قبول الطرف الآخر.",
+    expiredStateTitle: "انتهت المحادثة واختفت",
+    expiredStateBody: "لا يمكن عرض الرسائل بعد انتهاء الوقت. يمكنك حذف الأثر من القائمة أو بدء طلب جديد.",
+    blockedStateTitle: "هذه المحادثة محظورة",
+    blockedStateBody: "لن تستقبل رسائل من هذا الرقم. يمكنك إدارة الحظر لاحقًا من إعدادات الخصوصية.",
+    noChatsTitle: "لا توجد محادثات نشطة",
+    noChatsBody: "ابدأ برقم مستخدم فقط. الطلبات والمحادثات القريبة من الانتهاء ستظهر هنا تلقائيًا.",
     privacyModeLabel: "وضع الاختفاء",
     privacy10s: "10 ثوانٍ بعد القراءة",
     privacy5m: "5 دقائق",
@@ -121,6 +134,15 @@ const i18n = {
     realtimeConnecting: "جارٍ تفعيل الاتصال المباشر...",
     realtimeConnected: "الاتصال المباشر فعّال",
     mediaStorage: "رفع الوسائط يحتاج Storage لاحقًا. أُرسلت الرسالة النصية فقط.",
+    mediaSheetTitle: "إرسال سريع",
+    pickMedia: "صورة أو فيديو",
+    gifSent: "تم إرسال GIF مؤقت",
+    voiceHold: "اضغط مطولًا للتسجيل",
+    voiceRecording: "جارٍ التسجيل...",
+    voiceSent: "تم إرسال صوتية مؤقتة",
+    hiddenToggle: "رسالة مخفية",
+    hiddenActive: "النص مخفي حتى اللمس",
+    hiddenRevealHint: "المس باستمرار للكشف",
     hideMode: "وضع التخفي",
     shareQr: "شارك كـ QR",
     qrTitle: "شارك رقمك",
@@ -128,6 +150,15 @@ const i18n = {
     close: "إغلاق",
     burnToggle: "رسالة تحترق",
     burnAfterRead: "تحترق بعد القراءة",
+    reply: "رد",
+    replyTo: "رد على: {text}",
+    cancelReply: "إلغاء الرد",
+    copyMessage: "نسخ",
+    copiedMessage: "تم نسخ الرسالة",
+    burnNow: "إحراق الآن",
+    messageActions: "إجراءات الرسالة",
+    messageDeleted: "تم حذف الرسالة",
+    reactionAdded: "تم إضافة التفاعل",
     typing: "يكتب الآن...",
     fakeNotesTitle: "Notes",
     now: "الآن",
@@ -170,9 +201,20 @@ const i18n = {
     rejected: "Rejected.",
     accepted: "Request accepted.",
     requestsHeader: "New requests",
+    pendingHeader: "Waiting",
     expiringHeader: "Expiring soon",
+    expiringStripOne: "1 chat expires soon · in {time}",
+    expiringStrip: "{count} chats expire soon · closest in {time}",
     activeHeader: "Active",
     burnedHeader: "Burned",
+    blockedHeader: "Blocked",
+    pendingState: "Waiting for the other person to accept.",
+    expiredStateTitle: "This chat expired and disappeared",
+    expiredStateBody: "Messages are no longer available after expiry. You can clear the trace or start a new request.",
+    blockedStateTitle: "This chat is blocked",
+    blockedStateBody: "You will not receive messages from this code. Blocked codes can be managed later from privacy settings.",
+    noChatsTitle: "No active chats",
+    noChatsBody: "Start with a user code only. Requests and chats close to expiry will organize themselves here.",
     privacyModeLabel: "Disappears",
     privacy10s: "10s after read",
     privacy5m: "5 minutes",
@@ -213,6 +255,15 @@ const i18n = {
     realtimeConnecting: "Connecting realtime...",
     realtimeConnected: "Realtime connected",
     mediaStorage: "Media upload needs Storage later. Text sent only.",
+    mediaSheetTitle: "Quick send",
+    pickMedia: "Photo or video",
+    gifSent: "Temporary GIF sent",
+    voiceHold: "Hold to record",
+    voiceRecording: "Recording...",
+    voiceSent: "Temporary voice note sent",
+    hiddenToggle: "Hidden message",
+    hiddenActive: "Text is hidden until touch",
+    hiddenRevealHint: "Hold to reveal",
     hideMode: "Hide Mode",
     shareQr: "Share as QR",
     qrTitle: "Share your number",
@@ -220,6 +271,15 @@ const i18n = {
     close: "Close",
     burnToggle: "Burn message",
     burnAfterRead: "Burns after reading",
+    reply: "Reply",
+    replyTo: "Replying to: {text}",
+    cancelReply: "Cancel reply",
+    copyMessage: "Copy",
+    copiedMessage: "Message copied",
+    burnNow: "Burn now",
+    messageActions: "Message actions",
+    messageDeleted: "Message deleted",
+    reactionAdded: "Reaction added",
     typing: "Typing...",
     fakeNotesTitle: "Notes",
     now: "Now",
@@ -248,12 +308,19 @@ const demoChats = [
   ])
 ];
 
+demoChats[2].lastMessageAt = Date.now() - (FIVE_HOURS - 18 * 60 * 1000);
+demoChats[2].expiresAt = Date.now() + 18 * 60 * 1000;
+Object.values(demoChats[2].messages).flat().forEach((message) => {
+  message.expiresAt = new Date(demoChats[2].expiresAt).toISOString();
+});
+
 let currentLang = "ar";
 let displayName = "زائر 27";
 let currentProfile = null;
 let chats = [];
 let conversationRequests = [];
 let burnedChats = [];
+let blockedChats = [];
 let activeConversationId = "";
 let activeSubscription = null;
 let requestsSubscription = null;
@@ -266,6 +333,10 @@ let typingLastSentAt = 0;
 let typingStopTimer = null;
 let qrModalOpen = false;
 let idleLockTimer = null;
+let replyDraft = null;
+let activeActionMessageId = "";
+let hiddenMode = false;
+let voiceRecording = null;
 
 const $ = (id) => document.getElementById(id);
 
@@ -593,7 +664,26 @@ async function deleteConversationIfExpiredAndEmpty(chat) {
 
 async function loadConversationRequests() {
   if (!isLiveMode()) {
-    conversationRequests = [];
+    conversationRequests = [
+      {
+        id: "demo-request-incoming",
+        requester_id: "demo-rakan",
+        target_id: DEMO_PROFILE_ID,
+        status: "pending",
+        created_at: new Date().toISOString(),
+        requester: { id: "demo-rakan", public_code: "482913", display_name: currentLang === "ar" ? "راكان" : "Rakan", avatar_seed: "Rakan" },
+        target: { id: DEMO_PROFILE_ID, public_code: "270027", display_name: "27", avatar_seed: "27" }
+      },
+      {
+        id: "demo-request-outgoing",
+        requester_id: DEMO_PROFILE_ID,
+        target_id: "demo-lina",
+        status: "pending",
+        created_at: new Date().toISOString(),
+        requester: { id: DEMO_PROFILE_ID, public_code: "270027", display_name: "27", avatar_seed: "27" },
+        target: { id: "demo-lina", public_code: "918204", display_name: currentLang === "ar" ? "لينا" : "Lina", avatar_seed: "Lina" }
+      }
+    ];
     return [];
   }
 
@@ -624,6 +714,7 @@ async function loadConversationRequests() {
 }
 
 function isIncomingRequest(request) {
+  if (!isLiveMode()) return request.target_id === DEMO_PROFILE_ID;
   return request.target_id === currentProfile?.id;
 }
 
@@ -632,6 +723,7 @@ async function loadConversations() {
   try {
     if (!isLiveMode()) {
       chats = demoChats.filter((chat) => chat.expiresAt > Date.now());
+      moveExpiredChatsToBurned();
       renderChats();
       return chats;
     }
@@ -652,7 +744,7 @@ async function loadConversations() {
         user_b:profiles!conversations_user_b_id_fkey(id, public_code, display_name, avatar_seed)
       `)
       .or(`user_a_id.eq.${currentProfile.id},user_b_id.eq.${currentProfile.id}`)
-      .eq("status", "active")
+      .in("status", ["active", "blocked"])
       .order("last_message_at", { ascending: false, nullsFirst: false });
 
     if (error && isMissingRelationError(error)) {
@@ -675,7 +767,7 @@ async function loadConversations() {
 
     if (error) throw error;
 
-    const realChats = (data || []).map((row) => {
+    const mappedChats = (data || []).map((row) => {
       const otherProfile = row.user_a_id === currentProfile.id ? row.user_b : row.user_a;
       return {
         id: row.id,
@@ -683,11 +775,13 @@ async function loadConversations() {
         otherProfile,
         lastMessageAt: row.last_message_at ? new Date(row.last_message_at).getTime() : 0,
         privacyMode: row.privacy_mode || "5h",
+        status: row.status || "active",
         messages: { neutral: [] }
       };
     });
 
-    chats = realChats;
+    chats = mappedChats.filter((chat) => chat.status !== "blocked");
+    blockedChats = mappedChats.filter((chat) => chat.status === "blocked");
     burnedChats = burnedChats.slice(0, 12);
     await loadConversationRequests();
 
@@ -953,6 +1047,10 @@ async function sendMessage(conversationId, content, options = {}) {
       text: content,
       time: i18n[currentLang].now,
       privacyMode: mode,
+      replyToId: options.replyTo?.id,
+      replyToText: options.replyTo?.text,
+      messageType: options.messageType || (options.hidden ? "hidden_text" : "text"),
+      hidden: Boolean(options.hidden),
       burnAfterRead: Boolean(config.burnAfterRead),
       expiresAt: new Date(Date.now() + ttlMs).toISOString()
     });
@@ -966,6 +1064,7 @@ async function sendMessage(conversationId, content, options = {}) {
     conversation_id: conversationId,
     sender_id: currentProfile.id,
     content,
+    message_type: options.messageType || (options.hidden ? "hidden_text" : "text"),
     expires_at: expiresAt,
     privacy_mode: mode,
     burn_after_read: Boolean(config.burnAfterRead)
@@ -997,6 +1096,8 @@ function mapDbMessage(row) {
     id: row.id,
     type: row.sender_id === currentProfile.id ? "outgoing" : "incoming",
     text: row.content,
+    messageType: row.message_type || "text",
+    hidden: row.message_type === "hidden_text",
     time: formatTime(row.created_at),
     createdAt: row.created_at,
     expiresAt: row.expires_at,
@@ -1086,6 +1187,19 @@ function createDemoConversationFromCode(code) {
   return chat;
 }
 
+function moveExpiredChatsToBurned() {
+  const now = Date.now();
+  const expired = chats.filter((chat) => getChatExpiryTime(chat) <= now);
+  if (!expired.length) return 0;
+
+  burnedChats = [
+    ...expired.map((chat) => ({ ...chat, burned: true, status: "expired" })),
+    ...burnedChats
+  ].slice(0, 12);
+  chats = chats.filter((chat) => getChatExpiryTime(chat) > now);
+  return expired.length;
+}
+
 function appendDemoMessage(conversationId, message) {
   const chat = getChat(conversationId);
   if (!chat) return;
@@ -1108,7 +1222,7 @@ function appendDemoMessage(conversationId, message) {
 }
 
 function getChat(chatId) {
-  return chats.find((chat) => chat.id === chatId);
+  return [...chats, ...burnedChats, ...blockedChats].find((chat) => chat.id === chatId);
 }
 
 function getChatName(chat) {
@@ -1126,28 +1240,43 @@ function renderChats() {
   const list = $("chatsList");
   const empty = $("emptyState");
   const t = i18n[currentLang];
+  moveExpiredChatsToBurned();
 
-  if (!chats.length && !conversationRequests.length && !burnedChats.length) {
+  if (!chats.length && !conversationRequests.length && !burnedChats.length && !blockedChats.length) {
     list.innerHTML = "";
     empty.hidden = false;
+    empty.innerHTML = `
+      <strong>${escapeHtml(t.noChatsTitle)}</strong>
+      <span>${escapeHtml(t.noChatsBody)}</span>
+    `;
     return;
   }
 
   empty.hidden = true;
-  const requestsMarkup = conversationRequests.length ? `
+  const incomingRequests = conversationRequests.filter(isIncomingRequest);
+  const pendingRequests = conversationRequests.filter((request) => !isIncomingRequest(request));
+  const requestsMarkup = incomingRequests.length ? `
     <div class="inbox-group">
       <div class="inbox-group-title">${escapeHtml(t.requestsHeader)}</div>
-      ${conversationRequests.map(renderRequestItem).join("")}
+      ${incomingRequests.map(renderRequestItem).join("")}
+    </div>
+  ` : "";
+  const pendingMarkup = pendingRequests.length ? `
+    <div class="inbox-group">
+      <div class="inbox-group-title">${escapeHtml(t.pendingHeader)}</div>
+      ${pendingRequests.map(renderRequestItem).join("")}
     </div>
   ` : "";
 
   const expiring = chats.filter((chat) => getChatExpiryTime(chat) - Date.now() < 30 * 60 * 1000);
   const active = chats.filter((chat) => !expiring.includes(chat));
+  const expiringStrip = expiring.length ? renderExpiringStrip(expiring) : "";
   const expiringMarkup = expiring.length ? renderChatGroup(t.expiringHeader, expiring) : "";
   const activeMarkup = active.length ? renderChatGroup(t.activeHeader, active) : "";
   const burnedMarkup = burnedChats.length ? renderChatGroup(t.burnedHeader, burnedChats, true) : "";
+  const blockedMarkup = blockedChats.length ? renderChatGroup(t.blockedHeader, blockedChats, true) : "";
 
-  list.innerHTML = `${requestsMarkup}${expiringMarkup}${activeMarkup}${burnedMarkup}`;
+  list.innerHTML = `${requestsMarkup}${pendingMarkup}${expiringStrip}${expiringMarkup}${activeMarkup}${burnedMarkup}${blockedMarkup}`;
 }
 
 function renderChatGroup(title, items, disabled = false) {
@@ -1159,21 +1288,69 @@ function renderChatGroup(title, items, disabled = false) {
   `;
 }
 
+function renderExpiringStrip(items) {
+  const soonest = items.reduce((target, chat) => (
+    getChatExpiryTime(chat) < getChatExpiryTime(target) ? chat : target
+  ), items[0]);
+  const remaining = Math.max(0, getChatExpiryTime(soonest) - Date.now());
+  const template = items.length === 1 ? i18n[currentLang].expiringStripOne : i18n[currentLang].expiringStrip;
+  const label = template
+    .replace("{count}", items.length)
+    .replace("{time}", formatRemaining(remaining));
+
+  return `
+    <button class="expiring-strip" type="button" data-chat-id="${escapeHtml(soonest.id)}">
+      <span class="expiring-dot" aria-hidden="true"></span>
+      <span>${escapeHtml(label)}</span>
+    </button>
+  `;
+}
+
 function renderChatItem(chat, disabled = false) {
     const name = getChatName(chat);
     const hue = hashHue(chat.otherProfile?.avatar_seed || name);
     const statusClass = chat.online ? "online" : "offline";
+    const stateClass = chat.burned ? "is-expired" : chat.status === "blocked" ? "is-blocked" : "";
+    const meta = chat.burned
+      ? i18n[currentLang].expiredStateTitle
+      : chat.status === "blocked"
+        ? i18n[currentLang].blockedStateTitle
+        : getChatItemMeta(chat);
 
     return `
-      <div class="chat-item ${disabled ? "disabled" : ""}" role="button" tabindex="0" data-chat-id="${escapeHtml(chat.id)}" aria-label="${escapeHtml(name)}">
+      <div class="chat-item ${disabled ? "state-only" : ""} ${stateClass}" role="button" tabindex="0" data-chat-id="${escapeHtml(chat.id)}" aria-label="${escapeHtml(name)}">
         <div class="chat-avatar" style="--avatar-hue: ${hue}">${escapeHtml(getInitials(name))}</div>
         <div class="chat-info">
           <div class="chat-name">${escapeHtml(name)}</div>
-          <div class="chat-meta">${escapeHtml(chat.burned ? i18n[currentLang].expired : getPrivacyLabel(chat.privacyMode || "5h"))}</div>
+          <div class="chat-meta">${escapeHtml(meta)}</div>
         </div>
+        <div class="chat-pill">${escapeHtml(getChatPill(chat))}</div>
         <div class="chat-status ${statusClass}" aria-hidden="true"></div>
       </div>
     `;
+}
+
+function getChatItemMeta(chat) {
+  const preview = getChatPreview(chat);
+  const remaining = getChatExpiryTime(chat) - Date.now();
+  const expiry = remaining <= 0
+    ? i18n[currentLang].expiredStateTitle
+    : i18n[currentLang].expiresIn.replace("{time}", formatRemaining(remaining));
+  return preview ? `${preview} · ${expiry}` : expiry;
+}
+
+function getChatPreview(chat) {
+  const messages = getMessages(chat);
+  const last = messages[messages.length - 1];
+  if (!last) return i18n[currentLang].emptyChat;
+  if (last.mediaUrl) return last.fileName || i18n[currentLang].attach;
+  return last.text || i18n[currentLang].emptyChat;
+}
+
+function getChatPill(chat) {
+  if (chat.burned) return i18n[currentLang].burnedHeader;
+  if (chat.status === "blocked") return i18n[currentLang].block;
+  return getPrivacyLabel(chat.privacyMode || "5h");
 }
 
 function renderRequestItem(request) {
@@ -1182,16 +1359,18 @@ function renderRequestItem(request) {
   const hue = hashHue(profile?.avatar_seed || name);
   const incoming = isIncomingRequest(request);
   return `
-    <div class="request-item" data-request-id="${escapeHtml(request.id)}">
+    <div class="request-item ${incoming ? "incoming-request" : "pending-request"}" data-request-id="${escapeHtml(request.id)}">
       <div class="chat-avatar" style="--avatar-hue: ${hue}">${escapeHtml(getInitials(name))}</div>
       <div class="chat-info">
         <div class="chat-name">${escapeHtml(incoming ? i18n[currentLang].requestIncoming.replace("{name}", name) : i18n[currentLang].requestSent)}</div>
-        <div class="chat-meta">${escapeHtml(profile?.public_code || "")}</div>
+        <div class="chat-meta">${escapeHtml(incoming ? profile?.public_code || "" : i18n[currentLang].pendingState)}</div>
       </div>
       ${incoming ? `
+        <div class="request-actions">
         <button class="mini-action accept-request" type="button">${escapeHtml(i18n[currentLang].accept)}</button>
         <button class="mini-action reject-request" type="button">${escapeHtml(i18n[currentLang].reject)}</button>
         <button class="mini-action danger reject-block-request" type="button">${escapeHtml(i18n[currentLang].block)}</button>
+        </div>
       ` : ""}
     </div>
   `;
@@ -1200,6 +1379,19 @@ function renderRequestItem(request) {
 async function acceptConversationRequest(requestId) {
   const request = conversationRequests.find((item) => item.id === requestId);
   if (!request || !isIncomingRequest(request)) return;
+
+  if (!isLiveMode()) {
+    const profile = request.requester;
+    const code = profile?.public_code || "482913";
+    const chat = createDemoConversationFromCode(code);
+    chat.name = profile?.display_name || chat.name;
+    chat.otherProfile = profile || chat.otherProfile;
+    conversationRequests = conversationRequests.filter((item) => item.id !== requestId);
+    renderChats();
+    showToast(i18n[currentLang].accepted);
+    openChat(chat.id);
+    return;
+  }
 
   let { data: created, error: createError } = await db
     .from("conversations")
@@ -1244,6 +1436,26 @@ async function rejectConversationRequest(requestId, block = false) {
   const request = conversationRequests.find((item) => item.id === requestId);
   if (!request || !isIncomingRequest(request)) return;
 
+  if (!isLiveMode()) {
+    conversationRequests = conversationRequests.filter((item) => item.id !== requestId);
+    if (block) {
+      const profile = request.requester;
+      blockedChats.unshift({
+        id: `blocked-${request.requester_id}`,
+        online: false,
+        status: "blocked",
+        otherProfile: profile,
+        name: profile?.display_name || profile?.public_code || "27",
+        lastMessageAt: Date.now(),
+        expiresAt: Date.now(),
+        messages: { neutral: [] }
+      });
+    }
+    renderChats();
+    showToast(block ? i18n[currentLang].blocked : i18n[currentLang].rejected);
+    return;
+  }
+
   if (block) {
     const { error: blockError } = await db
       .from("blocked_profiles")
@@ -1276,12 +1488,21 @@ function renderMessages(chat) {
       const statusLabel = message.type === "outgoing"
         ? `<span class="message-status">${escapeHtml(getMessageStatusLabel(message))}</span>`
         : "";
+      const replyQuote = message.replyToText
+        ? `<span class="message-reply-quote">${escapeHtml(message.replyToText)}</span>`
+        : "";
+      const reaction = message.reaction
+        ? `<span class="message-reaction">${escapeHtml(message.reaction)}</span>`
+        : "";
       return `
       <div class="message-shell ${message.type}" data-message-id="${escapeHtml(message.id || "")}">
+        <div class="swipe-reply-cue" aria-hidden="true">↩</div>
         <div class="swipe-delete-cue" aria-hidden="true">🔥</div>
         <div class="message ${message.type}" style="--swipe-x: 0px; --delete-opacity: 0;">
+          ${replyQuote}
           ${renderMessageContent(message)}
           ${burnLabel}
+          ${reaction}
           <span class="message-time">${escapeHtml(message.time || t.now)} ${statusLabel}</span>
           <span class="message-timer${criticalClass}" style="--timer-width: ${percent}%"></span>
         </div>
@@ -1307,8 +1528,36 @@ function getMessageStatusLabel(message) {
   return t.sentStatus;
 }
 
+function getMessageSummary(message) {
+  const text = message?.text || message?.fileName || "";
+  return text.length > 72 ? `${text.slice(0, 72)}…` : text;
+}
+
 function renderMessageContent(message) {
   const text = escapeHtml(message.text || "");
+  if (message.messageType === "voice") {
+    return `
+      <span class="voice-message">
+        <span class="voice-play" aria-hidden="true"></span>
+        <span class="voice-wave" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
+        <span>${text || "0:03"}</span>
+      </span>
+    `;
+  }
+
+  if (message.messageType === "gif") {
+    return `<span class="gif-message"><strong>${text}</strong><small>GIF</small></span>`;
+  }
+
+  if (message.hidden) {
+    return `
+      <span class="hidden-message" tabindex="0" role="button" aria-label="${escapeHtml(i18n[currentLang].hiddenRevealHint)}">
+        <span class="hidden-mask">${escapeHtml(i18n[currentLang].hiddenRevealHint)}</span>
+        <span class="hidden-content">${text}</span>
+      </span>
+    `;
+  }
+
   if (message.mediaUrl && message.mediaType?.startsWith("image/")) {
     const caption = message.text ? `<span class="media-caption">${escapeHtml(message.text)}</span>` : "";
     return `<img class="message-media" src="${escapeHtml(message.mediaUrl)}" alt="${escapeHtml(message.fileName || "")}" />${caption}`;
@@ -1400,6 +1649,35 @@ function removeMessageLocally(messageId) {
   chat.expiresAt = latestExpiry || Date.now();
 }
 
+function setReplyDraft(message) {
+  if (!message) return;
+  replyDraft = {
+    id: message.id,
+    text: getMessageSummary(message)
+  };
+  updateReplyComposer();
+  $("messageInput").focus();
+}
+
+function clearReplyDraft() {
+  replyDraft = null;
+  updateReplyComposer();
+}
+
+function updateReplyComposer() {
+  const composer = $("replyComposer");
+  const text = $("replyComposerText");
+  const t = i18n[currentLang];
+  if (!replyDraft) {
+    composer.hidden = true;
+    text.textContent = "";
+    return;
+  }
+  composer.hidden = false;
+  text.textContent = t.replyTo.replace("{text}", replyDraft.text || "");
+  $("cancelReplyBtn").setAttribute("aria-label", t.cancelReply);
+}
+
 async function expireMessage(messageId, options = {}) {
   const message = findMessageById(messageId);
   if (!message || message.expiring) return;
@@ -1415,10 +1693,12 @@ async function expireMessage(messageId, options = {}) {
     }
     const chat = getChat(activeConversationId || $("chatView")?.dataset.activeChat);
     if (chat) {
+      if (replyDraft?.id === messageId) clearReplyDraft();
       renderMessages(chat);
       renderChats();
       updateChatCountdown(chat);
     }
+    showToast(i18n[currentLang].messageDeleted);
   };
 
   if (!shell || prefersReducedMotion()) {
@@ -1445,33 +1725,185 @@ function attachSwipeToMessages() {
     if (shell.dataset.swipeReady) return;
     shell.dataset.swipeReady = "true";
     let startX = 0;
+    let startY = 0;
     let deltaX = 0;
+    let longPressTimer = null;
+    let longPressMoved = false;
     const bubble = shell.querySelector(".message");
+    const replyDirection = document.documentElement.dir === "rtl" ? -1 : 1;
+    const deleteDirection = -replyDirection;
 
     shell.addEventListener("touchstart", (event) => {
       startX = event.touches[0].clientX;
+      startY = event.touches[0].clientY;
       deltaX = 0;
+      longPressMoved = false;
+      window.clearTimeout(longPressTimer);
+      longPressTimer = window.setTimeout(() => {
+        if (!longPressMoved) openMessageActions(shell.dataset.messageId);
+      }, 520);
       bubble.classList.remove("swipe-returning");
     }, { passive: true });
 
     shell.addEventListener("touchmove", (event) => {
-      deltaX = Math.min(0, event.touches[0].clientX - startX);
+      const rawDeltaX = event.touches[0].clientX - startX;
+      const rawDeltaY = event.touches[0].clientY - startY;
+      if (Math.abs(rawDeltaX) > 8 || Math.abs(rawDeltaY) > 8) {
+        longPressMoved = true;
+        window.clearTimeout(longPressTimer);
+      }
+      deltaX = Math.max(-SWIPE_DELETE_THRESHOLD, Math.min(SWIPE_DELETE_THRESHOLD, rawDeltaX));
       const distance = Math.min(Math.abs(deltaX), SWIPE_DELETE_THRESHOLD);
       bubble.style.setProperty("--swipe-x", `${deltaX}px`);
-      bubble.style.setProperty("--delete-opacity", String(distance / SWIPE_DELETE_THRESHOLD));
+      const isReply = Math.sign(deltaX) === replyDirection;
+      const isDelete = Math.sign(deltaX) === deleteDirection;
+      bubble.style.setProperty("--reply-opacity", String(isReply ? distance / SWIPE_REPLY_THRESHOLD : 0));
+      bubble.style.setProperty("--delete-opacity", String(isDelete ? distance / SWIPE_DELETE_THRESHOLD : 0));
     }, { passive: true });
 
     shell.addEventListener("touchend", () => {
-      if (Math.abs(deltaX) > SWIPE_DELETE_THRESHOLD) {
+      window.clearTimeout(longPressTimer);
+      if (Math.sign(deltaX) === replyDirection && Math.abs(deltaX) > SWIPE_REPLY_THRESHOLD) {
+        setReplyDraft(findMessageById(shell.dataset.messageId));
+        resetMessageSwipe(bubble);
+        return;
+      }
+      if (Math.sign(deltaX) === deleteDirection && Math.abs(deltaX) > SWIPE_DELETE_THRESHOLD) {
         shell.classList.add("message-expiring");
         expireMessage(shell.dataset.messageId, { swipe: true });
         return;
       }
-      bubble.classList.add("swipe-returning");
-      bubble.style.setProperty("--swipe-x", "0px");
-      bubble.style.setProperty("--delete-opacity", "0");
+      resetMessageSwipe(bubble);
+    });
+
+    shell.addEventListener("contextmenu", (event) => {
+      event.preventDefault();
+      openMessageActions(shell.dataset.messageId);
     });
   });
+}
+
+function resetMessageSwipe(bubble) {
+  bubble.classList.add("swipe-returning");
+  bubble.style.setProperty("--swipe-x", "0px");
+  bubble.style.setProperty("--delete-opacity", "0");
+  bubble.style.setProperty("--reply-opacity", "0");
+}
+
+function openMessageActions(messageId) {
+  const message = findMessageById(messageId);
+  if (!message) return;
+  activeActionMessageId = messageId;
+  $("messageActions").hidden = false;
+  $("messageActionsTitle").textContent = i18n[currentLang].messageActions;
+  $("replyActionBtn").textContent = i18n[currentLang].reply;
+  $("copyMessageBtn").textContent = i18n[currentLang].copyMessage;
+  $("burnMessageNowBtn").textContent = i18n[currentLang].burnNow;
+  vibrate(10);
+}
+
+function closeMessageActions() {
+  activeActionMessageId = "";
+  $("messageActions").hidden = true;
+}
+
+function getActiveActionMessage() {
+  return activeActionMessageId ? findMessageById(activeActionMessageId) : null;
+}
+
+async function copyActiveMessage() {
+  const message = getActiveActionMessage();
+  if (!message?.text) return;
+  await navigator.clipboard?.writeText(message.text);
+  closeMessageActions();
+  showToast(i18n[currentLang].copiedMessage);
+}
+
+function replyToActiveMessage() {
+  const message = getActiveActionMessage();
+  if (message) setReplyDraft(message);
+  closeMessageActions();
+}
+
+function burnActiveMessageNow() {
+  const message = getActiveActionMessage();
+  closeMessageActions();
+  if (message) expireMessage(message.id, { swipe: true });
+}
+
+function addReactionToActiveMessage(reaction) {
+  const message = getActiveActionMessage();
+  if (!message) return;
+  message.reaction = reaction;
+  closeMessageActions();
+  renderMessages(getChat(activeConversationId || $("chatView")?.dataset.activeChat));
+  showToast(i18n[currentLang].reactionAdded);
+}
+
+function openMediaSheet() {
+  $("mediaSheet").hidden = false;
+}
+
+function closeMediaSheet() {
+  $("mediaSheet").hidden = true;
+}
+
+async function sendGifMessage(gif) {
+  const conversationId = $("chatView").dataset.activeChat;
+  if (!conversationId) return;
+  const text = `${gif} ${gif} ${gif}`;
+  if (isLiveMode() && isUuid(conversationId)) {
+    await sendMessage(conversationId, text, { privacyMode, messageType: "gif" });
+    closeMediaSheet();
+    showToast(i18n[currentLang].gifSent);
+    return;
+  }
+  appendDemoMessage(conversationId, {
+    type: "outgoing",
+    text,
+    time: i18n[currentLang].now,
+    messageType: "gif",
+    privacyMode,
+    expiresAt: new Date(Date.now() + getPrivacyConfig(privacyMode).seconds * 1000).toISOString()
+  });
+  closeMediaSheet();
+  showToast(i18n[currentLang].gifSent);
+}
+
+function startVoiceRecording() {
+  if ($("chatView").hidden || voiceRecording) return;
+  voiceRecording = { startedAt: Date.now() };
+  $("voiceBtn").classList.add("recording");
+  $("voiceBtn").textContent = "■";
+  showToast(i18n[currentLang].voiceRecording);
+  vibrate(15);
+}
+
+async function finishVoiceRecording(cancel = false) {
+  if (!voiceRecording) return;
+  const startedAt = voiceRecording.startedAt;
+  voiceRecording = null;
+  $("voiceBtn").classList.remove("recording");
+  $("voiceBtn").textContent = "●";
+  if (cancel) return;
+
+  const seconds = Math.max(1, Math.round((Date.now() - startedAt) / 1000));
+  const conversationId = $("chatView").dataset.activeChat;
+  const duration = `0:${String(seconds).padStart(2, "0")}`;
+  if (isLiveMode() && isUuid(conversationId)) {
+    await sendMessage(conversationId, duration, { privacyMode, messageType: "voice" });
+    showToast(i18n[currentLang].voiceSent);
+    return;
+  }
+  appendDemoMessage(conversationId, {
+    type: "outgoing",
+    text: duration,
+    time: i18n[currentLang].now,
+    messageType: "voice",
+    privacyMode,
+    expiresAt: new Date(Date.now() + getPrivacyConfig(privacyMode).seconds * 1000).toISOString()
+  });
+  showToast(i18n[currentLang].voiceSent);
 }
 
 async function openChat(chatId) {
@@ -1494,15 +1926,42 @@ async function openChat(chatId) {
   $("chatView").dataset.activeChat = chat.id;
   $("chatViewName").textContent = getChatName(chat);
   $("chatViewStatus").textContent = t.loadingConversation;
+  $("messageForm").hidden = false;
+  document.querySelector(".chat-privacy-bar").hidden = false;
   privacyMode = chat.privacyMode || "5h";
   $("privacyModeSelect").value = privacyMode;
   window.location.hash = `#chat/${encodeURIComponent(chat.id)}`;
+
+  if (chat.burned || chat.status === "expired") {
+    renderConversationState("expired");
+    return;
+  }
+
+  if (chat.status === "blocked") {
+    renderConversationState("blocked");
+    return;
+  }
 
   try {
     await loadConversation(chat.id);
   } catch (error) {
     handleAsyncError(error, i18n[currentLang].errorChats);
   }
+}
+
+function renderConversationState(state) {
+  const t = i18n[currentLang];
+  const isBlocked = state === "blocked";
+  $("chatViewStatus").textContent = isBlocked ? t.blockedStateTitle : t.expiredStateTitle;
+  $("messageForm").hidden = true;
+  document.querySelector(".chat-privacy-bar").hidden = true;
+  $("messagesList").innerHTML = `
+    <div class="conversation-state ${isBlocked ? "blocked" : "expired"}">
+      <div class="conversation-state-icon" aria-hidden="true">${isBlocked ? "!" : "27"}</div>
+      <h3>${escapeHtml(isBlocked ? t.blockedStateTitle : t.expiredStateTitle)}</h3>
+      <p>${escapeHtml(isBlocked ? t.blockedStateBody : t.expiredStateBody)}</p>
+    </div>
+  `;
 }
 
 function showHome() {
@@ -1516,7 +1975,7 @@ function showHome() {
 
 async function closeChat() {
   const chat = getChat(activeConversationId);
-  if (chat?.privacyMode === "close") {
+  if (chat?.privacyMode === "close" && chats.some((item) => item.id === chat.id)) {
     if (isLiveMode() && isUuid(chat.id)) {
       await db.from("messages").delete().eq("conversation_id", chat.id);
     } else {
@@ -1620,10 +2079,22 @@ function setLanguage(lang) {
   $("privacyModeSelect").options[4].textContent = t.privacyClose;
   $("burnToggle").setAttribute("aria-label", t.burnToggle);
   $("burnToggle").title = t.burnToggle;
+  $("hiddenToggle").setAttribute("aria-label", t.hiddenToggle);
+  $("hiddenToggle").title = t.hiddenToggle;
+  $("voiceBtn").setAttribute("aria-label", t.voiceHold);
+  $("voiceBtn").title = t.voiceHold;
+  $("mediaSheetTitle").textContent = t.mediaSheetTitle;
+  $("pickMediaBtn").textContent = t.pickMedia;
   $("qrModalTitle").textContent = t.qrTitle;
   $("copyQrCodeBtn").textContent = t.copyNumber;
   $("closeQrModal").setAttribute("aria-label", t.close);
   $("fakeNotesTitle").textContent = t.fakeNotesTitle;
+  $("cancelReplyBtn").setAttribute("aria-label", t.cancelReply);
+  $("messageActionsTitle").textContent = t.messageActions;
+  $("replyActionBtn").textContent = t.reply;
+  $("copyMessageBtn").textContent = t.copyMessage;
+  $("burnMessageNowBtn").textContent = t.burnNow;
+  updateReplyComposer();
 
   if (!$("displayNameInput").dataset.edited) {
     displayName = lang === "ar" ? "زائر 27" : "Guest 27";
@@ -1696,9 +2167,11 @@ async function handleSendMessage(event) {
       showToast(i18n[currentLang].mediaStorage);
     }
 
-    if (text) await sendMessage(conversationId, text, { privacyMode });
+    if (text) await sendMessage(conversationId, text, { privacyMode, replyTo: replyDraft, hidden: hiddenMode });
     input.value = "";
     mediaInput.value = "";
+    clearReplyDraft();
+    setHiddenMode(false);
     if (privacyMode === "10s_read") setBurnMode(false);
   } catch (error) {
     handleAsyncError(error, i18n[currentLang].errorChats);
@@ -1746,6 +2219,14 @@ function updatePrivacyModeUI() {
   $("messageInput").classList.toggle("burn-active", isBurn);
   $("burnToggle").setAttribute("aria-pressed", String(isBurn));
   $("privacyModeLabel").textContent = i18n[currentLang].privacyModeLabel;
+}
+
+function setHiddenMode(enabled) {
+  hiddenMode = enabled;
+  $("hiddenToggle").classList.toggle("active", hiddenMode);
+  $("messageInput").classList.toggle("hidden-active", hiddenMode);
+  $("hiddenToggle").setAttribute("aria-pressed", String(hiddenMode));
+  if (enabled) showToast(i18n[currentLang].hiddenActive);
 }
 
 async function changePrivacyMode(mode) {
@@ -1899,6 +2380,7 @@ async function deleteAllConversationsNow() {
   if (error) throw error;
   chats = [];
   burnedChats = [];
+  blockedChats = [];
   renderChats();
   showHome();
   showToast(i18n[currentLang].deletedAll);
@@ -1914,6 +2396,7 @@ async function blockActiveChat() {
   if (error) throw error;
   await db.from("conversations").update({ status: "blocked" }).eq("id", chat.id);
   chats = chats.filter((item) => item.id !== chat.id);
+  blockedChats.unshift({ ...chat, status: "blocked", online: false });
   await closeChat();
   renderChats();
   showToast(i18n[currentLang].blocked);
@@ -2000,6 +2483,7 @@ async function boot() {
 
   if (!db) {
     setLoading("", false);
+    await loadConversationRequests();
     renderChats();
     startMessageTicker();
     registerPwa();
@@ -2046,7 +2530,10 @@ $("blockChatBtn").addEventListener("click", () => blockActiveChat().catch((error
 $("closeQrModal").addEventListener("click", closeQrModal);
 $("qrBackdrop").addEventListener("click", closeQrModal);
 $("copyQrCodeBtn").addEventListener("click", copyProfileCode);
+$("cancelReplyBtn").addEventListener("click", clearReplyDraft);
 $("burnToggle").addEventListener("click", () => setBurnMode(privacyMode !== "10s_read"));
+$("hiddenToggle").addEventListener("click", () => setHiddenMode(!hiddenMode));
+$("attachBtn").addEventListener("click", openMediaSheet);
 $("privacyModeSelect").addEventListener("change", (event) => {
   changePrivacyMode(event.target.value).catch((error) => handleAsyncError(error, i18n[currentLang].errorChats));
 });
@@ -2084,9 +2571,14 @@ document.addEventListener("click", (event) => {
     }
   }
 
+  const expiringStrip = event.target.closest(".expiring-strip");
+  if (expiringStrip) {
+    openChat(expiringStrip.dataset.chatId);
+    return;
+  }
+
   const item = event.target.closest(".chat-item");
   if (!item) return;
-  if (item.classList.contains("disabled")) return;
   openChat(item.dataset.chatId);
 });
 
@@ -2103,6 +2595,30 @@ $("messageForm").addEventListener("submit", handleSendMessage);
 $("messageInput").addEventListener("input", handleComposerTyping);
 $("mediaInput").addEventListener("change", () => {
   if ($("mediaInput").files?.length) $("messageForm").requestSubmit();
+});
+$("mediaSheetBackdrop").addEventListener("click", closeMediaSheet);
+$("pickMediaBtn").addEventListener("click", () => {
+  closeMediaSheet();
+  $("mediaInput").click();
+});
+document.querySelectorAll(".gif-choice").forEach((button) => {
+  button.addEventListener("click", () => sendGifMessage(button.dataset.gif).catch((error) => handleAsyncError(error, i18n[currentLang].errorChats)));
+});
+$("voiceBtn").addEventListener("pointerdown", (event) => {
+  event.preventDefault();
+  startVoiceRecording();
+});
+$("voiceBtn").addEventListener("pointerup", () => finishVoiceRecording(false).catch((error) => handleAsyncError(error, i18n[currentLang].errorChats)));
+$("voiceBtn").addEventListener("pointerleave", () => finishVoiceRecording(true).catch((error) => handleAsyncError(error, i18n[currentLang].errorChats)));
+$("voiceBtn").addEventListener("pointercancel", () => finishVoiceRecording(true).catch((error) => handleAsyncError(error, i18n[currentLang].errorChats)));
+$("messageActionsBackdrop").addEventListener("click", closeMessageActions);
+$("replyActionBtn").addEventListener("click", replyToActiveMessage);
+$("copyMessageBtn").addEventListener("click", () => copyActiveMessage().catch((error) => handleAsyncError(error, i18n[currentLang].errorChats)));
+$("burnMessageNowBtn").addEventListener("click", burnActiveMessageNow);
+$("messageActions").addEventListener("click", (event) => {
+  const reactionButton = event.target.closest("[data-reaction]");
+  if (!reactionButton) return;
+  addReactionToActiveMessage(reactionButton.dataset.reaction);
 });
 
 ["pointerdown", "keydown", "touchstart"].forEach((eventName) => {
@@ -2131,7 +2647,7 @@ window.setInterval(async () => {
     }
 
     const before = chats.length;
-    chats = chats.filter((chat) => !chat.expiresAt || chat.expiresAt > Date.now());
+    moveExpiredChatsToBurned();
     renderChats();
     if (before !== chats.length) showToast(i18n[currentLang].expired);
   } catch (error) {
