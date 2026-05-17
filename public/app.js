@@ -565,8 +565,15 @@ async function getOrCreateProfile() {
         avatar_seed: displayName || publicCode
       };
 
-      const { data, error } = await db.from("profiles").insert(profile).select("*").single();
-      if (!error) return data;
+      let { data, error } = await db.from("profiles").insert(profile).select("*").single();
+      if (error && isMissingRelationError(error)) {
+        const fallbackProfile = { ...profile };
+        delete fallbackProfile.code_visible;
+        const fallback = await db.from("profiles").insert(fallbackProfile).select("*").single();
+        data = fallback.data;
+        error = fallback.error;
+      }
+      if (!error) return { code_visible: true, ...data };
       if (error.code !== "23505") throw error;
     }
 
@@ -780,7 +787,19 @@ async function loadConversations() {
       };
     });
 
-    chats = mappedChats.filter((chat) => chat.status !== "blocked");
+    chats = mappedChats
+      .filter((chat) => chat.status !== "blocked")
+      .map((chat) => {
+        const existing = getChat(chat.id);
+        if (!existing) return chat;
+        return {
+          ...existing,
+          ...chat,
+          burned: false,
+          messages: existing.messages || chat.messages,
+          expiresAt: existing.expiresAt && existing.expiresAt > Date.now() ? existing.expiresAt : chat.expiresAt
+        };
+      });
     blockedChats = mappedChats.filter((chat) => chat.status === "blocked");
     burnedChats = burnedChats.slice(0, 12);
     await loadConversationRequests();
@@ -968,7 +987,7 @@ async function loadConversation(conversationId) {
     startChatCountdown(chat);
 
     activeSubscription = db
-      .channel(`messages:${conversationId}`)
+      .channel(`messages:${conversationId}:${Date.now()}`)
       .on(
         "postgres_changes",
         {
@@ -1060,7 +1079,7 @@ async function sendMessage(conversationId, content, options = {}) {
 
   const now = new Date();
   const expiresAt = new Date(now.getTime() + ttlMs).toISOString();
-  let { error } = await db.from("messages").insert({
+  let { data: insertedMessage, error } = await db.from("messages").insert({
     conversation_id: conversationId,
     sender_id: currentProfile.id,
     content,
@@ -1068,21 +1087,41 @@ async function sendMessage(conversationId, content, options = {}) {
     expires_at: expiresAt,
     privacy_mode: mode,
     burn_after_read: Boolean(config.burnAfterRead)
-  });
+  }).select("*").single();
 
   if (error && isMissingRelationError(error)) {
-    const fallback = await db.from("messages").insert({
+    let fallback = await db.from("messages").insert({
       conversation_id: conversationId,
       sender_id: currentProfile.id,
       content,
-      expires_at: expiresAt,
-      burn_after_read: Boolean(config.burnAfterRead)
-    });
+      expires_at: expiresAt
+    }).select("*").single();
+    if (fallback.error && isMissingRelationError(fallback.error)) {
+      fallback = await db.from("messages").insert({
+        conversation_id: conversationId,
+        sender_id: currentProfile.id,
+        content
+      }).select("*").single();
+    }
+    insertedMessage = fallback.data;
     error = fallback.error;
   }
 
   if (error) throw error;
   vibrate(30);
+
+  if (chat && insertedMessage) {
+    const nextMessage = mapDbMessage(insertedMessage);
+    const messages = chat.messages.neutral || [];
+    if (!messages.some((message) => message.id === nextMessage.id)) {
+      chat.messages.neutral = [...messages, nextMessage];
+      chat.lastMessageAt = new Date(nextMessage.createdAt || now).getTime();
+      chat.expiresAt = nextMessage.expiresAt ? new Date(nextMessage.expiresAt).getTime() : now.getTime() + ttlMs;
+      renderMessages(chat);
+      renderChats();
+      updateChatCountdown(chat);
+    }
+  }
 
   const { error: updateError } = await db
     .from("conversations")
@@ -1247,7 +1286,7 @@ function renderChats() {
     empty.hidden = false;
     empty.innerHTML = `
       <strong>${escapeHtml(t.noChatsTitle)}</strong>
-      <span>${escapeHtml(t.noChatsBody)}</span>
+      <span id="emptyText">${escapeHtml(t.noChatsBody)}</span>
     `;
     return;
   }
@@ -2043,7 +2082,7 @@ function setLanguage(lang) {
   $("codeInput").placeholder = t.inputPlaceholder;
   $("startBtn").textContent = t.startBtn;
   $("chatsHeader").textContent = t.chatsHeader;
-  $("emptyText").textContent = t.emptyText;
+  if ($("emptyText")) $("emptyText").textContent = t.emptyText;
   $("footerText").textContent = currentProfile?.public_code
     ? t.footerTextWithCode.replace("{code}", currentProfile.public_code)
     : t.footerText;
