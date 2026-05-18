@@ -1200,6 +1200,24 @@ async function loadConversation(conversationId) {
           updateChatCountdown(activeChat);
         }
       )
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "messages",
+          filter: `conversation_id=eq.${conversationId}`
+        },
+        (payload) => {
+          const activeChat = getChat(conversationId);
+          if (!Array.isArray(activeChat?.messages?.neutral)) return;
+          const updated = mapDbMessage(payload.new);
+          const index = activeChat.messages.neutral.findIndex((message) => message.id === updated.id);
+          if (index === -1) return;
+          activeChat.messages.neutral[index] = updated;
+          renderMessages(activeChat);
+        }
+      )
       .on("broadcast", { event: "typing" }, (payload) => {
         if (payload.payload?.userId === currentProfile?.id) return;
         typing = true;
@@ -1320,9 +1338,10 @@ async function sendMessage(conversationId, content, options = {}) {
 }
 
 function mapDbMessage(row) {
+  const isMine = Boolean(currentProfile) && row.sender_id === currentProfile.id;
   return {
     id: row.id,
-    type: row.sender_id === currentProfile.id ? "outgoing" : "incoming",
+    type: isMine ? "outgoing" : "incoming",
     text: row.content,
     messageType: row.message_type || "text",
     hidden: row.message_type === "hidden_text",
@@ -1332,9 +1351,7 @@ function mapDbMessage(row) {
     privacyMode: row.privacy_mode || "5h",
     burnAfterRead: Boolean(row.burn_after_read),
     readAt: row.read_at,
-    status: row.sender_id === currentProfile.id
-      ? (row.read_at ? "read" : "sent")
-      : ""
+    status: isMine ? (row.read_at ? "read" : "sent") : ""
   };
 }
 
@@ -1625,33 +1642,57 @@ async function acceptConversationRequest(requestId) {
     return;
   }
 
-  let { data: created, error: createError } = await db
+  const pairFilter = `and(user_a_id.eq.${request.requester_id},user_b_id.eq.${request.target_id}),and(user_a_id.eq.${request.target_id},user_b_id.eq.${request.requester_id})`;
+  const { data: existingConv, error: existingError } = await db
     .from("conversations")
-    .insert({
-      user_a_id: request.requester_id,
-      user_b_id: request.target_id,
-      privacy_mode: privacyMode,
-      last_message_at: new Date().toISOString(),
-      status: "active"
-    })
     .select("id")
-    .single();
+    .or(pairFilter)
+    .maybeSingle();
+  if (existingError && !isMissingRelationError(existingError)) throw existingError;
 
-  if (createError && isMissingRelationError(createError)) {
-    const fallback = await db
+  let created = existingConv?.id ? existingConv : null;
+
+  if (!created) {
+    let createError;
+    ({ data: created, error: createError } = await db
       .from("conversations")
       .insert({
         user_a_id: request.requester_id,
         user_b_id: request.target_id,
-        last_message_at: new Date().toISOString()
+        privacy_mode: privacyMode,
+        last_message_at: new Date().toISOString(),
+        status: "active"
       })
       .select("id")
-      .single();
-    created = fallback.data;
-    createError = fallback.error;
-  }
+      .single());
 
-  if (createError) throw createError;
+    if (createError && isMissingRelationError(createError)) {
+      const fallback = await db
+        .from("conversations")
+        .insert({
+          user_a_id: request.requester_id,
+          user_b_id: request.target_id,
+          last_message_at: new Date().toISOString()
+        })
+        .select("id")
+        .single();
+      created = fallback.data;
+      createError = fallback.error;
+    }
+
+    if (createError && createError.code === "23505") {
+      const recovered = await db
+        .from("conversations")
+        .select("id")
+        .or(pairFilter)
+        .maybeSingle();
+      if (recovered.error) throw recovered.error;
+      created = recovered.data;
+      createError = null;
+    }
+
+    if (createError) throw createError;
+  }
 
   const { error: updateError } = await db
     .from("conversation_requests")
@@ -2916,7 +2957,7 @@ window.setInterval(async () => {
   try {
     if (isLiveMode()) {
       await cleanupExpiredMessages();
-      if (!$("chatView").hidden && activeConversationId) await loadConversation(activeConversationId);
+      if (!$("chatView").hidden && activeConversationId && !activeSubscription) await loadConversation(activeConversationId);
       await loadConversations();
       return;
     }
