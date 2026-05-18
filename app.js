@@ -49,10 +49,32 @@ const i18n = {
     headerStatusLive: "متصل · Supabase Realtime",
     langToggle: "العربية / English",
     heroTagline: "خاص. سريع. يختفي.",
-    heroLine1: "محادثات سريعة، خصوصية عالية، وحذف تلقائي بعد ٥ ساعات.",
-    heroLine2: "تواصل بدون تسجيل، بدون بريد إلكتروني، وبدون رقم جوال.",
+    heroLine1: "افتح قناة سرية خلال ثوانٍ: سؤال مجهول، غرفة مؤقتة، أو محادثة بكود.",
+    heroLine2: "كل رابط له عمر قصير، وكل محادثة قابلة للاختفاء.",
     inputPlaceholder: "أدخل رقم المستخدم المراد التواصل معه",
     startBtn: "بدء المحادثة",
+    askActionTitle: "Ask Me Anonymously",
+    askActionHint: "رابط أسئلة مجهول ينتهي تلقائيًا",
+    roomActionTitle: "Temporary Room",
+    roomActionHint: "غرفة خاصة برابط مؤقت",
+    shareReady: "جاهز للمشاركة",
+    askShareTitle: "Ask Me Anonymously",
+    roomShareTitle: "Temporary Room",
+    askShareDesc: "انسخ الرابط وضعه في البايو أو أرسله لصديق. ينتهي تلقائيًا بعد ٥ ساعات.",
+    roomShareDesc: "شارك هذا الرابط لغرفة خاصة تختفي بعد آخر نشاط.",
+    copy: "نسخ",
+    anonymousEntryKicker: "رابط أسئلة مجهول",
+    roomEntryKicker: "غرفة مؤقتة",
+    anonymousEntryTitle: "أرسل رسالة مجهولة",
+    roomEntryTitle: "ادخل الغرفة المؤقتة",
+    anonymousEntryDesc: "هذا الرابط مؤقت. اكتب رسالة قصيرة وسيتم فتح محادثة خاصة عند توفر الطرف الآخر.",
+    roomEntryDesc: "الغرفة لا تحتاج حسابًا. أرسل أول رسالة وسيبدأ العدّاد.",
+    anonymousPlaceholder: "اكتب شيئًا لا تريد أن يبقى طويلًا...",
+    roomPlaceholder: "اكتب أول رسالة في الغرفة...",
+    anonymousSend: "إرسال مجهول",
+    roomSend: "دخول الغرفة",
+    linkCreated: "تم إنشاء الرابط المؤقت.",
+    entryQueued: "تم حفظ الرسالة محليًا كطلب مؤقت.",
     profileCodeLabel: "رقمك",
     copyMyCode: "انسخ رقمي",
     copyMyLink: "انسخ الرابط",
@@ -170,10 +192,32 @@ const i18n = {
     headerStatusLive: "Connected · Supabase Realtime",
     langToggle: "English / العربية",
     heroTagline: "خاص. سريع. يختفي.",
-    heroLine1: "Fast chats, maximum privacy, auto-deleted after 5 hours.",
-    heroLine2: "No sign-up, no email, no phone number.",
+    heroLine1: "Open a secret channel in seconds: anonymous ask, temporary room, or code chat.",
+    heroLine2: "Every link has a short life. Every conversation can disappear.",
     inputPlaceholder: "Enter the user's code to start a chat",
     startBtn: "Start chat",
+    askActionTitle: "Ask Me Anonymously",
+    askActionHint: "Anonymous question link that expires",
+    roomActionTitle: "Temporary Room",
+    roomActionHint: "Private room with a temporary link",
+    shareReady: "Ready to share",
+    askShareTitle: "Ask Me Anonymously",
+    roomShareTitle: "Temporary Room",
+    askShareDesc: "Copy the link into your bio or send it to a friend. It expires after 5 hours.",
+    roomShareDesc: "Share this private room link. It disappears after the last activity.",
+    copy: "Copy",
+    anonymousEntryKicker: "Anonymous ask link",
+    roomEntryKicker: "Temporary room",
+    anonymousEntryTitle: "Send an anonymous message",
+    roomEntryTitle: "Enter the temporary room",
+    anonymousEntryDesc: "This link is temporary. Write a short message and a private chat can start when the other side is available.",
+    roomEntryDesc: "No account needed. Send the first message and the timer starts.",
+    anonymousPlaceholder: "Write something that should not stay for long...",
+    roomPlaceholder: "Write the first room message...",
+    anonymousSend: "Send anonymously",
+    roomSend: "Enter room",
+    linkCreated: "Temporary link created.",
+    entryQueued: "Saved locally as a temporary request.",
     profileCodeLabel: "Your code",
     copyMyCode: "Copy my code",
     copyMyLink: "Copy link",
@@ -337,6 +381,8 @@ let replyDraft = null;
 let activeActionMessageId = "";
 let hiddenMode = false;
 let voiceRecording = null;
+let entryMode = "";
+let generatedShareLink = "";
 
 const $ = (id) => document.getElementById(id);
 
@@ -450,6 +496,135 @@ function getShareLink() {
   const code = currentProfile?.public_code || $("profileCodeValue")?.textContent?.trim() || "";
   const base = `${window.location.origin}${getAppBasePath()}`;
   return code ? `${base}?code=${encodeURIComponent(code)}` : base;
+}
+
+function createShareToken(prefix) {
+  const random = Math.random().toString(36).slice(2, 8).toUpperCase();
+  return `${prefix}-${random}-${Date.now().toString(36).toUpperCase()}`;
+}
+
+function getTemporaryShareLink(type) {
+  const base = `${window.location.origin}${getAppBasePath()}`;
+  const param = type === "room" ? "room" : "ask";
+  const token = createShareToken(type === "room" ? "ROOM" : "ASK");
+  return { token, url: `${base}?${param}=${encodeURIComponent(token)}` };
+}
+
+async function createTemporaryShareLink(type) {
+  const link = getTemporaryShareLink(type);
+  if (isLiveMode()) {
+    const { error } = await db.from("temporary_links").insert({
+      owner_id: currentProfile.id,
+      token: link.token,
+      link_type: type === "room" ? "room" : "ask",
+      expires_at: new Date(Date.now() + MESSAGE_TTL_SECONDS * 1000).toISOString()
+    });
+    if (error && !isMissingRelationError(error)) throw error;
+  }
+  return link.url;
+}
+
+async function showShareDrop(type) {
+  const t = i18n[currentLang];
+  generatedShareLink = await createTemporaryShareLink(type);
+  $("shareDrop").hidden = false;
+  $("shareDropKicker").textContent = t.shareReady;
+  $("shareDropTitle").textContent = type === "room" ? t.roomShareTitle : t.askShareTitle;
+  $("shareDropDesc").textContent = type === "room" ? t.roomShareDesc : t.askShareDesc;
+  $("shareLinkInput").value = generatedShareLink;
+  $("copyShareLinkBtn").textContent = t.copy;
+  showToast(t.linkCreated);
+  vibrate(20);
+}
+
+async function copyGeneratedShareLink() {
+  const link = generatedShareLink || $("shareLinkInput")?.value;
+  if (!link) return;
+  try {
+    let copied = false;
+    if (navigator.clipboard?.writeText) {
+      try {
+        await navigator.clipboard.writeText(link);
+        copied = true;
+      } catch {
+        copied = false;
+      }
+    }
+
+    if (!copied) {
+      const input = $("shareLinkInput");
+      input.focus();
+      input.select();
+      copied = document.execCommand("copy");
+    }
+
+    showToast(copied ? i18n[currentLang].copied : link);
+  } catch (error) {
+    handleAsyncError(error, link);
+  }
+}
+
+function showEntryCard(type, token) {
+  const t = i18n[currentLang];
+  entryMode = type;
+  $("entryCard").hidden = false;
+  $("entryCard").dataset.token = token;
+  $("entryCardKicker").textContent = type === "room" ? t.roomEntryKicker : t.anonymousEntryKicker;
+  $("entryCardTitle").textContent = type === "room" ? t.roomEntryTitle : t.anonymousEntryTitle;
+  $("entryCardDesc").textContent = type === "room" ? t.roomEntryDesc : t.anonymousEntryDesc;
+  $("entryMessageInput").placeholder = type === "room" ? t.roomPlaceholder : t.anonymousPlaceholder;
+  $("entrySendBtn").textContent = type === "room" ? t.roomSend : t.anonymousSend;
+}
+
+function handleTemporaryEntryParams() {
+  const params = new URLSearchParams(window.location.search);
+  const askToken = params.get("ask");
+  const roomToken = params.get("room");
+  if (askToken) showEntryCard("ask", askToken);
+  if (roomToken) showEntryCard("room", roomToken);
+}
+
+async function submitTemporaryEntry() {
+  const text = $("entryMessageInput").value.trim();
+  if (!text) return;
+  const token = $("entryCard").dataset.token || createShareToken(entryMode === "room" ? "ROOM" : "ASK");
+  const entry = {
+    id: createMessageId("entry"),
+    token,
+    mode: entryMode || "ask",
+    text,
+    createdAt: new Date().toISOString(),
+    expiresAt: new Date(Date.now() + MESSAGE_TTL_SECONDS * 1000).toISOString()
+  };
+
+  if (isLiveMode()) {
+    const { data: link, error: linkError } = await db
+      .from("temporary_links")
+      .select("id, owner_id, link_type")
+      .eq("token", token)
+      .maybeSingle();
+    if (linkError && !isMissingRelationError(linkError)) throw linkError;
+    if (link?.id && link.link_type === "ask") {
+      const { error } = await db.from("anonymous_entries").insert({
+        link_id: link.id,
+        owner_id: link.owner_id,
+        body: text,
+        expires_at: entry.expiresAt
+      });
+      if (!error) {
+        $("entryMessageInput").value = "";
+        showToast(i18n[currentLang].entryQueued);
+        return;
+      }
+      console.warn(error);
+    }
+  }
+
+  const key = "twentyseven_temporary_entries";
+  const existing = JSON.parse(localStorage.getItem(key) || "[]");
+  localStorage.setItem(key, JSON.stringify([entry, ...existing].slice(0, 24)));
+  $("entryMessageInput").value = "";
+  showToast(i18n[currentLang].entryQueued);
 }
 
 function handleAsyncError(error, fallbackMessage) {
@@ -2081,6 +2256,17 @@ function setLanguage(lang) {
   $("heroLine2").textContent = t.heroLine2;
   $("codeInput").placeholder = t.inputPlaceholder;
   $("startBtn").textContent = t.startBtn;
+  $("askActionTitle").textContent = t.askActionTitle;
+  $("askActionHint").textContent = t.askActionHint;
+  $("roomActionTitle").textContent = t.roomActionTitle;
+  $("roomActionHint").textContent = t.roomActionHint;
+  $("copyShareLinkBtn").textContent = t.copy;
+  if (!$("shareDrop").hidden) {
+    $("shareDropKicker").textContent = t.shareReady;
+  }
+  if (!$("entryCard").hidden) {
+    showEntryCard(entryMode || "ask", $("entryCard").dataset.token || "");
+  }
   $("chatsHeader").textContent = t.chatsHeader;
   if ($("emptyText")) $("emptyText").textContent = t.emptyText;
   $("footerText").textContent = currentProfile?.public_code
@@ -2519,6 +2705,7 @@ async function boot() {
   setLanguage(currentLang);
   const sharedCode = new URLSearchParams(window.location.search).get("code");
   if (sharedCode && /^\d{6}$/.test(sharedCode)) $("codeInput").value = sharedCode;
+  handleTemporaryEntryParams();
 
   if (!db) {
     setLoading("", false);
@@ -2559,6 +2746,10 @@ $("backFromSettings").addEventListener("click", closeSettings);
 $("saveSettingsBtn").addEventListener("click", saveSettings);
 $("copyCodeBtn").addEventListener("click", copyProfileCode);
 $("copyLinkBtn").addEventListener("click", copyProfileLink);
+$("createAskLinkBtn").addEventListener("click", () => showShareDrop("ask").catch((error) => handleAsyncError(error, i18n[currentLang].errorChats)));
+$("createRoomLinkBtn").addEventListener("click", () => showShareDrop("room").catch((error) => handleAsyncError(error, i18n[currentLang].errorChats)));
+$("copyShareLinkBtn").addEventListener("click", copyGeneratedShareLink);
+$("entrySendBtn").addEventListener("click", () => submitTemporaryEntry().catch((error) => handleAsyncError(error, i18n[currentLang].errorChats)));
 $("profileQrBtn").addEventListener("click", openQrModal);
 $("panicModeBtn").addEventListener("click", () => setPanicMode(true));
 $("shareQrBtn").addEventListener("click", openQrModal);

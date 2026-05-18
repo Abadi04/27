@@ -278,6 +278,153 @@ body {
     0 14px 34px rgba(12, 15, 26, 0.44);
 }
 
+/* Refero pattern: compact social/product action cards sit directly beneath the primary task and use borders instead of heavy elevation. */
+.viral-actions {
+  display: grid;
+  max-width: 420px;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin: 14px auto 0;
+}
+
+.viral-action {
+  display: grid;
+  min-height: 92px;
+  align-content: center;
+  gap: 6px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.02)),
+    rgba(255, 255, 255, 0.03);
+  color: var(--text-primary);
+  cursor: pointer;
+  font: inherit;
+  padding: 14px;
+  text-align: start;
+  transition: all var(--transition-fast);
+}
+
+.viral-action.is-primary {
+  border-color: rgba(180, 140, 255, 0.24);
+  background:
+    radial-gradient(circle at 100% 0%, rgba(180, 140, 255, 0.16), transparent 44%),
+    rgba(255, 255, 255, 0.04);
+}
+
+.viral-action span {
+  font-size: 0.9rem;
+  font-weight: 750;
+  line-height: 1.2;
+}
+
+.viral-action small {
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  line-height: 1.55;
+}
+
+.viral-action:hover,
+.viral-action:focus-visible {
+  border-color: rgba(255, 255, 255, 0.16);
+  background: var(--bg-card-hover);
+  outline: none;
+  transform: translateY(-1px);
+}
+
+.share-drop,
+.entry-card {
+  max-width: 420px;
+  margin: 14px auto 0;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-md);
+  background:
+    radial-gradient(circle at 10% 0%, rgba(26, 188, 243, 0.08), transparent 36%),
+    rgba(255, 255, 255, 0.04);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 18px 38px rgba(0, 0, 0, 0.22);
+  padding: 14px;
+  text-align: start;
+}
+
+.share-drop[hidden],
+.entry-card[hidden] {
+  display: none;
+}
+
+.share-drop-kicker,
+.entry-card-kicker {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--accent-cyan);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.share-drop-title,
+.entry-card h2 {
+  display: block;
+  color: #ffffff;
+  font-size: 1rem;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.share-drop-desc,
+.entry-card p {
+  margin: 8px 0 12px;
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+  line-height: 1.7;
+}
+
+.share-link-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+}
+
+.share-link-input,
+.entry-card-input {
+  width: 100%;
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  outline: none;
+  background: rgba(0, 0, 0, 0.24);
+  color: rgba(255, 255, 255, 0.86);
+  font: inherit;
+  font-size: 0.78rem;
+  padding: 10px 12px;
+}
+
+.entry-card-input {
+  min-height: 88px;
+  margin-bottom: 10px;
+  resize: vertical;
+}
+
+.copy-share-link {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.78rem;
+  padding: 0 13px;
+  transition: all var(--transition-fast);
+}
+
+.copy-share-link:hover,
+.copy-share-link:focus-visible {
+  border-color: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.12);
+  outline: none;
+}
+
 /* Refero pattern: quiet dark product surfaces with thin graphite borders and compact utility actions. */
 .profile-code-card {
   display: grid;
@@ -1808,6 +1955,10 @@ body {
   .hero-tagline {
     font-size: 1rem;
   }
+
+  .viral-actions {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 375px) {
@@ -1833,6 +1984,14 @@ body {
   .start-btn {
     padding: 13px 20px;
     font-size: 0.93rem;
+  }
+
+  .share-link-row {
+    grid-template-columns: 1fr;
+  }
+
+  .copy-share-link {
+    min-height: 40px;
   }
 
   .profile-code-card {
