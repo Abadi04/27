@@ -9,7 +9,7 @@
     <link rel="apple-touch-icon" href="apple-touch-icon.png?v=official-icon-1" />
     <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png?v=official-icon-1" />
     <title>27</title>
-    <link rel="stylesheet" href="styles.css?v=privacy-core-1" />
+    <link rel="stylesheet" href="styles.css?v=viral-links-1" />
   </head>
   <body>
     <div class="bg-glow" aria-hidden="true"></div>
@@ -47,6 +47,35 @@
             inputmode="numeric"
           />
           <button class="start-btn" id="startBtn" type="button">بدء المحادثة</button>
+        </div>
+        <div class="viral-actions" aria-label="روابط قابلة للمشاركة">
+          <!-- Refero pattern: Linear/Cal-style compact action cards expose high-value actions directly below the primary input. -->
+          <button class="viral-action is-primary" id="createAskLinkBtn" type="button">
+            <span id="askActionTitle">Ask Me Anonymously</span>
+            <small id="askActionHint">رابط أسئلة مجهول ينتهي تلقائيًا</small>
+          </button>
+          <button class="viral-action" id="createRoomLinkBtn" type="button">
+            <span id="roomActionTitle">Temporary Room</span>
+            <small id="roomActionHint">غرفة خاصة برابط مؤقت</small>
+          </button>
+        </div>
+        <div class="share-drop" id="shareDrop" hidden>
+          <!-- Refero pattern: Instagram QR/share screens keep the share artifact centered with a single copy action. -->
+          <span class="share-drop-kicker" id="shareDropKicker">جاهز للمشاركة</span>
+          <strong class="share-drop-title" id="shareDropTitle">Ask Me Anonymously</strong>
+          <p class="share-drop-desc" id="shareDropDesc">انسخ الرابط وضعه في البايو أو أرسله لصديق. ينتهي تلقائيًا بعد ٥ ساعات.</p>
+          <div class="share-link-row">
+            <input class="share-link-input" id="shareLinkInput" type="text" readonly />
+            <button class="copy-share-link" id="copyShareLinkBtn" type="button">نسخ</button>
+          </div>
+        </div>
+        <div class="entry-card" id="entryCard" hidden>
+          <!-- Refero pattern: Vimeo/Patreon empty states use a quiet centered card with one clear next action. -->
+          <span class="entry-card-kicker" id="entryCardKicker">رابط مؤقت</span>
+          <h2 id="entryCardTitle">أرسل رسالة مجهولة</h2>
+          <p id="entryCardDesc">هذا الرابط مؤقت. اكتب رسالة قصيرة وسيتم فتح محادثة خاصة عند توفر الطرف الآخر.</p>
+          <textarea class="entry-card-input" id="entryMessageInput" rows="3" placeholder="اكتب شيئًا لا تريد أن يبقى طويلًا..."></textarea>
+          <button class="start-btn" id="entrySendBtn" type="button">إرسال مجهول</button>
         </div>
         <div class="profile-code-card" id="profileCodeCard" hidden>
           <span class="profile-code-label" id="profileCodeLabel">رقمك</span>
@@ -204,6 +233,6 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="vendor/qrcode.min.js?v=privacy-core-1"></script>
-    <script src="app.js?v=chat-expiry-fix-1"></script>
+    <script src="app.js?v=viral-links-1"></script>
   </body>
 </html>

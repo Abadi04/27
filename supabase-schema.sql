@@ -95,6 +95,42 @@ create unique index if not exists conversation_requests_open_pair
   on public.conversation_requests (least(requester_id, target_id), greatest(requester_id, target_id))
   where status = 'pending';
 
+create table if not exists public.temporary_links (
+  id uuid primary key default gen_random_uuid(),
+  owner_id uuid references public.profiles(id) on delete cascade,
+  token text unique not null,
+  link_type text not null check (link_type in ('ask', 'room')),
+  max_opens integer not null default 27,
+  open_count integer not null default 0,
+  created_at timestamptz not null default now(),
+  expires_at timestamptz not null default (now() + interval '5 hours')
+);
+
+create table if not exists public.temporary_rooms (
+  id uuid primary key default gen_random_uuid(),
+  link_id uuid not null references public.temporary_links(id) on delete cascade,
+  title text,
+  max_members integer not null default 7,
+  last_activity_at timestamptz not null default now(),
+  created_at timestamptz not null default now()
+);
+
+create table if not exists public.anonymous_entries (
+  id uuid primary key default gen_random_uuid(),
+  link_id uuid references public.temporary_links(id) on delete cascade,
+  owner_id uuid references public.profiles(id) on delete cascade,
+  body text not null,
+  status text not null default 'new',
+  created_at timestamptz not null default now(),
+  expires_at timestamptz not null default (now() + interval '5 hours')
+);
+
+create index if not exists temporary_links_token_idx
+  on public.temporary_links (token);
+
+create index if not exists anonymous_entries_owner_status_idx
+  on public.anonymous_entries (owner_id, status, created_at);
+
 create table if not exists public.blocked_profiles (
   blocker_id uuid not null references public.profiles(id) on delete cascade,
   blocked_id uuid not null references public.profiles(id) on delete cascade,
@@ -185,6 +221,9 @@ alter table public.conversations enable row level security;
 alter table public.messages enable row level security;
 alter table public.push_subscriptions enable row level security;
 alter table public.conversation_requests enable row level security;
+alter table public.temporary_links enable row level security;
+alter table public.temporary_rooms enable row level security;
+alter table public.anonymous_entries enable row level security;
 alter table public.blocked_profiles enable row level security;
 alter table public.message_receipts enable row level security;
 
@@ -264,6 +303,72 @@ on public.conversation_requests for update
 to authenticated
 using (auth.uid() = target_id or auth.uid() = requester_id)
 with check (auth.uid() = target_id or auth.uid() = requester_id);
+
+drop policy if exists "temporary links select active" on public.temporary_links;
+create policy "temporary links select active"
+on public.temporary_links for select
+to authenticated
+using (expires_at > now() and open_count < max_opens);
+
+drop policy if exists "temporary links insert own" on public.temporary_links;
+create policy "temporary links insert own"
+on public.temporary_links for insert
+to authenticated
+with check (owner_id = auth.uid());
+
+drop policy if exists "temporary links update own" on public.temporary_links;
+create policy "temporary links update own"
+on public.temporary_links for update
+to authenticated
+using (owner_id = auth.uid())
+with check (owner_id = auth.uid());
+
+drop policy if exists "temporary rooms select active link" on public.temporary_rooms;
+create policy "temporary rooms select active link"
+on public.temporary_rooms for select
+to authenticated
+using (
+  exists (
+    select 1 from public.temporary_links l
+    where l.id = temporary_rooms.link_id
+      and l.link_type = 'room'
+      and l.expires_at > now()
+  )
+);
+
+drop policy if exists "temporary rooms insert own link" on public.temporary_rooms;
+create policy "temporary rooms insert own link"
+on public.temporary_rooms for insert
+to authenticated
+with check (
+  exists (
+    select 1 from public.temporary_links l
+    where l.id = temporary_rooms.link_id
+      and l.owner_id = auth.uid()
+      and l.link_type = 'room'
+  )
+);
+
+drop policy if exists "anonymous entries select owner" on public.anonymous_entries;
+create policy "anonymous entries select owner"
+on public.anonymous_entries for select
+to authenticated
+using (owner_id = auth.uid());
+
+drop policy if exists "anonymous entries insert active link" on public.anonymous_entries;
+create policy "anonymous entries insert active link"
+on public.anonymous_entries for insert
+to authenticated
+with check (
+  exists (
+    select 1 from public.temporary_links l
+    where l.id = anonymous_entries.link_id
+      and l.owner_id = anonymous_entries.owner_id
+      and l.link_type = 'ask'
+      and l.expires_at > now()
+      and l.open_count < l.max_opens
+  )
+);
 
 drop policy if exists "blocks manage own" on public.blocked_profiles;
 create policy "blocks manage own"
