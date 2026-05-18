@@ -967,7 +967,9 @@ async function loadConversations() {
         id: row.id,
         online: true,
         otherProfile,
-        lastMessageAt: row.last_message_at ? new Date(row.last_message_at).getTime() : 0,
+        lastMessageAt: row.last_message_at
+          ? new Date(row.last_message_at).getTime()
+          : (row.created_at ? new Date(row.created_at).getTime() : Date.now()),
         privacyMode: row.privacy_mode || "5h",
         status: row.status || "active",
         messages: { neutral: [] }
@@ -1362,15 +1364,8 @@ function formatRemaining(ms) {
 
 function getChatExpiryTime(chat) {
   if (!chat) return 0;
-  const messages = getMessages(chat);
-  const latestMessageExpiry = messages.reduce((latest, message) => {
-    if (!message.expiresAt) return latest;
-    return Math.max(latest, new Date(message.expiresAt).getTime());
-  }, 0);
-
-  if (latestMessageExpiry) return latestMessageExpiry;
-  if (chat.expiresAt) return chat.expiresAt;
   if (chat.lastMessageAt) return chat.lastMessageAt + FIVE_HOURS;
+  if (chat.expiresAt) return chat.expiresAt;
   return Date.now() + FIVE_HOURS;
 }
 
@@ -1429,19 +1424,17 @@ function moveExpiredChatsToBurned() {
 function appendDemoMessage(conversationId, message) {
   const chat = getChat(conversationId);
   if (!chat) return;
-  if (!chat.messages.neutral && !chat.messages[currentLang]) {
-    chat.messages.neutral = [];
-  }
-  const targetMessages = chat.messages.neutral || chat.messages[currentLang];
+  if (!chat.messages) chat.messages = {};
+  if (!Array.isArray(chat.messages.neutral)) chat.messages.neutral = [];
   const expiresAt = message.expiresAt || new Date(Date.now() + FIVE_HOURS).toISOString();
-  targetMessages.push({
+  chat.messages.neutral.push({
     id: message.id || createMessageId("demo"),
     createdAt: new Date().toISOString(),
     ...message,
     expiresAt
   });
   chat.lastMessageAt = Date.now();
-  chat.expiresAt = new Date(expiresAt).getTime();
+  chat.expiresAt = chat.lastMessageAt + FIVE_HOURS;
   renderMessages(chat);
   renderChats();
   updateChatCountdown(chat);
@@ -1457,9 +1450,12 @@ function getChatName(chat) {
 }
 
 function getMessages(chat) {
-  if (!chat) return [];
-  if (chat.messages?.[currentLang]) return chat.messages[currentLang];
-  return chat.messages?.neutral || [];
+  if (!chat?.messages) return [];
+  const neutral = Array.isArray(chat.messages.neutral) ? chat.messages.neutral : [];
+  const seeded = chat.messages[currentLang];
+  if (seeded && neutral.length) return [...seeded, ...neutral];
+  if (seeded) return seeded;
+  return neutral;
 }
 
 function renderChats() {
