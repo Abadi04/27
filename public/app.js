@@ -29,6 +29,7 @@ const PRIVACY_MODES = {
 };
 const PROFILE_STORAGE_KEY = "twentyseven_profile";
 const ONBOARDING_STORAGE_KEY = "veil_seen";
+const HIDE_CHATS_STORAGE_KEY = "twentyseven_hide_chats";
 const SWIPE_DELETE_THRESHOLD = 80;
 const SWIPE_REPLY_THRESHOLD = 56;
 const DEMO_PROFILE_ID = "demo-self";
@@ -129,6 +130,11 @@ const i18n = {
     onlineNow: "متصل الآن",
     hideCode: "إخفاء رقمي",
     showCode: "إظهار رقمي",
+    hideChats: "إخفاء الدردشات",
+    hideChatsHint: "إخفاء كل المحادثات من القائمة الرئيسية.",
+    hideCodeHint: "منع مشاركة الرقم والكود السريع.",
+    hiddenChatsTitle: "الدردشات مخفية",
+    hiddenChatsBody: "أوقف خيار إخفاء الدردشات من الإعدادات لعرض المحادثات مرة أخرى.",
     regenerateCode: "تجديد رقمي",
     codeRegenerated: "تم تجديد رقمك.",
     deleteAll: "مسح كل المحادثات الآن",
@@ -165,7 +171,7 @@ const i18n = {
     hiddenToggle: "رسالة مخفية",
     hiddenActive: "النص مخفي حتى اللمس",
     hiddenRevealHint: "المس باستمرار للكشف",
-    hideMode: "وضع التخفي",
+    hideMode: "إخفاء الدردشات",
     shareQr: "شارك كـ QR",
     qrTitle: "شارك رقمك",
     copyNumber: "نسخ الرقم",
@@ -272,6 +278,11 @@ const i18n = {
     onlineNow: "Online now",
     hideCode: "Hide my code",
     showCode: "Show my code",
+    hideChats: "Hide all chats",
+    hideChatsHint: "Hide every conversation from the main list.",
+    hideCodeHint: "Prevent sharing your number and quick code.",
+    hiddenChatsTitle: "Chats are hidden",
+    hiddenChatsBody: "Turn off Hide all chats in settings to show conversations again.",
     regenerateCode: "Regenerate code",
     codeRegenerated: "Your code was regenerated.",
     deleteAll: "Delete all chats now",
@@ -308,7 +319,7 @@ const i18n = {
     hiddenToggle: "Hidden message",
     hiddenActive: "Text is hidden until touch",
     hiddenRevealHint: "Hold to reveal",
-    hideMode: "Hide Mode",
+    hideMode: "Hide all chats",
     shareQr: "Share as QR",
     qrTitle: "Share your number",
     copyNumber: "Copy Number",
@@ -372,6 +383,7 @@ let countdownTimer = null;
 let messageTicker = null;
 let privacyMode = "5h";
 let panicMode = false;
+let chatsHidden = localStorage.getItem(HIDE_CHATS_STORAGE_KEY) === "1";
 let typing = false;
 let typingLastSentAt = 0;
 let typingStopTimer = null;
@@ -1456,6 +1468,16 @@ function renderChats() {
   const t = i18n[currentLang];
   moveExpiredChatsToBurned();
 
+  if (chatsHidden) {
+    list.innerHTML = "";
+    empty.hidden = false;
+    empty.innerHTML = `
+      <strong>${escapeHtml(t.hiddenChatsTitle)}</strong>
+      <span id="emptyText">${escapeHtml(t.hiddenChatsBody)}</span>
+    `;
+    return;
+  }
+
   if (!chats.length && !conversationRequests.length && !burnedChats.length && !blockedChats.length) {
     list.innerHTML = "";
     empty.hidden = false;
@@ -2289,9 +2311,11 @@ function setLanguage(lang) {
   $("privacyLabel").textContent = t.privacyLabel;
   $("privacyHint").textContent = t.privacyHint;
   $("saveSettingsBtn").textContent = t.saveSettings;
-  $("panicModeBtn").textContent = t.hideMode;
+  $("hideChatsLabel").textContent = t.hideChats;
+  $("hideChatsHint").textContent = t.hideChatsHint;
   $("shareQrBtn").textContent = t.shareQr;
-  $("toggleCodeBtn").textContent = currentProfile?.code_visible === false ? t.showCode : t.hideCode;
+  $("codeVisibilityLabel").textContent = currentProfile?.code_visible === false ? t.showCode : t.hideCode;
+  $("codeVisibilityHint").textContent = t.hideCodeHint;
   $("regenerateCodeBtn").textContent = t.regenerateCode;
   $("deleteAllBtn").textContent = t.deleteAll;
   $("blockChatBtn").textContent = t.block;
@@ -2319,6 +2343,7 @@ function setLanguage(lang) {
   $("replyActionBtn").textContent = t.reply;
   $("copyMessageBtn").textContent = t.copyMessage;
   $("burnMessageNowBtn").textContent = t.burnNow;
+  updateSettingsToggles();
   updateReplyComposer();
 
   if (!$("displayNameInput").dataset.edited) {
@@ -2446,6 +2471,24 @@ function updatePrivacyModeUI() {
   $("privacyModeLabel").textContent = i18n[currentLang].privacyModeLabel;
 }
 
+function updateSettingsToggles() {
+  const hideChatsButton = $("panicModeBtn");
+  hideChatsButton.classList.toggle("is-on", chatsHidden);
+  hideChatsButton.setAttribute("aria-checked", String(chatsHidden));
+
+  const hideCodeActive = currentProfile?.code_visible === false;
+  const codeButton = $("toggleCodeBtn");
+  codeButton.classList.toggle("is-on", hideCodeActive);
+  codeButton.setAttribute("aria-checked", String(hideCodeActive));
+}
+
+function toggleChatsHidden() {
+  chatsHidden = !chatsHidden;
+  localStorage.setItem(HIDE_CHATS_STORAGE_KEY, chatsHidden ? "1" : "0");
+  updateSettingsToggles();
+  renderChats();
+}
+
 function setHiddenMode(enabled) {
   hiddenMode = enabled;
   $("hiddenToggle").classList.toggle("active", hiddenMode);
@@ -2542,6 +2585,10 @@ function subscribeToRequests() {
 async function toggleCodeVisibility() {
   if (!isLiveMode() || !currentProfile) return;
   const nextVisible = currentProfile.code_visible === false;
+  currentProfile = { ...currentProfile, code_visible: nextVisible };
+  localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(currentProfile));
+  updateProfileCodeUI();
+  updateSettingsToggles();
   const { data, error } = await db
     .from("profiles")
     .update({ code_visible: nextVisible })
@@ -2549,9 +2596,10 @@ async function toggleCodeVisibility() {
     .select("*")
     .single();
   if (error && !isMissingRelationError(error)) throw error;
-  currentProfile = error ? { ...currentProfile, code_visible: nextVisible } : data;
+  currentProfile = error ? currentProfile : data;
   localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(currentProfile));
   updateProfileCodeUI();
+  updateSettingsToggles();
   setLanguage(currentLang);
 }
 
@@ -2583,6 +2631,7 @@ async function regenerateCode() {
       }
       localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(currentProfile));
       updateProfileCodeUI();
+      updateSettingsToggles();
       setLanguage(currentLang);
       showToast(i18n[currentLang].codeRegenerated);
       return;
@@ -2751,7 +2800,7 @@ $("createRoomLinkBtn").addEventListener("click", () => showShareDrop("room").cat
 $("copyShareLinkBtn").addEventListener("click", copyGeneratedShareLink);
 $("entrySendBtn").addEventListener("click", () => submitTemporaryEntry().catch((error) => handleAsyncError(error, i18n[currentLang].errorChats)));
 $("profileQrBtn").addEventListener("click", openQrModal);
-$("panicModeBtn").addEventListener("click", () => setPanicMode(true));
+$("panicModeBtn").addEventListener("click", toggleChatsHidden);
 $("shareQrBtn").addEventListener("click", openQrModal);
 $("toggleCodeBtn").addEventListener("click", () => toggleCodeVisibility().catch((error) => handleAsyncError(error, i18n[currentLang].errorChats)));
 $("regenerateCodeBtn").addEventListener("click", () => regenerateCode().catch((error) => handleAsyncError(error, i18n[currentLang].errorChats)));

@@ -9,7 +9,7 @@
     <link rel="apple-touch-icon" href="apple-touch-icon.png?v=official-icon-1" />
     <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png?v=official-icon-1" />
     <title>27</title>
-    <link rel="stylesheet" href="styles.css?v=viral-links-1" />
+    <link rel="stylesheet" href="styles.css?v=settings-toggles-1" />
   </head>
   <body>
     <div class="bg-glow" aria-hidden="true"></div>
@@ -166,9 +166,23 @@
             </span>
             <input class="settings-input" id="ttlInput" type="text" value="5h" disabled />
           </label>
-          <button class="setting-action" id="panicModeBtn" type="button">وضع التخفي</button>
+          <button class="setting-switch-row" id="panicModeBtn" type="button" role="switch" aria-checked="false">
+            <!-- Refero pattern: iOS privacy settings use row labels with a right-aligned switch that exposes state at a glance. -->
+            <span>
+              <strong id="hideChatsLabel">إخفاء الدردشات</strong>
+              <small id="hideChatsHint">إخفاء كل المحادثات من القائمة الرئيسية.</small>
+            </span>
+            <span class="switch-track" aria-hidden="true"><span class="switch-thumb"></span></span>
+          </button>
           <button class="setting-action" id="shareQrBtn" type="button">شارك كـ QR</button>
-          <button class="setting-action" id="toggleCodeBtn" type="button">إخفاء رقمي</button>
+          <button class="setting-switch-row" id="toggleCodeBtn" type="button" role="switch" aria-checked="false">
+            <!-- Refero pattern: web settings pages place privacy toggles inline, with the switch carrying the active/inactive state. -->
+            <span>
+              <strong id="codeVisibilityLabel">إخفاء رقمي</strong>
+              <small id="codeVisibilityHint">منع مشاركة الرقم والكود السريع.</small>
+            </span>
+            <span class="switch-track" aria-hidden="true"><span class="switch-thumb"></span></span>
+          </button>
           <button class="setting-action" id="regenerateCodeBtn" type="button">تجديد رقمي</button>
           <button class="setting-action danger-action" id="deleteAllBtn" type="button">مسح كل المحادثات الآن</button>
           <button class="start-btn save-settings" id="saveSettingsBtn" type="button">حفظ</button>
@@ -233,6 +247,6 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="vendor/qrcode.min.js?v=privacy-core-1"></script>
-    <script src="app.js?v=viral-links-1"></script>
+    <script src="app.js?v=settings-toggles-1"></script>
   </body>
 </html>
