@@ -13,7 +13,7 @@
     <link rel="apple-touch-icon" href="apple-touch-icon.png?v=official-icon-1" />
     <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png?v=official-icon-1" />
     <title>27</title>
-    <link rel="stylesheet" href="styles.css?v=design-elevation-3" />
+    <link rel="stylesheet" href="styles.css?v=home-redesign-1" />
   </head>
   <body>
     <div class="bg-glow" aria-hidden="true"></div>
@@ -37,29 +37,32 @@
         </h1>
         <p class="hero-tagline" id="heroTagline">خاص. سريع. يختفي.</p>
         <div class="hero-desc" id="heroDesc">
-          <p id="heroLine1">محادثات سريعة، خصوصية عالية، وحذف تلقائي بعد ٥ ساعات.</p>
-          <p id="heroLine2">تواصل بدون تسجيل، بدون بريد إلكتروني، وبدون رقم جوال.</p>
+          <p id="heroLine1">محادثات مجهولة تختفي تلقائيًا بعد آخر نشاط.</p>
         </div>
         <div class="input-group">
           <input
             type="text"
             class="code-input"
             id="codeInput"
-            placeholder="أدخل رقم المستخدم المراد التواصل معه"
+            placeholder="أدخل رقم المستخدم"
             autocomplete="off"
             inputmode="numeric"
           />
-          <button class="start-btn" id="startBtn" type="button">بدء المحادثة</button>
+          <button class="start-btn primary-cta" id="startBtn" type="button">بدء المحادثة</button>
         </div>
-        <div class="viral-actions" aria-label="روابط قابلة للمشاركة">
-          <button class="viral-action is-primary" id="createAskLinkBtn" type="button">
-            <span id="askActionTitle">Ask Me Anonymously</span>
-            <small id="askActionHint">رابط أسئلة مجهول ينتهي تلقائيًا</small>
-          </button>
-          <button class="viral-action" id="createRoomLinkBtn" type="button">
-            <span id="roomActionTitle">Temporary Room</span>
-            <small id="roomActionHint">غرفة خاصة برابط مؤقت</small>
-          </button>
+        <div class="secondary-options">
+          <p class="secondary-options-label" id="secondaryOptionsLabel">خيارات أخرى</p>
+          <div class="viral-actions" aria-label="روابط قابلة للمشاركة">
+            <!-- Refero pattern: dark mobile settings screens keep secondary actions visible as quieter stacked cards below the primary task. -->
+            <button class="viral-action" id="createRoomLinkBtn" type="button">
+              <span id="roomActionTitle">Temporary Room</span>
+              <small id="roomActionHint">غرفة خاصة برابط مؤقت</small>
+            </button>
+            <button class="viral-action" id="createAskLinkBtn" type="button">
+              <span id="askActionTitle">Ask Me Anonymously</span>
+              <small id="askActionHint">رابط أسئلة مجهول ينتهي تلقائيًا</small>
+            </button>
+          </div>
         </div>
         <div class="share-drop" id="shareDrop" hidden>
           <span class="share-drop-kicker" id="shareDropKicker">جاهز للمشاركة</span>
@@ -75,16 +78,26 @@
           <h2 id="entryCardTitle">أرسل رسالة مجهولة</h2>
           <p id="entryCardDesc">هذا الرابط مؤقت. اكتب رسالة قصيرة وسيتم فتح محادثة خاصة عند توفر الطرف الآخر.</p>
           <textarea class="entry-card-input" id="entryMessageInput" rows="3" placeholder="اكتب شيئًا لا تريد أن يبقى طويلًا..."></textarea>
-          <button class="start-btn" id="entrySendBtn" type="button">إرسال مجهول</button>
+          <button class="start-btn" id="entrySendBtn" type="button">أرسل كمجهول</button>
         </div>
         <div class="profile-code-card" id="profileCodeCard" hidden>
-          <span class="profile-code-label" id="profileCodeLabel">رقمك</span>
-          <strong class="profile-code-value" id="profileCodeValue">------</strong>
-          <button class="profile-qr-btn" id="profileQrBtn" type="button" aria-label="شارك كـ QR" title="شارك كـ QR">
-            <span class="qr-icon" aria-hidden="true"></span>
-          </button>
-          <button class="copy-code-btn" id="copyCodeBtn" type="button">انسخ رقمي</button>
-          <button class="copy-link-btn" id="copyLinkBtn" type="button">انسخ الرابط</button>
+          <!-- Refero pattern: account/profile cards separate the label/value group from compact utility actions. -->
+          <div class="profile-code-content">
+            <div class="profile-code-header">
+              <span class="profile-code-kicker" id="profileCodeKicker">شارك رابطك</span>
+              <button class="profile-qr-btn" id="profileQrBtn" type="button" aria-label="شارك كـ QR" title="شارك كـ QR">
+                <span class="qr-icon" aria-hidden="true"></span>
+              </button>
+            </div>
+            <div class="profile-code-main">
+              <span class="profile-code-label" id="profileCodeLabel">رقمك</span>
+              <strong class="profile-code-value" id="profileCodeValue">------</strong>
+            </div>
+            <div class="profile-code-actions">
+              <button class="copy-code-btn" id="copyCodeBtn" type="button">نسخ الرقم</button>
+              <button class="copy-link-btn" id="copyLinkBtn" type="button">نسخ الرابط</button>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -245,6 +258,6 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="vendor/qrcode.min.js?v=privacy-core-1"></script>
-    <script src="app.js?v=settings-toggles-1"></script>
+    <script src="app.js?v=home-redesign-1"></script>
   </body>
 </html>

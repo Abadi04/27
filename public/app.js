@@ -50,10 +50,11 @@ const i18n = {
     headerStatusLive: "متصل · Supabase Realtime",
     langToggle: "العربية / English",
     heroTagline: "خاص. سريع. يختفي.",
-    heroLine1: "افتح قناة سرية خلال ثوانٍ: سؤال مجهول، غرفة مؤقتة، أو محادثة بكود.",
-    heroLine2: "كل رابط له عمر قصير، وكل محادثة قابلة للاختفاء.",
-    inputPlaceholder: "أدخل رقم المستخدم المراد التواصل معه",
+    heroLine1: "محادثات مجهولة تختفي تلقائيًا بعد آخر نشاط.",
+    heroLine2: "",
+    inputPlaceholder: "أدخل رقم المستخدم",
     startBtn: "بدء المحادثة",
+    secondaryOptionsLabel: "خيارات أخرى",
     askActionTitle: "Ask Me Anonymously",
     askActionHint: "رابط أسئلة مجهول ينتهي تلقائيًا",
     roomActionTitle: "Temporary Room",
@@ -72,12 +73,14 @@ const i18n = {
     roomEntryDesc: "الغرفة لا تحتاج حسابًا. أرسل أول رسالة وسيبدأ العدّاد.",
     anonymousPlaceholder: "اكتب شيئًا لا تريد أن يبقى طويلًا...",
     roomPlaceholder: "اكتب أول رسالة في الغرفة...",
-    anonymousSend: "إرسال مجهول",
+    anonymousSend: "أرسل كمجهول",
     roomSend: "دخول الغرفة",
-    featureUnavailable: "هذه الميزة غير متاحة حاليًا.",
+    linkCreated: "تم إنشاء الرابط المؤقت.",
+    entryQueued: "تم حفظ الرسالة محليًا كطلب مؤقت.",
+    profileCodeKicker: "شارك رابطك",
     profileCodeLabel: "رقمك",
-    copyMyCode: "انسخ رقمي",
-    copyMyLink: "انسخ الرابط",
+    copyMyCode: "نسخ الرقم",
+    copyMyLink: "نسخ الرابط",
     copied: "تم النسخ",
     chatsHeader: "المحادثات النشطة",
     emptyText: "لا توجد محادثات حالية. ابدأ محادثة جديدة بإدخال رقم مستخدم.",
@@ -196,11 +199,12 @@ const i18n = {
     headerStatus: "Encrypted · No login",
     headerStatusLive: "Connected · Supabase Realtime",
     langToggle: "English / العربية",
-    heroTagline: "Private. Fast. Gone.",
-    heroLine1: "Open a secret channel in seconds: anonymous ask, temporary room, or code chat.",
-    heroLine2: "Every link has a short life. Every conversation can disappear.",
-    inputPlaceholder: "Enter the user's code to start a chat",
+    heroTagline: "Private. Fast. Disappears.",
+    heroLine1: "Anonymous chats that disappear automatically after last activity.",
+    heroLine2: "",
+    inputPlaceholder: "Enter user code",
     startBtn: "Start chat",
+    secondaryOptionsLabel: "Other options",
     askActionTitle: "Ask Me Anonymously",
     askActionHint: "Anonymous question link that expires",
     roomActionTitle: "Temporary Room",
@@ -221,9 +225,11 @@ const i18n = {
     roomPlaceholder: "Write the first room message...",
     anonymousSend: "Send anonymously",
     roomSend: "Enter room",
-    featureUnavailable: "This feature isn't available yet.",
+    linkCreated: "Temporary link created.",
+    entryQueued: "Saved locally as a temporary request.",
+    profileCodeKicker: "Share your link",
     profileCodeLabel: "Your code",
-    copyMyCode: "Copy my code",
+    copyMyCode: "Copy code",
     copyMyLink: "Copy link",
     copied: "Copied",
     chatsHeader: "Active chats",
@@ -606,6 +612,7 @@ function updateProfileCodeUI() {
 
   const hasCode = Boolean(currentProfile?.public_code);
   card.hidden = !hasCode;
+  $("profileCodeKicker").textContent = i18n[currentLang].profileCodeKicker;
   $("profileCodeLabel").textContent = i18n[currentLang].profileCodeLabel;
   $("copyCodeBtn").textContent = i18n[currentLang].copyMyCode;
   $("copyLinkBtn").textContent = i18n[currentLang].copyMyLink;
@@ -2239,7 +2246,8 @@ function setLanguage(lang) {
   $("settingsToggle").textContent = t.settings;
   $("heroTagline").textContent = t.heroTagline;
   $("heroLine1").textContent = t.heroLine1;
-  $("heroLine2").textContent = t.heroLine2;
+  if ($("heroLine2")) $("heroLine2").textContent = t.heroLine2 || "";
+  if ($("secondaryOptionsLabel")) $("secondaryOptionsLabel").textContent = t.secondaryOptionsLabel || "خيارات أخرى";
   $("codeInput").placeholder = t.inputPlaceholder;
   $("startBtn").textContent = t.startBtn;
   $("askActionTitle").textContent = t.askActionTitle;
