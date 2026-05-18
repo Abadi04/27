@@ -197,7 +197,7 @@ const i18n = {
     headerStatus: "Encrypted · No login",
     headerStatusLive: "Connected · Supabase Realtime",
     langToggle: "English / العربية",
-    heroTagline: "خاص. سريع. يختفي.",
+    heroTagline: "Private. Fast. Gone.",
     heroLine1: "Open a secret channel in seconds: anonymous ask, temporary room, or code chat.",
     heroLine2: "Every link has a short life. Every conversation can disappear.",
     inputPlaceholder: "Enter the user's code to start a chat",
