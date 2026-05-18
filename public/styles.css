@@ -1,13 +1,8 @@
 /* =====================================================================
    27 — Design system
-   Quiet, private, ephemeral. Deep blue-black surfaces, one calm accent.
-   References (patterns, not copies):
-   - Surface depth & layered panels: Linear, Things 3, Vercel (dark)
-   - Quiet primary action: Apple HIG / iOS
-   - Message bubbles: iMessage / Telegram dark
-   - Bottom sheets w/ grab handle + safe areas: iOS UIKit
-   - Settings rows w/ trailing switch: iOS Settings
-   - Single-focus code screen: iOS device pairing
+   Quiet, private, ephemeral. Deep blue-black base, one amber accent.
+   Patterns (not copies): Apple HIG, iMessage / Telegram dark,
+   Things 3, Linear, Vercel (dark surfaces).
    ===================================================================== */
 
 *, *::before, *::after {
@@ -17,10 +12,10 @@
 }
 
 :root {
-  /* Surfaces — solid, layered deep blue-black for real depth (Linear/Things) */
+  /* Surfaces — solid, layered deep blue-black for depth (no glow) */
   --bg-base: #07090F;
   --bg-raised: #0B0E16;
-  --bg-elevated: #11141F;
+  --bg-elevated: #12151F;
   --bg-input: #0E1119;
   --bg-overlay: rgba(255, 255, 255, 0.035);
   --bg-overlay-strong: rgba(255, 255, 255, 0.06);
@@ -28,21 +23,19 @@
   /* Hairline borders */
   --border-subtle: rgba(255, 255, 255, 0.07);
   --border-strong: rgba(255, 255, 255, 0.12);
-  --border-focus: rgba(96, 140, 240, 0.55);
+  --border-focus: rgba(230, 162, 60, 0.6);
 
   /* Text */
   --text-primary: #EEF1F7;
   --text-secondary: rgba(233, 238, 248, 0.62);
   --text-muted: rgba(233, 238, 248, 0.40);
 
-  /* One calm accent — deep azure, never neon */
-  --accent: #5A8BF0;
-  --accent-soft: rgba(90, 139, 240, 0.14);
-  --accent-line: rgba(90, 139, 240, 0.42);
+  /* One calm accent — muted amber, never neon */
+  --accent: #E6A23C;
+  --accent-line: rgba(230, 162, 60, 0.45);
 
   /* Functional semantics only */
   --ok: #3DCB8E;
-  --warn: #E6A23C;
   --danger: #E5566F;
   --danger-soft: rgba(229, 86, 111, 0.12);
 
@@ -62,11 +55,11 @@
   --s-8: 32px;
   --s-10: 40px;
 
-  /* Elevation — tight, no colored glow */
+  /* Elevation — tight, neutral, no colored glow */
   --shadow-1: 0 1px 0 rgba(255, 255, 255, 0.04) inset, 0 8px 24px rgba(0, 0, 0, 0.35);
   --shadow-2: 0 1px 0 rgba(255, 255, 255, 0.05) inset, 0 18px 44px rgba(0, 0, 0, 0.45);
 
-  --font-base: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display",
+  --font-base: -apple-system, BlinkMacSystemFont, "SF Pro Text",
     "SF Arabic", "Helvetica Neue", "Segoe UI", "Noto Sans Arabic", system-ui, sans-serif;
   --t-fast: 0.16s ease;
   --t-med: 0.28s cubic-bezier(0.22, 1, 0.36, 1);
@@ -93,27 +86,18 @@ body {
   min-height: 100vh;
   min-height: 100dvh;
   overflow-x: hidden;
-  background:
-    radial-gradient(120% 80% at 50% 0%, #0C111D 0%, transparent 60%),
-    linear-gradient(180deg, #080A11 0%, var(--bg-base) 38%, #05060B 100%);
-  background-attachment: fixed;
+  background: var(--bg-base);
   color: var(--text-primary);
   font-family: var(--font-base);
   line-height: 1.5;
-  letter-spacing: -0.005em;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Repurposed: subtle top depth wash, not a colored blob */
+/* Repurposed element: kept neutral, no colored blob */
 .bg-glow {
-  position: fixed;
-  inset: 0 0 auto;
-  z-index: 0;
-  height: 360px;
-  pointer-events: none;
-  background: radial-gradient(80% 100% at 50% 0%, rgba(58, 86, 150, 0.10) 0%, transparent 70%);
+  display: none;
 }
 
 .app-header {
@@ -126,19 +110,18 @@ body {
   gap: var(--s-3);
   padding: calc(var(--s-3) + var(--safe-top)) calc(var(--s-5) + var(--safe-right)) var(--s-3) calc(var(--s-5) + var(--safe-left));
   border-bottom: 1px solid var(--border-subtle);
-  background: rgba(8, 10, 17, 0.72);
-  backdrop-filter: saturate(160%) blur(20px);
-  -webkit-backdrop-filter: saturate(160%) blur(20px);
+  background: rgba(7, 9, 15, 0.82);
+  backdrop-filter: saturate(140%) blur(18px);
+  -webkit-backdrop-filter: saturate(140%) blur(18px);
 }
 
-/* Clean geometric wordmark — calm, deliberate (no handwritten gimmick) */
+/* Clean wordmark — calm, deliberate */
 .header-logo {
   color: #fff;
   font-size: 1.3rem;
   font-weight: 700;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.08em;
   line-height: 1;
-  padding-inline-end: 0.14em;
 }
 
 .header-right {
@@ -153,7 +136,6 @@ body {
   gap: var(--s-2);
   color: var(--text-muted);
   font-size: 0.74rem;
-  letter-spacing: 0;
 }
 
 .header-status::before {
@@ -193,7 +175,6 @@ body {
   border-color: var(--border-strong);
   background: var(--bg-overlay-strong);
   color: var(--text-primary);
-  outline: none;
 }
 
 .main-content,
@@ -240,8 +221,8 @@ body {
   border-radius: 24px;
   background: #fff;
   box-shadow:
-    0 0 0 1px rgba(255, 255, 255, 0.10),
-    0 18px 40px rgba(0, 0, 0, 0.55);
+    0 0 0 1px rgba(255, 255, 255, 0.1),
+    0 16px 38px rgba(0, 0, 0, 0.55);
   object-fit: cover;
 }
 
@@ -250,7 +231,6 @@ body {
   color: #fff;
   font-size: clamp(1.5rem, 6vw, 1.95rem);
   font-weight: 700;
-  letter-spacing: -0.02em;
   line-height: 1.2;
 }
 
@@ -279,14 +259,13 @@ body {
   min-height: 52px;
   border: 1px solid var(--border-subtle);
   border-radius: var(--r-md);
-  outline: none;
   background: var(--bg-input);
   color: var(--text-primary);
   font: inherit;
   font-size: 1rem;
   padding: 15px 18px;
   text-align: inherit;
-  transition: border-color var(--t-fast), box-shadow var(--t-fast);
+  transition: border-color var(--t-fast);
 }
 
 .code-input::placeholder {
@@ -295,40 +274,34 @@ body {
 
 .code-input:focus {
   border-color: var(--border-focus);
-  box-shadow: 0 0 0 4px var(--accent-soft);
 }
 
-/* Quiet primary action: deep graphite-blue with a hairline top light (Apple/Linear) */
+/* Quiet primary action — calm neutral graphite, hairline top light */
 .start-btn,
 #startBtn {
   position: relative;
   width: 100%;
   min-height: 52px;
   overflow: hidden;
-  border: 1px solid rgba(120, 152, 224, 0.22);
+  border: 1px solid var(--border-strong);
   border-radius: var(--r-md);
-  background: linear-gradient(180deg, #1B2740 0%, #121A2C 100%);
+  background: #181B24;
   color: #fff;
   cursor: pointer;
   font: inherit;
   font-size: 1rem;
   font-weight: 650;
   padding: 15px 24px;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.10),
-    0 12px 30px rgba(0, 0, 0, 0.4);
-  transition: transform var(--t-fast), box-shadow var(--t-fast), border-color var(--t-fast);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  transition: transform var(--t-fast), border-color var(--t-fast), background var(--t-fast);
 }
 
 .start-btn:hover,
 .start-btn:focus-visible,
 #startBtn:hover,
 #startBtn:focus-visible {
-  border-color: rgba(140, 170, 240, 0.34);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.12),
-    0 16px 38px rgba(0, 0, 0, 0.5);
-  outline: none;
+  border-color: var(--accent-line);
+  background: #1E212B;
   transform: translateY(-1px);
 }
 
@@ -345,7 +318,7 @@ body {
   transform: none;
 }
 
-/* Secondary high-value actions, directly under primary task (Linear/Cal) */
+/* Secondary actions directly under primary task */
 .viral-actions {
   display: grid;
   max-width: 420px;
@@ -372,9 +345,6 @@ body {
 
 .viral-action.is-primary {
   border-color: var(--accent-line);
-  background:
-    linear-gradient(180deg, rgba(90, 139, 240, 0.10), transparent 60%),
-    var(--bg-raised);
 }
 
 .viral-action span {
@@ -393,7 +363,6 @@ body {
 .viral-action:focus-visible {
   border-color: var(--border-strong);
   background: var(--bg-elevated);
-  outline: none;
   transform: translateY(-1px);
 }
 
@@ -453,7 +422,6 @@ body {
   width: 100%;
   border: 1px solid var(--border-subtle);
   border-radius: var(--r-sm);
-  outline: none;
   background: var(--bg-input);
   color: var(--text-secondary);
   font: inherit;
@@ -489,8 +457,7 @@ body {
 .copy-share-link:hover,
 .copy-share-link:focus-visible {
   border-color: var(--accent-line);
-  background: var(--accent-soft);
-  outline: none;
+  background: var(--bg-overlay-strong);
 }
 
 /* Quiet identity card */
@@ -524,7 +491,7 @@ body {
   color: #fff;
   font-size: 1.45rem;
   font-weight: 700;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.08em;
   line-height: 1;
 }
 
@@ -562,7 +529,6 @@ body {
 .copy-link-btn:focus-visible {
   border-color: var(--border-strong);
   color: var(--text-primary);
-  outline: none;
 }
 
 .profile-qr-btn {
@@ -585,8 +551,7 @@ body {
 .profile-qr-btn:hover,
 .profile-qr-btn:focus-visible {
   border-color: var(--accent-line);
-  background: var(--accent-soft);
-  outline: none;
+  background: var(--bg-overlay-strong);
   transform: translateY(-1px);
 }
 
@@ -618,9 +583,8 @@ body {
 .copy-code-btn:hover,
 .copy-code-btn:focus-visible {
   border-color: var(--accent-line);
-  background: var(--accent-soft);
+  background: var(--bg-overlay-strong);
   color: #fff;
-  outline: none;
 }
 
 .section-divider {
@@ -660,16 +624,16 @@ body {
   text-transform: uppercase;
 }
 
-/* High-priority expiring row above the list (iOS pinned-row pattern) */
+/* High-priority expiring row above the list */
 .expiring-strip {
   display: flex;
   width: 100%;
   align-items: center;
   gap: var(--s-3);
-  border: 1px solid rgba(230, 162, 60, 0.22);
+  border: 1px solid var(--accent-line);
   border-radius: var(--r-md);
-  background: rgba(230, 162, 60, 0.07);
-  color: rgba(247, 226, 190, 0.92);
+  background: var(--bg-raised);
+  color: var(--text-secondary);
   cursor: pointer;
   font: inherit;
   font-size: 0.82rem;
@@ -680,9 +644,8 @@ body {
 
 .expiring-strip:hover,
 .expiring-strip:focus-visible {
-  border-color: rgba(230, 162, 60, 0.36);
-  background: rgba(230, 162, 60, 0.11);
-  outline: none;
+  border-color: var(--accent);
+  background: var(--bg-elevated);
   transform: translateY(-1px);
 }
 
@@ -691,7 +654,7 @@ body {
   height: 7px;
   flex-shrink: 0;
   border-radius: 50%;
-  background: var(--warn);
+  background: var(--accent);
   animation: pulse-dot 2.4s ease-in-out infinite;
 }
 
@@ -713,7 +676,6 @@ body {
 .request-item:focus-within {
   border-color: var(--border-strong);
   background: var(--bg-elevated);
-  outline: none;
   transform: translateY(-1px);
 }
 
@@ -736,7 +698,7 @@ body {
   background: rgba(229, 86, 111, 0.04);
 }
 
-/* Elegant identity avatar — one muted family, distinct per seed (Linear/Notion) */
+/* Elegant identity avatar — one muted family, distinct per seed */
 .chat-avatar {
   position: relative;
   display: flex;
@@ -748,17 +710,15 @@ body {
   border-radius: 50%;
   background: linear-gradient(
     155deg,
-    hsl(var(--avatar-hue, 220) 26% 34%) 0%,
-    hsl(calc(var(--avatar-hue, 220) + 18) 30% 17%) 100%
+    hsl(var(--avatar-hue, 220) 22% 32%) 0%,
+    hsl(calc(var(--avatar-hue, 220) + 16) 24% 16%) 100%
   );
   box-shadow:
     inset 0 0 0 1px rgba(255, 255, 255, 0.07),
-    inset 0 1px 2px rgba(255, 255, 255, 0.10),
-    0 6px 16px rgba(0, 0, 0, 0.4);
+    inset 0 1px 2px rgba(255, 255, 255, 0.09);
   color: rgba(255, 255, 255, 0.92);
   font-size: 0.86rem;
   font-weight: 700;
-  letter-spacing: 0.02em;
 }
 
 .chat-info {
@@ -828,7 +788,6 @@ body {
 .mini-action:hover,
 .mini-action:focus-visible {
   border-color: var(--accent-line);
-  outline: none;
 }
 
 .mini-action.danger,
@@ -853,7 +812,7 @@ body {
   background: rgba(255, 255, 255, 0.18);
 }
 
-/* Empty / state cards — calm, intentional, never a placeholder feel */
+/* Empty / state cards — calm, intentional */
 .empty-state {
   display: grid;
   gap: var(--s-2);
@@ -871,14 +830,13 @@ body {
   width: 44px;
   height: 44px;
   margin: 0 auto var(--s-2);
-  border: 1px solid var(--border-strong);
+  border: 1px solid var(--accent-line);
   border-radius: 50%;
-  background:
-    radial-gradient(circle at 50% 50%, var(--accent-soft), transparent 70%);
+  background: var(--bg-overlay-strong);
   content: "27";
   display: grid;
   place-items: center;
-  color: var(--text-secondary);
+  color: var(--accent);
   font-size: 0.82rem;
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -955,10 +913,9 @@ body {
 .chat-danger-btn:hover,
 .chat-danger-btn:focus-visible {
   background: rgba(229, 86, 111, 0.18);
-  outline: none;
 }
 
-/* Calm grouped mode row before deeper controls (Telegram/iOS settings) */
+/* Calm grouped mode row before deeper controls */
 .chat-privacy-bar {
   display: flex;
   align-items: center;
@@ -1008,14 +965,12 @@ body {
   border-color: var(--border-strong);
   background: var(--bg-overlay-strong);
   color: var(--text-primary);
-  outline: none;
 }
 
 .chat-view-name {
   color: var(--text-primary);
   font-size: 1.2rem;
   font-weight: 650;
-  letter-spacing: -0.01em;
   line-height: 1.25;
 }
 
@@ -1034,9 +989,7 @@ body {
   overflow-y: auto;
   border: 1px solid var(--border-subtle);
   border-radius: var(--r-lg);
-  background:
-    linear-gradient(180deg, #090C13 0%, #06080D 100%);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+  background: #06080D;
   padding: var(--s-4);
 }
 
@@ -1059,27 +1012,25 @@ body {
   width: 100%;
   max-width: none;
   overflow: hidden;
-  border: 1px solid transparent;
+  border: 1px solid var(--border-subtle);
   border-radius: var(--r-lg);
   font-size: 0.93rem;
   line-height: 1.55;
   padding: 10px 14px 16px;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
   transform: translateX(var(--swipe-x, 0));
 }
 
-/* Incoming: neutral graphite. Outgoing: single deep blue (iMessage/Telegram dark) */
+/* Distinction by elevation, not color (calm, dark) */
 .message.incoming {
-  border-color: var(--border-subtle);
   border-bottom-left-radius: 7px;
-  background: #161A24;
+  background: #14171F;
   color: rgba(236, 240, 248, 0.92);
 }
 
 .message.outgoing {
-  border-color: rgba(120, 152, 224, 0.22);
   border-bottom-right-radius: 7px;
-  background: linear-gradient(180deg, #1C355F 0%, #16284A 100%);
+  background: #20242F;
   color: #fff;
 }
 
@@ -1118,8 +1069,8 @@ body {
   height: 36px;
   place-items: center;
   border-radius: 50%;
-  background: var(--accent-soft);
-  color: rgba(210, 224, 255, 0.9);
+  background: var(--bg-overlay-strong);
+  color: var(--accent);
   opacity: var(--reply-opacity, 0);
   transform: translateY(-50%) translateX(calc(-16px * (1 - var(--reply-opacity, 0))));
 }
@@ -1161,10 +1112,10 @@ body {
 .message-reply-quote {
   display: block;
   margin-bottom: var(--s-2);
-  border-inline-start: 2px solid var(--accent-line);
+  border-inline-start: 2px solid var(--accent);
   border-radius: 8px;
-  background: var(--accent-soft);
-  color: rgba(214, 226, 250, 0.78);
+  background: var(--bg-overlay);
+  color: var(--text-secondary);
   font-size: 0.76rem;
   line-height: 1.45;
   padding: 7px 9px;
@@ -1181,7 +1132,7 @@ body {
   border: 1px solid var(--border-strong);
   border-radius: var(--r-full);
   background: var(--bg-elevated);
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
   font-size: 0.82rem;
 }
 
@@ -1233,7 +1184,7 @@ body {
   width: 30px;
   height: 30px;
   border-radius: 50%;
-  background: var(--accent-soft);
+  background: var(--bg-overlay-strong);
 }
 
 .voice-play::before {
@@ -1242,7 +1193,7 @@ body {
   height: 0;
   margin: 9px 0 0 12px;
   border-block: 6px solid transparent;
-  border-inline-start: 9px solid rgba(220, 230, 255, 0.9);
+  border-inline-start: 9px solid rgba(255, 255, 255, 0.85);
   content: "";
 }
 
@@ -1256,7 +1207,7 @@ body {
   width: 3px;
   height: 12px;
   border-radius: var(--r-full);
-  background: rgba(150, 180, 240, 0.55);
+  background: rgba(255, 255, 255, 0.35);
 }
 
 .voice-wave i:nth-child(2) { height: 20px; }
@@ -1271,7 +1222,7 @@ body {
   place-items: center;
   border: 1px solid var(--border-subtle);
   border-radius: var(--r-md);
-  background: linear-gradient(160deg, #1A2236, #10141F);
+  background: #1A1D26;
 }
 
 .gif-message strong {
@@ -1306,20 +1257,20 @@ body {
 .message-time {
   display: block;
   margin-top: 6px;
-  color: rgba(190, 200, 220, 0.45);
+  color: rgba(255, 255, 255, 0.4);
   font-size: 0.68rem;
   line-height: 1.2;
 }
 
 .message.outgoing .message-time {
-  color: rgba(220, 228, 248, 0.55);
+  color: rgba(255, 255, 255, 0.5);
 }
 
 .message-status {
   color: inherit;
 }
 
-/* Thin embedded expiry hairline (Telegram self-destruct / iOS progress) */
+/* Thin embedded expiry hairline */
 .message-timer {
   position: absolute;
   right: 0;
@@ -1328,7 +1279,7 @@ body {
   height: 2px;
   border-radius: 0 0 var(--r-lg) var(--r-lg);
   background: var(--accent);
-  opacity: 0.7;
+  opacity: 0.75;
   transition: width 1s linear;
 }
 
@@ -1489,7 +1440,7 @@ body {
   border: 1px solid var(--border-strong);
   border-radius: var(--r-lg) var(--r-lg) 0 0;
   background: var(--bg-elevated);
-  box-shadow: 0 -18px 50px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 -16px 44px rgba(0, 0, 0, 0.5);
   padding: var(--s-3) var(--s-5) calc(var(--s-5) + var(--safe-bottom));
 }
 
@@ -1546,8 +1497,6 @@ body {
 .message-action-btn:hover,
 .message-action-btn:focus-visible {
   border-color: var(--accent-line);
-  background: var(--accent-soft);
-  outline: none;
 }
 
 .message-action-btn {
@@ -1570,7 +1519,7 @@ body {
   margin-top: var(--s-3);
   padding-top: var(--s-3);
   padding-bottom: var(--safe-bottom);
-  background: linear-gradient(180deg, transparent, var(--bg-base) 30%);
+  background: var(--bg-base);
 }
 
 .reply-composer {
@@ -1581,8 +1530,8 @@ body {
   gap: var(--s-3);
   border: 1px solid var(--accent-line);
   border-radius: var(--r-sm);
-  background: var(--accent-soft);
-  color: rgba(216, 228, 250, 0.85);
+  background: var(--bg-raised);
+  color: var(--text-secondary);
   font-size: 0.78rem;
   line-height: 1.4;
   padding: 10px 12px;
@@ -1652,7 +1601,6 @@ body {
   border-color: var(--border-strong);
   background: var(--bg-overlay-strong);
   color: var(--text-primary);
-  outline: none;
   transform: translateY(-1px);
 }
 
@@ -1661,12 +1609,12 @@ body {
   min-height: 46px;
   border: 1px solid var(--border-subtle);
   border-radius: var(--r-md);
-  outline: none;
   background: var(--bg-input);
   color: var(--text-primary);
   font: inherit;
   font-size: 0.95rem;
   padding: 13px 15px;
+  transition: border-color var(--t-fast);
 }
 
 .message-input::placeholder {
@@ -1675,17 +1623,14 @@ body {
 
 .message-input:focus {
   border-color: var(--border-focus);
-  box-shadow: 0 0 0 4px var(--accent-soft);
 }
 
 .message-input.burn-active {
-  border-color: rgba(229, 86, 111, 0.62);
-  box-shadow: 0 0 0 4px var(--danger-soft);
+  border-color: rgba(229, 86, 111, 0.6);
 }
 
 .message-input.hidden-active {
   border-color: var(--border-focus);
-  box-shadow: 0 0 0 4px var(--accent-soft);
 }
 
 .burn-toggle.active,
@@ -1698,25 +1643,22 @@ body {
 
 .send-btn {
   min-height: 46px;
-  border: 1px solid rgba(120, 152, 224, 0.24);
+  border: 1px solid var(--accent-line);
   border-radius: var(--r-md);
-  background: linear-gradient(180deg, #1B2740 0%, #121A2C 100%);
+  background: #181B24;
   color: #fff;
   cursor: pointer;
   font: inherit;
   font-weight: 650;
   padding: 0 18px;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
-  transition: border-color var(--t-fast), transform var(--t-fast), box-shadow var(--t-fast);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  transition: border-color var(--t-fast), transform var(--t-fast), background var(--t-fast);
 }
 
 .send-btn:hover,
 .send-btn:focus-visible {
-  border-color: rgba(140, 170, 240, 0.36);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.12),
-    0 10px 24px rgba(0, 0, 0, 0.4);
-  outline: none;
+  border-color: var(--accent);
+  background: #1E212B;
   transform: translateY(-1px);
 }
 
@@ -1780,16 +1722,15 @@ body {
   min-height: 44px;
   border: 1px solid var(--border-subtle);
   border-radius: var(--r-sm);
-  outline: none;
   background: var(--bg-input);
   color: var(--text-primary);
   font: inherit;
   padding: 11px 13px;
+  transition: border-color var(--t-fast);
 }
 
 .settings-input:focus {
   border-color: var(--border-focus);
-  box-shadow: 0 0 0 4px var(--accent-soft);
 }
 
 .settings-input:disabled {
@@ -1818,7 +1759,6 @@ body {
 .setting-action:focus-visible {
   border-color: var(--border-strong);
   background: var(--bg-overlay-strong);
-  outline: none;
 }
 
 .setting-switch-row {
@@ -1842,7 +1782,6 @@ body {
 .setting-switch-row:focus-visible {
   border-color: var(--border-strong);
   background: var(--bg-overlay-strong);
-  outline: none;
 }
 
 .switch-track {
@@ -1870,7 +1809,7 @@ body {
 }
 
 .setting-switch-row.is-on .switch-track {
-  border-color: rgba(90, 139, 240, 0.5);
+  border-color: var(--accent);
   background: var(--accent);
 }
 
@@ -1896,16 +1835,16 @@ html[dir="rtl"] .setting-switch-row.is-on .switch-thumb {
 }
 
 /* ---------- Panic / overlays ---------- */
+body.panic-active {
+  overflow: hidden;
+}
+
 .panic-screen {
   position: fixed;
   inset: 0;
   z-index: 1000;
   background: #fff;
   color: #111;
-}
-
-body.panic-active {
-  overflow: hidden;
 }
 
 .panic-screen[hidden],
@@ -1965,7 +1904,7 @@ body.panic-active {
   border: 1px solid var(--border-strong);
   border-radius: var(--r-lg);
   background: var(--bg-elevated);
-  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.65);
+  box-shadow: 0 26px 70px rgba(0, 0, 0, 0.65);
   padding: var(--s-6);
   text-align: center;
 }
@@ -1986,7 +1925,7 @@ body.panic-active {
 
 .qr-dialog strong {
   color: var(--text-secondary);
-  letter-spacing: 0.1em;
+  letter-spacing: 0.08em;
 }
 
 .qr-close {
@@ -2005,16 +1944,14 @@ body.panic-active {
   font-size: 1.2rem;
 }
 
-/* Single-focus onboarding code (iOS pairing) */
+/* Single-focus onboarding code */
 .onboarding-screen {
   position: fixed;
   inset: 0;
   z-index: 900;
   display: grid;
   place-items: center;
-  background:
-    radial-gradient(80% 60% at 50% 35%, #0C111D 0%, transparent 70%),
-    var(--bg-base);
+  background: var(--bg-base);
   opacity: 1;
 }
 
@@ -2037,19 +1974,17 @@ body.panic-active {
   z-index: 200;
   max-width: calc(100vw - 40px);
   border: 1px solid var(--border-strong);
-  border-radius: var(--r-full);
-  background: rgba(20, 25, 38, 0.92);
+  border-radius: var(--r-md);
+  background: var(--bg-elevated);
   color: var(--text-primary);
   font-size: 0.85rem;
   opacity: 0;
-  padding: 12px 22px;
+  padding: 12px 20px;
   pointer-events: none;
   text-align: center;
   transform: translateX(-50%) translateY(16px);
   transition: opacity var(--t-med), transform var(--t-med);
   line-height: 1.45;
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
 }
 
 .toast.show {
