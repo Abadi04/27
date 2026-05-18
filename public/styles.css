@@ -307,10 +307,10 @@ body {
 #startBtn,
 #entrySendBtn,
 #saveSettingsBtn {
-  background: linear-gradient(135deg, #b48cff 0%, #9370db 100%);
+  background: linear-gradient(135deg, #1f1f2e 0%, #151520 100%);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.15),
-    0 12px 32px rgba(180, 140, 255, 0.28);
+    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    0 12px 30px rgba(0, 0, 0, 0.34);
   font-weight: 750;
 }
 
@@ -320,10 +320,10 @@ body {
 #entrySendBtn:focus-visible,
 #saveSettingsBtn:hover,
 #saveSettingsBtn:focus-visible {
-  background: linear-gradient(135deg, #c49fff 0%, #a380eb 100%);
+  background: linear-gradient(135deg, #2a2a3e 0%, #1f1f2e 100%);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.18),
-    0 16px 40px rgba(180, 140, 255, 0.38);
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 14px 34px rgba(12, 15, 26, 0.44);
   transform: translateY(-2px);
 }
 
