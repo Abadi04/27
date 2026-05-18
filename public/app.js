@@ -74,8 +74,7 @@ const i18n = {
     roomPlaceholder: "اكتب أول رسالة في الغرفة...",
     anonymousSend: "إرسال مجهول",
     roomSend: "دخول الغرفة",
-    linkCreated: "تم إنشاء الرابط المؤقت.",
-    entryQueued: "تم حفظ الرسالة محليًا كطلب مؤقت.",
+    featureUnavailable: "هذه الميزة غير متاحة حاليًا.",
     profileCodeLabel: "رقمك",
     copyMyCode: "انسخ رقمي",
     copyMyLink: "انسخ الرابط",
@@ -222,8 +221,7 @@ const i18n = {
     roomPlaceholder: "Write the first room message...",
     anonymousSend: "Send anonymously",
     roomSend: "Enter room",
-    linkCreated: "Temporary link created.",
-    entryQueued: "Saved locally as a temporary request.",
+    featureUnavailable: "This feature isn't available yet.",
     profileCodeLabel: "Your code",
     copyMyCode: "Copy my code",
     copyMyLink: "Copy link",
@@ -510,43 +508,9 @@ function getShareLink() {
   return code ? `${base}?code=${encodeURIComponent(code)}` : base;
 }
 
-function createShareToken(prefix) {
-  const random = Math.random().toString(36).slice(2, 8).toUpperCase();
-  return `${prefix}-${random}-${Date.now().toString(36).toUpperCase()}`;
-}
-
-function getTemporaryShareLink(type) {
-  const base = `${window.location.origin}${getAppBasePath()}`;
-  const param = type === "room" ? "room" : "ask";
-  const token = createShareToken(type === "room" ? "ROOM" : "ASK");
-  return { token, url: `${base}?${param}=${encodeURIComponent(token)}` };
-}
-
-async function createTemporaryShareLink(type) {
-  const link = getTemporaryShareLink(type);
-  if (isLiveMode()) {
-    const { error } = await db.from("temporary_links").insert({
-      owner_id: currentProfile.id,
-      token: link.token,
-      link_type: type === "room" ? "room" : "ask",
-      expires_at: new Date(Date.now() + MESSAGE_TTL_SECONDS * 1000).toISOString()
-    });
-    if (error && !isMissingRelationError(error)) throw error;
-  }
-  return link.url;
-}
-
-async function showShareDrop(type) {
-  const t = i18n[currentLang];
-  generatedShareLink = await createTemporaryShareLink(type);
-  $("shareDrop").hidden = false;
-  $("shareDropKicker").textContent = t.shareReady;
-  $("shareDropTitle").textContent = type === "room" ? t.roomShareTitle : t.askShareTitle;
-  $("shareDropDesc").textContent = type === "room" ? t.roomShareDesc : t.askShareDesc;
-  $("shareLinkInput").value = generatedShareLink;
-  $("copyShareLinkBtn").textContent = t.copy;
-  showToast(t.linkCreated);
-  vibrate(20);
+async function showShareDrop() {
+  $("shareDrop").hidden = true;
+  showToast(i18n[currentLang].featureUnavailable);
 }
 
 async function copyGeneratedShareLink() {
@@ -599,44 +563,7 @@ function handleTemporaryEntryParams() {
 async function submitTemporaryEntry() {
   const text = $("entryMessageInput").value.trim();
   if (!text) return;
-  const token = $("entryCard").dataset.token || createShareToken(entryMode === "room" ? "ROOM" : "ASK");
-  const entry = {
-    id: createMessageId("entry"),
-    token,
-    mode: entryMode || "ask",
-    text,
-    createdAt: new Date().toISOString(),
-    expiresAt: new Date(Date.now() + MESSAGE_TTL_SECONDS * 1000).toISOString()
-  };
-
-  if (isLiveMode()) {
-    const { data: link, error: linkError } = await db
-      .from("temporary_links")
-      .select("id, owner_id, link_type")
-      .eq("token", token)
-      .maybeSingle();
-    if (linkError && !isMissingRelationError(linkError)) throw linkError;
-    if (link?.id && link.link_type === "ask") {
-      const { error } = await db.from("anonymous_entries").insert({
-        link_id: link.id,
-        owner_id: link.owner_id,
-        body: text,
-        expires_at: entry.expiresAt
-      });
-      if (!error) {
-        $("entryMessageInput").value = "";
-        showToast(i18n[currentLang].entryQueued);
-        return;
-      }
-      console.warn(error);
-    }
-  }
-
-  const key = "twentyseven_temporary_entries";
-  const existing = JSON.parse(localStorage.getItem(key) || "[]");
-  localStorage.setItem(key, JSON.stringify([entry, ...existing].slice(0, 24)));
-  $("entryMessageInput").value = "";
-  showToast(i18n[currentLang].entryQueued);
+  showToast(i18n[currentLang].featureUnavailable);
 }
 
 function handleAsyncError(error, fallbackMessage) {
@@ -2943,10 +2870,6 @@ $("messageActions").addEventListener("click", (event) => {
 
 document.addEventListener("visibilitychange", () => {
   if (document.hidden && !$("chatView").hidden) setPanicMode(true);
-});
-
-window.addEventListener("blur", () => {
-  if (!$("chatView").hidden) setPanicMode(true);
 });
 
 window.addEventListener("hashchange", () => {
