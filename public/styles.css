@@ -80,6 +80,13 @@
 html {
   scroll-behavior: smooth;
   -webkit-text-size-adjust: 100%;
+  color-scheme: dark;
+  accent-color: var(--accent);
+}
+
+:where(a, button, input, select, textarea, [tabindex], [role="button"]):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 body {
@@ -2037,9 +2044,10 @@ body.panic-active {
   opacity: 0;
   padding: 12px 22px;
   pointer-events: none;
+  text-align: center;
   transform: translateX(-50%) translateY(16px);
   transition: opacity var(--t-med), transform var(--t-med);
-  white-space: nowrap;
+  line-height: 1.45;
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
 }
