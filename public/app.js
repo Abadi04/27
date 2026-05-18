@@ -83,7 +83,8 @@ const i18n = {
     copyMyLink: "نسخ الرابط",
     copied: "تم النسخ",
     chatsHeader: "المحادثات النشطة",
-    emptyText: "لا توجد محادثات حالية. ابدأ محادثة جديدة بإدخال رقم مستخدم.",
+    emptyTitle: "لا توجد محادثات بعد",
+    emptyText: "أدخل رقم مستخدم أعلاه لبدء محادثة مشفّرة تختفي تلقائيًا.",
     footerText: "جميع المحادثات تُحذف تلقائيًا بعد ٥ ساعات من آخر رسالة.",
     footerTextWithCode: "رقمك: {code} · جميع المحادثات تُحذف تلقائيًا بعد ٥ ساعات.",
     back: "رجوع",
@@ -192,6 +193,7 @@ const i18n = {
     typing: "يكتب الآن...",
     fakeNotesTitle: "Notes",
     now: "الآن",
+    ttlSeconds: "< ١ د",
     userPrefix: "مستخدم",
     demoMode: "وضع تجريبي: أضف مفاتيح Supabase ليصبح حقيقيًا."
   },
@@ -233,7 +235,8 @@ const i18n = {
     copyMyLink: "Copy link",
     copied: "Copied",
     chatsHeader: "Active chats",
-    emptyText: "No active chats. Start a new one by entering a user code.",
+    emptyTitle: "No conversations yet",
+    emptyText: "Enter a user code above to start an encrypted chat that auto-deletes.",
     footerText: "All conversations are automatically deleted 5 hours after the last message.",
     footerTextWithCode: "Your code: {code} · All conversations auto-delete after 5 hours.",
     back: "Back",
@@ -342,6 +345,7 @@ const i18n = {
     typing: "Typing...",
     fakeNotesTitle: "Notes",
     now: "Now",
+    ttlSeconds: "< 1m",
     userPrefix: "User",
     demoMode: "Demo mode: add Supabase keys to make it real."
   }
@@ -1701,6 +1705,10 @@ function renderMessages(chat) {
       const reaction = message.reaction
         ? `<span class="message-reaction">${escapeHtml(message.reaction)}</span>`
         : "";
+      const ttlInfo = formatTTL(remaining);
+      const ttlLabel = ttlInfo
+        ? `<span class="message-ttl ${ttlInfo.cls}">${escapeHtml(ttlInfo.text)}</span>`
+        : "";
       return `
       <div class="message-shell ${message.type}" data-message-id="${escapeHtml(message.id || "")}">
         <div class="swipe-reply-cue" aria-hidden="true">↩</div>
@@ -1710,7 +1718,7 @@ function renderMessages(chat) {
           ${renderMessageContent(message)}
           ${burnLabel}
           ${reaction}
-          <span class="message-time">${escapeHtml(message.time || t.now)} ${statusLabel}</span>
+          <span class="message-time">${escapeHtml(message.time || t.now)} ${ttlLabel} ${statusLabel}</span>
           <span class="message-timer${criticalClass}" style="--timer-width: ${percent}%"></span>
         </div>
       </div>
@@ -1812,6 +1820,18 @@ function handleComposerTyping() {
 function getMessageRemaining(message) {
   if (!message?.expiresAt) return FIVE_HOURS;
   return Math.max(0, new Date(message.expiresAt).getTime() - Date.now());
+}
+
+function formatTTL(ms) {
+  if (ms <= 0) return null;
+  const mins = Math.floor(ms / 60000);
+  const hrs = Math.floor(mins / 60);
+  const t = i18n[currentLang];
+  if (mins < 1) return { text: t.ttlSeconds || "< 1m", cls: "ttl-critical" };
+  if (mins < 30) return { text: `${mins}m`, cls: "ttl-warning" };
+  if (hrs < 1) return { text: `${mins}m`, cls: "" };
+  const remMins = mins % 60;
+  return { text: remMins > 0 ? `${hrs}h ${remMins}m` : `${hrs}h`, cls: "" };
 }
 
 function getMessageTimerPercent(message) {
@@ -2690,6 +2710,8 @@ function startOnboarding(onComplete) {
   const randomCode = randomPublicCode();
   screen.hidden = false;
   code.textContent = "";
+  const hint = $("onboardingHint");
+  if (hint) hint.textContent = currentLang === "en" ? "This is your code — share it to start an anonymous chat" : "هذا رقمك الخاص — شاركه لبدء محادثة مجهولة";
   let step = 0;
 
   const typeNext = () => {
