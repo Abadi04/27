@@ -100,7 +100,12 @@ export function updateProfileCodeUI() {
   const t = i18n[state.currentLang];
   const hasCode = Boolean(state.currentProfile?.public_code);
 
-  card.hidden = !hasCode;
+  if (hasCode) {
+    card.hidden = false;
+    card.removeAttribute("hidden");
+  } else {
+    card.hidden = true;
+  }
   $("profileCodeKicker").textContent = t.profileCodeKicker;
   $("profileCodeLabel").textContent = t.profileCodeLabel;
   $("copyCodeBtn").textContent = t.copyMyCode;

@@ -96,9 +96,18 @@ async function boot() {
   // Live mode
   try {
     state.currentProfile = await getOrCreateProfile();
+    if (!state.currentProfile) throw new Error("getOrCreateProfile returned null");
+
     state.displayName = state.currentProfile.display_name || state.displayName;
     $("displayNameInput").value = state.displayName;
 
+    // Force-show profile card immediately (guard against setLanguage hiding it before profile loads)
+    const card = $("profileCodeCard");
+    if (card && state.currentProfile.public_code && state.currentProfile.code_visible !== false) {
+      card.hidden = false;
+      card.removeAttribute("hidden");
+      $("profileCodeValue").textContent = state.currentProfile.public_code;
+    }
     updateProfileCodeUI();
     registerPwa();
 
@@ -111,6 +120,8 @@ async function boot() {
   } catch (error) {
     handleAsyncError(error, i18n[state.currentLang].errorChats);
     renderChats();
+    // Still try to show card if profile was partially loaded
+    updateProfileCodeUI();
   } finally {
     setLoading("", false);
   }
