@@ -18,9 +18,9 @@ import { updatePrivacyModeUI } from "./settings.js";
 // ============================================================
 export function showHome() {
   stopChatCountdown();
-  $("heroSection").hidden = false;
+  // heroSection stays hidden — FAB handles new chats
   const divider = document.querySelector(".section-divider");
-  if (divider) divider.hidden = false;
+  if (divider) divider.hidden = true;
   $("chatsSection").hidden = false;
   $("chatView").hidden = true;
   $("settingsView").hidden = true;

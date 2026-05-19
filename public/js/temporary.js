@@ -28,6 +28,7 @@ export async function showShareDrop(type) {
   const t = i18n[state.currentLang];
   state.generatedShareLink = await createTemporaryShareLink(type);
 
+  $("shareDropBackdrop").hidden = false;
   $("shareDrop").hidden = false;
   $("shareDropKicker").textContent = t.shareReady;
   $("shareDropTitle").textContent = type === "room" ? t.roomShareTitle : t.askShareTitle;
@@ -128,4 +129,11 @@ export async function submitTemporaryEntry() {
   localStorage.setItem(key, JSON.stringify([entry, ...existing].slice(0, 24)));
   $("entryMessageInput").value = "";
   showToast(i18n[state.currentLang].entryQueued);
+}
+
+export function closeShareDrop() {
+  const bd = $("shareDropBackdrop");
+  const sd = $("shareDrop");
+  if (bd) bd.hidden = true;
+  if (sd) sd.hidden = true;
 }

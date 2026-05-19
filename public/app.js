@@ -1938,6 +1938,7 @@
   async function showShareDrop(type) {
     const t = i18n[state.currentLang];
     state.generatedShareLink = await createTemporaryShareLink(type);
+    $("shareDropBackdrop").hidden = false;
     $("shareDrop").hidden = false;
     $("shareDropKicker").textContent = t.shareReady;
     $("shareDropTitle").textContent = type === "room" ? t.roomShareTitle : t.askShareTitle;
@@ -2028,6 +2029,12 @@
     localStorage.setItem(key, JSON.stringify([entry, ...existing].slice(0, 24)));
     $("entryMessageInput").value = "";
     showToast(i18n[state.currentLang].entryQueued);
+  }
+  function closeShareDrop() {
+    const bd = $("shareDropBackdrop");
+    const sd = $("shareDrop");
+    if (bd) bd.hidden = true;
+    if (sd) sd.hidden = true;
   }
 
   // public/js/lang.js
@@ -2146,9 +2153,8 @@
   init_demo();
   function showHome() {
     stopChatCountdown();
-    $("heroSection").hidden = false;
     const divider = document.querySelector(".section-divider");
-    if (divider) divider.hidden = false;
+    if (divider) divider.hidden = true;
     $("chatsSection").hidden = false;
     $("chatView").hidden = true;
     $("settingsView").hidden = true;
@@ -2911,6 +2917,7 @@
   });
   $("headerCodeChip").addEventListener("click", copyProfileCode);
   $("headerQrBtn").addEventListener("click", openQrModal);
+  $("shareDropBackdrop").addEventListener("click", closeShareDrop);
   $("messagesList").addEventListener("click", (e) => {
     const msg = e.target.closest(".message.blur-until-read");
     if (!msg) return;

@@ -40,7 +40,7 @@ import {
   openQrModal, closeQrModal,
 } from "./settings.js";
 import {
-  showShareDrop, copyGeneratedShareLink, submitTemporaryEntry,
+  showShareDrop, closeShareDrop, copyGeneratedShareLink, submitTemporaryEntry,
   handleTemporaryEntryParams,
 } from "./temporary.js";
 import {
@@ -519,6 +519,9 @@ $("codeModalInput").addEventListener("keydown", (e) => {
 // Header chip/QR shortcuts
 $("headerCodeChip").addEventListener("click", copyProfileCode);
 $("headerQrBtn").addEventListener("click", openQrModal);
+
+// ShareDrop / EntryCard backdrop close
+$("shareDropBackdrop").addEventListener("click", closeShareDrop);
 
 // ============================================================
 // BurnAfterRead: tap to unblur
