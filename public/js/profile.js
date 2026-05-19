@@ -98,14 +98,8 @@ export function updateProfileCodeUI() {
   const card = $("profileCodeCard");
   if (!card) return;
   const t = i18n[state.currentLang];
-  const hasCode = Boolean(state.currentProfile?.public_code);
 
-  if (hasCode) {
-    card.hidden = false;
-    card.removeAttribute("hidden");
-  } else {
-    card.hidden = true;
-  }
+  // Always update text labels
   $("profileCodeKicker").textContent = t.profileCodeKicker;
   $("profileCodeLabel").textContent = t.profileCodeLabel;
   $("copyCodeBtn").textContent = t.copyMyCode;
@@ -113,10 +107,15 @@ export function updateProfileCodeUI() {
   $("profileQrBtn").setAttribute("aria-label", t.shareQr);
   $("profileQrBtn").title = t.shareQr;
 
-  if (hasCode) {
+  const profile = state.currentProfile;
+  if (profile?.public_code) {
+    // Show real code
+    card.hidden = false;
+    card.removeAttribute("hidden");
     $("profileCodeValue").textContent =
-      state.currentProfile.code_visible === false ? "••••••" : state.currentProfile.public_code;
+      profile.code_visible === false ? "••••••" : profile.public_code;
   }
+  // Never hide the card once the profile is loaded - it starts visible in HTML
 }
 
 // ============================================================
