@@ -29,7 +29,7 @@ jobs:
           node-version: '20'
           cache: 'npm'
       - run: npm ci
-      - run: npx html-validate public/index.html --config '{"extends":["html-validate:recommended"],"rules":{"no-inline-style":"off","require-sri":"off","long-title":"off"}}'
+      - run: npx html-validate public/index.html
 
   lighthouse:
     runs-on: ubuntu-latest
