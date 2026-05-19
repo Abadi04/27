@@ -74,11 +74,12 @@ body {
 }
 
 .header-logo {
+  /* Refero pattern: tiny brand marks can act as the only header focal point; keep it compact but give the numeric mark a handwritten personality. */
   color: #ffffff;
-  font-family: var(--font-base);
-  font-size: 1.6rem;
-  font-weight: 800;
-  letter-spacing: -0.03em;
+  font-family: "Bradley Hand", "Segoe Print", "Marker Felt", "Comic Sans MS", cursive;
+  font-size: 1.75rem;
+  font-weight: 600;
+  letter-spacing: 0;
   line-height: 1;
   text-shadow: 0 1px 12px rgba(58, 110, 165, 0.2);
 }
@@ -286,6 +287,13 @@ body {
   font-weight: 700;
 }
 
+#startBtn {
+  /* Refero pattern: primary CTAs in dark auth/chat entry screens use subdued near-black gradients and restrained type weight. */
+  background: linear-gradient(135deg, #1f1f2e 0%, #171722 52%, #101018 100%);
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 500;
+}
+
 #startBtn:hover,
 #startBtn:focus-visible,
 #entrySendBtn:hover,
@@ -297,6 +305,12 @@ body {
     inset 0 1px 0 rgba(140, 180, 240, 0.1),
     0 14px 34px rgba(8, 12, 24, 0.5);
   transform: translateY(-2px);
+}
+
+#startBtn:hover,
+#startBtn:focus-visible {
+  background: linear-gradient(135deg, #272738 0%, #1f1f2e 54%, #151520 100%);
+  color: #ffffff;
 }
 
 #startBtn:active,
