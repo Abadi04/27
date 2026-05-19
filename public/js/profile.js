@@ -115,15 +115,9 @@ export function updateProfileCodeUI() {
     const codeDisplay = profile.code_visible === false ? "••••••" : profile.public_code;
     $("profileCodeValue").textContent = codeDisplay;
 
-    // Update header chip
-    const chip = $("headerCodeChip");
+    // Update header chip (always visible, updates code)
     const chipVal = $("headerCodeValue");
-    if (chip && chipVal) {
-      chipVal.textContent = codeDisplay;
-      chip.hidden = false;
-    }
-    const qrBtn = $("headerQrBtn");
-    if (qrBtn) qrBtn.hidden = profile.code_visible === false;
+    if (chipVal) chipVal.textContent = codeDisplay;
   }
   // Never hide the card once the profile is loaded - it starts visible in HTML
 }

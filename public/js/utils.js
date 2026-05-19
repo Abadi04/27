@@ -10,7 +10,7 @@ export const $ = (id) => document.getElementById(id);
 export function setLoading(message, visible = true) {
   const el = $("loadingState");
   if (!el) return;
-  el.textContent = message || "";
+  // Don't overwrite skeleton HTML with textContent
   el.hidden = !visible;
 }
 

@@ -17,12 +17,12 @@
     <header class="app-header" id="appHeader">
       <div class="header-logo">27</div>
       <div class="header-center">
-        <button class="header-code-chip" id="headerCodeChip" type="button" aria-label="رقمك الشخصي" hidden>
+        <button class="header-code-chip" id="headerCodeChip" type="button" aria-label="رقمك الشخصي">
           <span class="header-code-value" id="headerCodeValue">------</span>
         </button>
       </div>
       <div class="header-right">
-        <button class="header-qr-btn" id="headerQrBtn" type="button" aria-label="QR" hidden>QR</button>
+        <button class="header-qr-btn" id="headerQrBtn" type="button" aria-label="QR">QR</button>
         <button class="settings-toggle" id="settingsToggle" type="button">الإعدادات</button>
         <button class="lang-toggle" id="langToggle" type="button" aria-label="Switch language">
           العربية / English
@@ -71,7 +71,7 @@
 
       <section class="chats-section" id="chatsSection">
         <h2 class="chats-header" id="chatsHeader">المحادثات النشطة</h2>
-        <div class="skeleton-list" id="loadingState" hidden role="status" aria-label="جارٍ التحميل">
+        <div class="skeleton-list" id="loadingState" role="status" aria-label="جارٍ التحميل">
           <div class="skeleton-item"><div class="skeleton-avatar"></div><div class="skeleton-lines"><div class="skeleton-line w70"></div><div class="skeleton-line w45"></div></div></div>
           <div class="skeleton-item"><div class="skeleton-avatar"></div><div class="skeleton-lines"><div class="skeleton-line w55"></div><div class="skeleton-line w80"></div></div></div>
           <div class="skeleton-item"><div class="skeleton-avatar"></div><div class="skeleton-lines"><div class="skeleton-line w65"></div><div class="skeleton-line w35"></div></div></div>
@@ -80,7 +80,7 @@
         <div class="chats-list" id="chatsList"></div>
         <div class="empty-state" id="emptyState" hidden>
           <strong id="emptyTitle">لا توجد محادثات بعد</strong>
-          <p id="emptyText">أدخل رقم مستخدم أعلاه لبدء محادثة مشفّرة تختفي تلقائيًا.</p>
+          <p id="emptyText">اضغط على زر <strong>+</strong> لبدء محادثة جديدة أو إنشاء رابط مجهول.</p>
         </div>
       </section>
 

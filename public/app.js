@@ -165,7 +165,7 @@
           blockedStateTitle: "\u0647\u0630\u0647 \u0627\u0644\u0645\u062D\u0627\u062F\u062B\u0629 \u0645\u062D\u0638\u0648\u0631\u0629",
           blockedStateBody: "\u0644\u0646 \u062A\u0633\u062A\u0642\u0628\u0644 \u0631\u0633\u0627\u0626\u0644 \u0645\u0646 \u0647\u0630\u0627 \u0627\u0644\u0631\u0642\u0645. \u064A\u0645\u0643\u0646\u0643 \u0625\u062F\u0627\u0631\u0629 \u0627\u0644\u062D\u0638\u0631 \u0644\u0627\u062D\u0642\u064B\u0627 \u0645\u0646 \u0625\u0639\u062F\u0627\u062F\u0627\u062A \u0627\u0644\u062E\u0635\u0648\u0635\u064A\u0629.",
           noChatsTitle: "\u0644\u0627 \u062A\u0648\u062C\u062F \u0645\u062D\u0627\u062F\u062B\u0627\u062A \u0646\u0634\u0637\u0629",
-          noChatsBody: "\u0627\u0628\u062F\u0623 \u0628\u0631\u0642\u0645 \u0645\u0633\u062A\u062E\u062F\u0645 \u0641\u0642\u0637. \u0627\u0644\u0637\u0644\u0628\u0627\u062A \u0648\u0627\u0644\u0645\u062D\u0627\u062F\u062B\u0627\u062A \u0627\u0644\u0642\u0631\u064A\u0628\u0629 \u0645\u0646 \u0627\u0644\u0627\u0646\u062A\u0647\u0627\u0621 \u0633\u062A\u0638\u0647\u0631 \u0647\u0646\u0627 \u062A\u0644\u0642\u0627\u0626\u064A\u064B\u0627.",
+          noChatsBody: "\u0627\u0636\u063A\u0637 + \u0644\u0628\u062F\u0621 \u0645\u062D\u0627\u062F\u062B\u0629\u060C \u0625\u0646\u0634\u0627\u0621 \u063A\u0631\u0641\u0629 \u0645\u0624\u0642\u062A\u0629\u060C \u0623\u0648 \u0631\u0627\u0628\u0637 \u0623\u0633\u0626\u0644\u0629 \u0645\u062C\u0647\u0648\u0644.",
           privacyModeLabel: "\u0648\u0636\u0639 \u0627\u0644\u0627\u062E\u062A\u0641\u0627\u0621",
           privacy10s: "10 \u062B\u0648\u0627\u0646\u064D \u0628\u0639\u062F \u0627\u0644\u0642\u0631\u0627\u0621\u0629",
           privacy5m: "5 \u062F\u0642\u0627\u0626\u0642",
@@ -318,7 +318,7 @@
           blockedStateTitle: "This chat is blocked",
           blockedStateBody: "You will not receive messages from this code. Blocked codes can be managed later from privacy settings.",
           noChatsTitle: "No active chats",
-          noChatsBody: "Start with a user code only. Requests and chats close to expiry will organize themselves here.",
+          noChatsBody: "Tap + to start a chat, create a temporary room, or an anonymous Q&A link.",
           privacyModeLabel: "Disappears",
           privacy10s: "10s after read",
           privacy5m: "5 minutes",
@@ -405,7 +405,6 @@
   function setLoading(message, visible = true) {
     const el = $("loadingState");
     if (!el) return;
-    el.textContent = message || "";
     el.hidden = !visible;
   }
   function setButtonBusy(button, busy, label) {
@@ -1722,14 +1721,8 @@
       card.removeAttribute("hidden");
       const codeDisplay = profile.code_visible === false ? "\u2022\u2022\u2022\u2022\u2022\u2022" : profile.public_code;
       $("profileCodeValue").textContent = codeDisplay;
-      const chip = $("headerCodeChip");
       const chipVal = $("headerCodeValue");
-      if (chip && chipVal) {
-        chipVal.textContent = codeDisplay;
-        chip.hidden = false;
-      }
-      const qrBtn = $("headerQrBtn");
-      if (qrBtn) qrBtn.hidden = profile.code_visible === false;
+      if (chipVal) chipVal.textContent = codeDisplay;
     }
   }
   async function copyProfileCode() {
