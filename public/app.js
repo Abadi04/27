@@ -1368,7 +1368,8 @@
     startConversationWithCode: () => startConversationWithCode
   });
   async function loadConversations() {
-    setLoading(i18n[state.currentLang].loadingChats, true);
+    const silentRefresh = state.chats.length > 0;
+    if (!silentRefresh) setLoading(i18n[state.currentLang].loadingChats, true);
     try {
       if (!isLiveMode()) {
         state.chats = demoChats.filter((c) => c.expiresAt > Date.now());
@@ -1422,7 +1423,7 @@
       renderChats();
       return state.chats;
     } finally {
-      setLoading("", false);
+      if (!silentRefresh) setLoading("", false);
     }
   }
   async function startConversationWithCode(code, onOpenChat) {
@@ -2801,9 +2802,6 @@
   document.addEventListener("visibilitychange", () => {
     if (document.hidden && !$("chatView").hidden) setPanicMode(true);
   });
-  window.addEventListener("blur", () => {
-    if (!$("chatView").hidden) setPanicMode(true);
-  });
   window.addEventListener("hashchange", () => {
     openRouteFromHash().catch(
       (e) => handleAsyncError(e, i18n[state.currentLang].errorChats)
@@ -2839,12 +2837,18 @@
     fab.hidden = inChat || inSettings;
   }
   var _fabObserver = new MutationObserver(updateFabVisibility);
-  document.addEventListener("DOMContentLoaded", () => {
+  function _attachFabObserver() {
     const chatView = $("chatView");
     const settingsView = $("settingsView");
     if (chatView) _fabObserver.observe(chatView, { attributes: true, attributeFilter: ["hidden"] });
     if (settingsView) _fabObserver.observe(settingsView, { attributes: true, attributeFilter: ["hidden"] });
-  });
+  }
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", _attachFabObserver);
+  } else {
+    _attachFabObserver();
+  }
+  updateFabVisibility();
   function openFabSheet() {
     $("fabSheet").hidden = false;
     $("fabBtn").classList.add("open");

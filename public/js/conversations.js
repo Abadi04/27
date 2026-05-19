@@ -21,7 +21,9 @@ import { loadConversationRequests } from "./requests.js";
 // Load chat list
 // ============================================================
 export async function loadConversations() {
-  setLoading(i18n[state.currentLang].loadingChats, true);
+  // Only show skeleton on first load (no data yet) — avoid jarring flash during background refresh
+  const silentRefresh = state.chats.length > 0;
+  if (!silentRefresh) setLoading(i18n[state.currentLang].loadingChats, true);
   try {
     if (!isLiveMode()) {
       state.chats = demoChats.filter((c) => c.expiresAt > Date.now());
@@ -89,7 +91,7 @@ export async function loadConversations() {
     renderChats();
     return state.chats;
   } finally {
-    setLoading("", false);
+    if (!silentRefresh) setLoading("", false);
   }
 }
 

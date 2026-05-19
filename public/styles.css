@@ -9,16 +9,16 @@ button, a, input, select, textarea {
 }
 
 :root {
-  --bg-primary: #060810;
-  --bg-card: rgba(255, 255, 255, 0.035);
-  --bg-card-hover: rgba(255, 255, 255, 0.06);
-  --bg-input: rgba(255, 255, 255, 0.05);
-  --border-subtle: rgba(255, 255, 255, 0.07);
+  --bg-primary: #000000;
+  --bg-card: rgba(255, 255, 255, 0.04);
+  --bg-card-hover: rgba(255, 255, 255, 0.07);
+  --bg-input: rgba(255, 255, 255, 0.06);
+  --border-subtle: rgba(255, 255, 255, 0.08);
   --border-focus: rgba(90, 130, 200, 0.45);
   --text-primary: #eaeef3;
   --text-secondary: rgba(220, 230, 245, 0.55);
   --text-muted: rgba(200, 215, 235, 0.3);
-  --home-accent: #131a28;
+  --home-accent: #0a0a0a;
   --status-online: #34d399;
   --status-offline: rgba(255, 255, 255, 0.2);
   --radius-md: 14px;
@@ -47,16 +47,7 @@ body {
 }
 
 .bg-glow {
-  /* Refero pattern: dark premium pages use a barely visible value shift behind the hero instead of bright gradients. */
-  position: fixed;
-  top: -200px;
-  left: 50%;
-  z-index: 0;
-  width: min(480px, 100vw);
-  height: 480px;
-  pointer-events: none;
-  transform: translateX(-50%);
-  background: radial-gradient(circle, rgba(30, 60, 110, 0.12) 0%, rgba(15, 25, 45, 0.15) 35%, transparent 68%);
+  display: none; /* pure black — no glow overlay */
 }
 
 .app-header {
@@ -68,7 +59,7 @@ body {
   justify-content: space-between;
   padding: calc(16px + env(safe-area-inset-top, 0)) calc(24px + env(safe-area-inset-right, 0)) 16px calc(24px + env(safe-area-inset-left, 0));
   border-bottom: 1px solid var(--border-subtle);
-  background: rgba(6, 8, 16, 0.8);
+  background: rgba(0, 0, 0, 0.92);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
 }
@@ -300,7 +291,7 @@ body {
 #startBtn,
 #entrySendBtn,
 #saveSettingsBtn {
-  background: linear-gradient(135deg, #1a2a42 0%, #121c2e 100%);
+  background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%);
   box-shadow:
     inset 0 1px 0 rgba(140, 180, 240, 0.08),
     0 12px 30px rgba(0, 0, 0, 0.4);
@@ -309,7 +300,7 @@ body {
 
 #startBtn {
   /* Refero pattern: primary CTAs in dark auth/chat entry screens use subdued near-black gradients and restrained type weight. */
-  background: linear-gradient(135deg, #1f1f2e 0%, #171722 52%, #101018 100%);
+  background: linear-gradient(135deg, #181818 0%, #101010 52%, #080808 100%);
   color: rgba(255, 255, 255, 0.9);
   font-weight: 500;
 }
@@ -320,7 +311,7 @@ body {
 #entrySendBtn:focus-visible,
 #saveSettingsBtn:hover,
 #saveSettingsBtn:focus-visible {
-  background: linear-gradient(135deg, #223656 0%, #1a2a42 100%);
+  background: linear-gradient(135deg, #222222 0%, #141414 100%);
   box-shadow:
     inset 0 1px 0 rgba(140, 180, 240, 0.1),
     0 14px 34px rgba(8, 12, 24, 0.5);
@@ -329,7 +320,7 @@ body {
 
 #startBtn:hover,
 #startBtn:focus-visible {
-  background: linear-gradient(135deg, #272738 0%, #1f1f2e 54%, #151520 100%);
+  background: linear-gradient(135deg, #202020 0%, #141414 54%, #0c0c0c 100%);
   color: #ffffff;
 }
 
@@ -474,7 +465,7 @@ body {
 .copy-share-link {
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 14px;
-  background: rgba(19, 26, 40, 0.74);
+  background: rgba(10, 10, 10, 0.74);
   color: #ffffff;
   cursor: pointer;
   font: inherit;
@@ -558,7 +549,7 @@ body {
 .copy-link-btn {
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: var(--radius-md);
-  background: rgba(19, 26, 40, 0.6);
+  background: rgba(10, 10, 10, 0.6);
   color: rgba(255, 255, 255, 0.82);
   cursor: pointer;
   font: inherit;
@@ -624,7 +615,7 @@ body {
   position: absolute;
   width: 3px;
   height: 3px;
-  background: #060810;
+  background: #000000;
   content: "";
 }
 
@@ -632,8 +623,8 @@ body {
   top: 2px;
   left: 2px;
   box-shadow:
-    11px 0 0 #060810,
-    0 11px 0 #060810;
+    11px 0 0 #000000,
+    0 11px 0 #000000;
 }
 
 .section-divider {
@@ -972,7 +963,7 @@ body {
   max-width: 190px;
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 999px;
-  background: #06080d;
+  background: #050505;
   color: rgba(255, 255, 255, 0.82);
   font: inherit;
   padding: 6px 9px;
@@ -1001,7 +992,7 @@ body {
 
 .chat-view .back-btn {
   border-color: rgba(126, 149, 180, 0.16);
-  background: rgba(3, 7, 13, 0.72);
+  background: rgba(0, 0, 0, 0.72);
   color: rgba(220, 229, 242, 0.74);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035);
 }
@@ -1009,7 +1000,7 @@ body {
 .chat-view .back-btn:hover,
 .chat-view .back-btn:focus-visible {
   border-color: rgba(135, 164, 204, 0.26);
-  background: rgba(8, 14, 24, 0.9);
+  background: rgba(0, 0, 0, 0.9);
   color: rgba(248, 250, 255, 0.94);
 }
 
@@ -1052,12 +1043,12 @@ body {
   border: 1px solid rgba(112, 132, 164, 0.1);
   border-radius: 18px;
   background:
-    radial-gradient(circle at 0% 0%, rgba(21, 38, 64, 0.22), transparent 34%),
-    radial-gradient(circle at 100% 100%, rgba(10, 30, 58, 0.16), transparent 38%),
-    linear-gradient(180deg, rgba(2, 5, 10, 0.98), rgba(0, 0, 0, 0.99));
+    radial-gradient(circle at 0% 0%, rgba(20, 20, 20, 0.22), transparent 34%),
+    radial-gradient(circle at 100% 100%, rgba(15, 15, 15, 0.16), transparent 38%),
+    linear-gradient(180deg, rgba(0, 0, 0, 0.98), rgba(0, 0, 0, 0.99));
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.025),
-    inset 0 0 42px rgba(1, 10, 24, 0.72),
+    inset 0 0 42px rgba(0, 0, 0, 0.72),
     0 18px 46px rgba(0, 0, 0, 0.38);
   padding: 16px;
 }
@@ -1097,7 +1088,7 @@ body {
 .message.incoming {
   border-bottom-left-radius: 8px;
   background:
-    linear-gradient(180deg, rgba(20, 23, 29, 0.96), rgba(9, 11, 15, 0.98));
+    linear-gradient(180deg, rgba(10, 10, 10, 0.96), rgba(4, 4, 4, 0.98));
   color: rgba(232, 236, 244, 0.9);
 }
 
@@ -1105,7 +1096,7 @@ body {
   border-color: rgba(82, 113, 156, 0.16);
   border-bottom-right-radius: 8px;
   background:
-    linear-gradient(135deg, rgba(9, 17, 29, 0.98), rgba(5, 12, 24, 0.98) 58%, rgba(10, 25, 45, 0.92));
+    linear-gradient(135deg, rgba(0, 0, 0, 0.98), rgba(0, 0, 0, 0.98) 58%, rgba(0, 0, 0, 0.92));
   color: rgba(248, 250, 255, 0.96);
 }
 
@@ -1196,7 +1187,7 @@ body {
   place-items: center;
   border: 1px solid rgba(255, 255, 255, 0.09);
   border-radius: var(--radius-full);
-  background: rgba(4, 8, 14, 0.92);
+  background: rgba(0, 0, 0, 0.92);
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.24);
   font-size: 0.82rem;
 }
@@ -1405,7 +1396,7 @@ body {
   gap: 5px;
   border: 1px solid rgba(110, 132, 168, 0.09);
   border-radius: var(--radius-full);
-  background: rgba(3, 8, 16, 0.58);
+  background: rgba(0, 0, 0, 0.58);
   color: rgba(172, 184, 204, 0.62);
   font-size: 0.75rem;
   padding: 7px 12px;
@@ -1433,7 +1424,7 @@ body {
   max-height: 320px;
   border: 1px solid rgba(139, 158, 190, 0.1);
   border-radius: 14px;
-  background: #05070c;
+  background: #030303;
   object-fit: cover;
 }
 
@@ -1446,7 +1437,7 @@ body {
   align-self: center;
   border: 1px solid rgba(110, 132, 168, 0.09);
   border-radius: var(--radius-full);
-  background: rgba(3, 8, 16, 0.58);
+  background: rgba(0, 0, 0, 0.58);
   color: rgba(172, 184, 204, 0.54);
   font-size: 0.75rem;
   padding: 7px 12px;
@@ -1539,7 +1530,7 @@ body {
   border: 1px solid rgba(112, 132, 164, 0.14);
   border-radius: 22px 22px 0 0;
   background:
-    linear-gradient(180deg, rgba(12, 18, 28, 0.98), rgba(3, 6, 12, 0.99));
+    linear-gradient(180deg, rgba(0, 0, 0, 0.98), rgba(0, 0, 0, 0.99));
   box-shadow: 0 -18px 42px rgba(0, 0, 0, 0.38);
   padding: 10px 16px calc(16px + env(safe-area-inset-bottom));
 }
@@ -1578,7 +1569,7 @@ body {
   border: 1px solid rgba(112, 132, 164, 0.14);
   border-radius: 22px 22px 0 0;
   background:
-    linear-gradient(180deg, rgba(12, 18, 28, 0.98), rgba(3, 6, 12, 0.99));
+    linear-gradient(180deg, rgba(0, 0, 0, 0.98), rgba(0, 0, 0, 0.99));
   box-shadow: 0 -18px 42px rgba(0, 0, 0, 0.38);
   padding: 10px 16px calc(16px + env(safe-area-inset-bottom));
 }
@@ -1690,7 +1681,7 @@ body {
   border: 1px solid rgba(124, 151, 188, 0.14);
   border-radius: 16px;
   background:
-    linear-gradient(180deg, rgba(10, 16, 26, 0.96), rgba(3, 7, 13, 0.98));
+    linear-gradient(180deg, rgba(0, 0, 0, 0.96), rgba(0, 0, 0, 0.98));
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.04),
     0 9px 20px rgba(0, 0, 0, 0.22);
@@ -1706,7 +1697,7 @@ body {
 .attach-btn:focus-visible {
   border-color: rgba(139, 170, 215, 0.22);
   background:
-    linear-gradient(180deg, rgba(15, 25, 40, 0.98), rgba(5, 10, 19, 0.98));
+    linear-gradient(180deg, rgba(0, 0, 0, 0.98), rgba(0, 0, 0, 0.98));
   color: rgba(248, 250, 255, 0.94);
   outline: none;
   transform: translateY(-1px);
@@ -1732,7 +1723,7 @@ body {
 .message-input:focus {
   border-color: rgba(114, 146, 192, 0.28);
   box-shadow:
-    0 0 0 3px rgba(18, 45, 82, 0.16),
+    0 0 0 3px rgba(100, 100, 100, 0.16),
     inset 0 1px 0 rgba(255, 255, 255, 0.035);
 }
 
@@ -1752,7 +1743,7 @@ body {
   place-items: center;
   border: 1px solid rgba(124, 151, 188, 0.14);
   border-radius: 16px;
-  background: linear-gradient(180deg, rgba(10, 16, 26, 0.96), rgba(3, 7, 13, 0.98));
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.96), rgba(0, 0, 0, 0.98));
   cursor: pointer;
   transition: all var(--transition-fast);
 }
@@ -1765,7 +1756,7 @@ body {
   place-items: center;
   border: 1px solid rgba(124, 151, 188, 0.14);
   border-radius: 16px;
-  background: linear-gradient(180deg, rgba(10, 16, 26, 0.96), rgba(3, 7, 13, 0.98));
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.96), rgba(0, 0, 0, 0.98));
   color: rgba(226, 235, 249, 0.78);
   cursor: pointer;
   font: inherit;
@@ -1791,7 +1782,7 @@ body {
   border: 1px solid rgba(124, 151, 188, 0.16);
   border-radius: 16px;
   background:
-    linear-gradient(180deg, rgba(13, 23, 38, 0.96), rgba(5, 10, 19, 0.98));
+    linear-gradient(180deg, rgba(0, 0, 0, 0.96), rgba(0, 0, 0, 0.98));
   color: rgba(238, 244, 255, 0.92);
   cursor: pointer;
   font: inherit;
@@ -1807,9 +1798,9 @@ body {
 .send-btn:focus-visible {
   border-color: rgba(139, 170, 215, 0.24);
   background:
-    linear-gradient(180deg, rgba(17, 30, 48, 0.98), rgba(8, 15, 27, 0.98));
+    linear-gradient(180deg, rgba(0, 0, 0, 0.98), rgba(0, 0, 0, 0.98));
   box-shadow:
-    0 0 0 3px rgba(18, 45, 82, 0.12),
+    0 0 0 3px rgba(100, 100, 100, 0.12),
     0 12px 26px rgba(0, 0, 0, 0.28);
   outline: none;
   transform: translateY(-1px);
@@ -2069,7 +2060,7 @@ html[dir="rtl"] .setting-switch-row.is-on .switch-thumb {
   gap: 14px;
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 18px;
-  background: #060810;
+  background: #000000;
   box-shadow: 0 24px 70px rgba(0, 0, 0, 0.56);
   padding: 22px;
   text-align: center;
@@ -2118,7 +2109,7 @@ html[dir="rtl"] .setting-switch-row.is-on .switch-thumb {
   place-items: center;
   place-content: center;
   gap: 16px;
-  background: #060810;
+  background: #000000;
   opacity: 1;
   animation: onboard-in 0.6s ease both;
 }
@@ -2521,9 +2512,7 @@ html[dir="rtl"] .setting-switch-row.is-on .switch-thumb {
 .fab-sheet-panel {
   position: absolute;
   bottom: 0; left: 0; right: 0;
-  background: #0f1220;
-  border-radius: 20px 20px 0 0;
-  padding: 12px 20px calc(24px + env(safe-area-inset-bottom));
+  background: #050505;
   animation: slideUp .25s cubic-bezier(.22,1,.36,1);
 }
 .fab-sheet-title {
@@ -2573,7 +2562,7 @@ html[dir="rtl"] .setting-switch-row.is-on .switch-thumb {
 .code-modal-panel {
   position: absolute;
   bottom: 0; left: 0; right: 0;
-  background: #0f1220;
+  background: #050505;
   border-radius: 20px 20px 0 0;
   padding: 12px 20px calc(28px + env(safe-area-inset-bottom));
   animation: slideUp .25s cubic-bezier(.22,1,.36,1);
@@ -2682,7 +2671,7 @@ html[dir="rtl"] .setting-switch-row.is-on .switch-thumb {
   position: fixed;
   bottom: 0; left: 0; right: 0;
   z-index: 251;
-  background: #0f1220;
+  background: #050505;
   border-radius: 20px 20px 0 0;
   padding: 20px 20px calc(28px + env(safe-area-inset-bottom));
   animation: slideUp .25s cubic-bezier(.22,1,.36,1);

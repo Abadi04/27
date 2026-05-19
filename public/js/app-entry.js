@@ -387,9 +387,8 @@ document.addEventListener("visibilitychange", () => {
   if (document.hidden && !$("chatView").hidden) setPanicMode(true);
 });
 
-window.addEventListener("blur", () => {
-  if (!$("chatView").hidden) setPanicMode(true);
-});
+// Note: window.blur removed — too aggressive (fires on any tab switch, address bar click)
+// visibilitychange below is the correct trigger for panic mode
 
 // ============================================================
 // Hash routing
@@ -442,16 +441,21 @@ function updateFabVisibility() {
   fab.hidden = inChat || inSettings;
 }
 
-// Patch routing functions to update FAB
-const _origShowHome = showHome;
 // We observe chatView/settingsView visibility changes via MutationObserver
 const _fabObserver = new MutationObserver(updateFabVisibility);
-document.addEventListener("DOMContentLoaded", () => {
+function _attachFabObserver() {
   const chatView = $("chatView");
   const settingsView = $("settingsView");
   if (chatView) _fabObserver.observe(chatView, { attributes: true, attributeFilter: ["hidden"] });
   if (settingsView) _fabObserver.observe(settingsView, { attributes: true, attributeFilter: ["hidden"] });
-});
+}
+// Script loads at end of <body> so DOM is already ready — DOMContentLoaded may have already fired
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", _attachFabObserver);
+} else {
+  _attachFabObserver();
+}
+updateFabVisibility(); // sync initial state
 
 function openFabSheet() {
   $("fabSheet").hidden = false;
