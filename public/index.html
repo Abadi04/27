@@ -1,15 +1,15 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
   <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="description" content="27 — محادثات خاصة، سريعة، وتُحذف تلقائيًا. تواصل بدون تسجيل." />
-    <meta name="theme-color" content="#060810" />
-    <link rel="manifest" href="manifest.json?v=privacy-core-1" />
-    <link rel="apple-touch-icon" href="apple-touch-icon.png?v=official-icon-1" />
-    <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png?v=official-icon-1" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="description" content="27 — محادثات خاصة، سريعة، وتُحذف تلقائيًا. تواصل بدون تسجيل.">
+    <meta name="theme-color" content="#060810">
+    <link rel="manifest" href="manifest.json?v=privacy-core-1">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png?v=official-icon-1">
+    <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png?v=official-icon-1">
     <title>27</title>
-    <link rel="stylesheet" href="styles.css?v=cta-logo-tune-1" />
+    <link rel="stylesheet" href="styles.css?v=cta-logo-tune-1">
   </head>
   <body>
     <div class="bg-glow" aria-hidden="true"></div>
@@ -32,8 +32,8 @@
 
     <main class="main-content">
       <section class="hero" id="heroSection">
-        <h1 class="hero-title" aria-label="27">
-          <img class="hero-mark" src="new-main-icon.jpg?v=main-icon-2" alt="" aria-hidden="true" />
+        <h1 class="hero-title">
+          <img class="hero-mark" src="new-main-icon.jpg?v=main-icon-2" alt="" aria-hidden="true">
           <span class="sr-only">27</span>
         </h1>
         <p class="hero-tagline" id="heroTagline">خاص. سريع. يختفي.</p>
@@ -47,13 +47,12 @@
             id="codeInput"
             placeholder="أدخل رقم المستخدم"
             autocomplete="off"
-            inputmode="numeric"
-          />
+            inputmode="numeric">
           <button class="start-btn primary-cta" id="startBtn" type="button">بدء المحادثة</button>
         </div>
         <div class="secondary-options">
           <p class="secondary-options-label" id="secondaryOptionsLabel">خيارات أخرى</p>
-          <div class="viral-actions" aria-label="روابط قابلة للمشاركة">
+          <div class="viral-actions" role="group" aria-label="روابط قابلة للمشاركة">
             <button class="viral-action" id="createRoomLinkBtn" type="button">
               <span id="roomActionTitle">Temporary Room</span>
               <small id="roomActionHint">غرفة خاصة برابط مؤقت</small>
@@ -69,7 +68,7 @@
           <strong class="share-drop-title" id="shareDropTitle">Ask Me Anonymously</strong>
           <p class="share-drop-desc" id="shareDropDesc">انسخ الرابط وضعه في البايو أو أرسله لصديق. ينتهي تلقائيًا بعد ٥ ساعات.</p>
           <div class="share-link-row">
-            <input class="share-link-input" id="shareLinkInput" type="text" readonly />
+            <input class="share-link-input" id="shareLinkInput" type="text" readonly>
             <button class="copy-share-link" id="copyShareLinkBtn" type="button">نسخ</button>
           </div>
         </div>
@@ -104,7 +103,7 @@
 
       <section class="chats-section" id="chatsSection">
         <h2 class="chats-header" id="chatsHeader">المحادثات النشطة</h2>
-        <div class="skeleton-list" id="loadingState" hidden aria-label="جارٍ التحميل">
+        <div class="skeleton-list" id="loadingState" hidden role="status" aria-label="جارٍ التحميل">
           <div class="skeleton-item"><div class="skeleton-avatar"></div><div class="skeleton-lines"><div class="skeleton-line w70"></div><div class="skeleton-line w45"></div></div></div>
           <div class="skeleton-item"><div class="skeleton-avatar"></div><div class="skeleton-lines"><div class="skeleton-line w55"></div><div class="skeleton-line w80"></div></div></div>
           <div class="skeleton-item"><div class="skeleton-avatar"></div><div class="skeleton-lines"><div class="skeleton-line w65"></div><div class="skeleton-line w35"></div></div></div>
@@ -145,14 +144,13 @@
           <button class="attach-btn" id="attachBtn" type="button" aria-label="إرسال صورة أو فيديو" title="إرسال صورة أو فيديو">
             +
           </button>
-          <input class="media-input" id="mediaInput" type="file" accept="image/*,video/*" />
+          <input class="media-input" id="mediaInput" type="file" accept="image/*,video/*">
           <input
             class="message-input"
             id="messageInput"
             type="text"
             autocomplete="off"
-            placeholder="اكتب رسالة مؤقتة..."
-          />
+            placeholder="اكتب رسالة مؤقتة...">
           <button class="burn-toggle" id="burnToggle" type="button" aria-label="رسالة تحترق" title="رسالة تحترق">🔥</button>
           <button class="hidden-toggle" id="hiddenToggle" type="button" aria-label="رسالة مخفية" title="رسالة مخفية">◐</button>
           <button class="voice-btn" id="voiceBtn" type="button" aria-label="تسجيل صوتي" title="تسجيل صوتي">●</button>
@@ -174,14 +172,14 @@
               <strong id="displayNameLabel">اسم العرض</strong>
               <small id="displayNameHint">يُستخدم لتوليد الأفاتار فقط.</small>
             </span>
-            <input class="settings-input" id="displayNameInput" type="text" autocomplete="off" value="زائر 27" />
+            <input class="settings-input" id="displayNameInput" type="text" autocomplete="off" value="زائر 27">
           </label>
           <label class="setting-row">
             <span>
               <strong id="privacyLabel">حذف تلقائي</strong>
               <small id="privacyHint">كل محادثة تُزال بعد 5 ساعات من آخر رسالة.</small>
             </span>
-            <input class="settings-input" id="ttlInput" type="text" value="5h" disabled />
+            <input class="settings-input" id="ttlInput" type="text" value="5h" disabled>
           </label>
           <button class="setting-switch-row" id="panicModeBtn" type="button" role="switch" aria-checked="false">
             <span>
@@ -223,7 +221,7 @@
       <div class="qr-dialog" role="dialog" aria-modal="true" aria-labelledby="qrModalTitle">
         <button class="qr-close" id="closeQrModal" type="button" aria-label="إغلاق">×</button>
         <h2 id="qrModalTitle">شارك رقمك</h2>
-        <img id="qrImage" alt="" />
+        <img id="qrImage" src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" alt="">
         <strong id="qrCodeText">------</strong>
         <button class="start-btn" id="copyQrCodeBtn" type="button">نسخ الرقم</button>
       </div>
@@ -233,7 +231,7 @@
       <div class="message-actions-sheet" role="dialog" aria-modal="true" aria-labelledby="messageActionsTitle">
         <div class="sheet-handle" aria-hidden="true"></div>
         <h2 id="messageActionsTitle">إجراءات الرسالة</h2>
-        <div class="reaction-row" aria-label="تفاعلات سريعة">
+        <div class="reaction-row" role="group" aria-label="تفاعلات سريعة">
           <button type="button" data-reaction="🔥">🔥</button>
           <button type="button" data-reaction="❤️">❤️</button>
           <button type="button" data-reaction="😂">😂</button>
@@ -302,7 +300,7 @@
         <div class="sheet-handle" aria-hidden="true"></div>
         <h2 id="codeModalTitle">بدء محادثة</h2>
         <input class="code-input" id="codeModalInput" type="text" inputmode="numeric"
-          placeholder="أدخل رقم المستخدم" autocomplete="off" maxlength="6" />
+          placeholder="أدخل رقم المستخدم" autocomplete="off" maxlength="6">
         <button class="start-btn" id="codeModalStartBtn" type="button">بدء المحادثة</button>
       </div>
     </div>

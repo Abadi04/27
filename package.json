@@ -12,7 +12,7 @@
   "devDependencies": {
     "esbuild": "^0.28.0",
     "eslint": "^8.57.0",
-    "html-validate": "^9.0.0"
+    "html-validate": "^9.7.1"
   },
   "dependencies": {
     "qrcode": "^1.5.4",
