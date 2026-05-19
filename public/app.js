@@ -72,38 +72,37 @@ import { demoChats, appendDemoMessage } from "./js/demo.js";
 // Boot
 // ============================================================
 async function boot() {
-  setLoading(i18n[state.currentLang].loadingChats, true);
-  state.chats = demoChats.filter((c) => c.expiresAt > Date.now());
-
-  setLanguage(state.currentLang);
-
-  // Pre-fill input if ?code=NNNNNN was passed
-  const sharedCode = new URLSearchParams(window.location.search).get("code");
-  if (sharedCode && /^\d{6}$/.test(sharedCode)) $("codeInput").value = sharedCode;
-  handleTemporaryEntryParams();
-
-  // Demo mode (no Supabase keys)
-  if (!db) {
-    setLoading("", false);
-    await loadConversationRequests();
-    renderChats();
-    startMessageTicker();
-    registerPwa();
-    showToast(i18n[state.currentLang].demoMode);
-    return;
-  }
-
-  // Live mode
   try {
+    setLoading(i18n[state.currentLang].loadingChats, true);
+    state.chats = demoChats.filter((c) => c.expiresAt > Date.now());
+
+    try { setLanguage(state.currentLang); } catch (e) { console.warn("setLanguage init error:", e); }
+
+    // Pre-fill input if ?code=NNNNNN was passed
+    const sharedCode = new URLSearchParams(window.location.search).get("code");
+    if (sharedCode && /^\d{6}$/.test(sharedCode)) $("codeInput").value = sharedCode;
+    try { handleTemporaryEntryParams(); } catch (e) { console.warn(e); }
+
+    // Demo mode (no Supabase keys)
+    if (!db) {
+      await loadConversationRequests();
+      renderChats();
+      startMessageTicker();
+      registerPwa();
+      showToast(i18n[state.currentLang].demoMode);
+      return;
+    }
+
+    // Live mode
     state.currentProfile = await getOrCreateProfile();
     if (!state.currentProfile) throw new Error("getOrCreateProfile returned null");
 
     state.displayName = state.currentProfile.display_name || state.displayName;
     $("displayNameInput").value = state.displayName;
 
-    // Force-show profile card immediately (guard against setLanguage hiding it before profile loads)
+    // Show profile card with real code (always show code_visible=true at boot)
     const card = $("profileCodeCard");
-    if (card && state.currentProfile.public_code && state.currentProfile.code_visible !== false) {
+    if (card && state.currentProfile.public_code) {
       card.hidden = false;
       card.removeAttribute("hidden");
       $("profileCodeValue").textContent = state.currentProfile.public_code;
@@ -113,14 +112,14 @@ async function boot() {
 
     await loadConversations();
     subscribeToRequests();
-    setLanguage(state.currentLang);
+    try { setLanguage(state.currentLang); } catch (e) { console.warn("setLanguage post-load error:", e); }
 
     await openRouteFromHash();
     startMessageTicker();
+
   } catch (error) {
     handleAsyncError(error, i18n[state.currentLang].errorChats);
     renderChats();
-    // Still try to show card if profile was partially loaded
     updateProfileCodeUI();
   } finally {
     setLoading("", false);
