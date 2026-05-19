@@ -1,0 +1,432 @@
+// ============================================================
+// app-entry.js — Entry point for esbuild bundling
+// Imports all modules and wires up boot sequence + event listeners
+// ============================================================
+
+import { db } from "./db.js";
+import { state } from "./state.js";
+import { i18n } from "./i18n.js";
+import { demoChats } from "./demo.js";
+import {
+  $, setLoading, setButtonBusy, showToast, flashError,
+  handleAsyncError, isLiveMode,
+} from "./utils.js";
+import { setLanguage } from "./lang.js";
+import {
+  getOrCreateProfile, updateProfileCodeUI, copyProfileCode,
+  copyProfileLink, toggleCodeVisibility, regenerateCode,
+} from "./profile.js";
+import {
+  loadConversations, loadConversation,
+  startConversationWithCode, deleteAllConversationsNow, blockActiveChat,
+} from "./conversations.js";
+import {
+  loadConversationRequests, acceptConversationRequest,
+  rejectConversationRequest, subscribeToRequests,
+} from "./requests.js";
+import {
+  sendMessage, cleanupExpiredMessages, clearReplyDraft,
+  startMessageTicker, handleComposerTyping,
+} from "./messages.js";
+import { appendDemoMessage } from "./demo.js";
+import { renderChats, moveExpiredChatsToBurned } from "./render.js";
+import {
+  showHome, openChat, closeChat, openSettings, closeSettings,
+  openRouteFromHash,
+} from "./routing.js";
+import {
+  saveSettings, setBurnMode, setHiddenMode, changePrivacyMode,
+  toggleChatsHidden, setPanicMode, resetIdleLock,
+  openQrModal, closeQrModal,
+} from "./settings.js";
+import {
+  showShareDrop, copyGeneratedShareLink, submitTemporaryEntry,
+  handleTemporaryEntryParams,
+} from "./temporary.js";
+import {
+  attachSwipeToMessages, closeMessageActions, replyToActiveMessage,
+  copyActiveMessage, burnActiveMessageNow, addReactionToActiveMessage,
+} from "./gestures.js";
+import {
+  openMediaSheet, closeMediaSheet, sendGifMessage,
+  startVoiceRecording, finishVoiceRecording,
+} from "./media.js";
+import { registerPwa } from "./pwa.js";
+import { startOnboarding } from "./onboarding.js";
+
+// ============================================================
+// UI Handler: Start chat from code input
+// ============================================================
+async function handleStartChat() {
+  const input = $("codeInput");
+  const code = input.value.trim();
+
+  if (!/^\d{6}$/.test(code)) {
+    input.focus();
+    input.style.borderColor = "rgba(244, 63, 94, 0.5)";
+    flashError(i18n[state.currentLang].invalidCode);
+    window.setTimeout(() => { input.style.borderColor = ""; }, 1200);
+    return;
+  }
+
+  try {
+    setButtonBusy($("startBtn"), true, i18n[state.currentLang].searchingCode);
+    const conversationId = await startConversationWithCode(code);
+    if (conversationId) {
+      input.value = "";
+      showToast(i18n[state.currentLang].starting);
+    }
+  } catch (error) {
+    handleAsyncError(error, i18n[state.currentLang].errorChats);
+  } finally {
+    setButtonBusy($("startBtn"), false);
+  }
+}
+
+// ============================================================
+// UI Handler: Send message
+// ============================================================
+async function handleSendMessage(event) {
+  event.preventDefault();
+  const input = $("messageInput");
+  const mediaInput = $("mediaInput");
+  const text = input.value.trim();
+  const file = mediaInput.files?.[0];
+  const conversationId = $("chatView").dataset.activeChat;
+
+  if (!text && !file) return;
+
+  try {
+    setButtonBusy($("sendBtn"), true, i18n[state.currentLang].sendingMessage);
+
+    if (file && !isLiveMode()) {
+      appendDemoMessage(conversationId, {
+        type: "outgoing",
+        text,
+        time: i18n[state.currentLang].now,
+        mediaUrl: URL.createObjectURL(file),
+        mediaType: file.type,
+        fileName: file.name,
+      });
+    }
+
+    if (file && isLiveMode()) {
+      showToast(i18n[state.currentLang].mediaStorage);
+    }
+
+    if (text) {
+      await sendMessage(conversationId, text, {
+        privacyMode: state.privacyMode,
+        replyTo: state.replyDraft,
+        hidden: state.hiddenMode,
+      });
+    }
+
+    input.value = "";
+    mediaInput.value = "";
+    clearReplyDraft();
+    setHiddenMode(false);
+    if (state.privacyMode === "10s_read") setBurnMode(false);
+  } catch (error) {
+    handleAsyncError(error, i18n[state.currentLang].errorChats);
+  } finally {
+    setButtonBusy($("sendBtn"), false);
+  }
+}
+
+// ============================================================
+// Boot sequence
+// ============================================================
+async function boot() {
+  setLoading(i18n[state.currentLang].loadingChats, true);
+  state.chats = demoChats.filter((chat) => chat.expiresAt > Date.now());
+  setLanguage(state.currentLang);
+
+  const sharedCode = new URLSearchParams(window.location.search).get("code");
+  if (sharedCode && /^\d{6}$/.test(sharedCode)) {
+    $("codeInput").value = sharedCode;
+  }
+  handleTemporaryEntryParams();
+
+  if (!db) {
+    setLoading("", false);
+    await loadConversationRequests();
+    renderChats();
+    startMessageTicker();
+    registerPwa();
+    showToast(i18n[state.currentLang].demoMode);
+    return;
+  }
+
+  try {
+    state.currentProfile = await getOrCreateProfile();
+    state.displayName = state.currentProfile.display_name || state.displayName;
+    $("displayNameInput").value = state.displayName;
+    updateProfileCodeUI();
+    registerPwa();
+    await loadConversations();
+    subscribeToRequests();
+    setLanguage(state.currentLang);
+    await openRouteFromHash();
+    startMessageTicker();
+  } catch (error) {
+    handleAsyncError(error, i18n[state.currentLang].errorChats);
+    renderChats();
+  } finally {
+    setLoading("", false);
+  }
+}
+
+// ============================================================
+// Event Listeners — Settings & Profile
+// ============================================================
+$("langToggle").addEventListener("click", () => {
+  setLanguage(state.currentLang === "ar" ? "en" : "ar");
+});
+$("settingsToggle").addEventListener("click", openSettings);
+$("backFromSettings").addEventListener("click", closeSettings);
+$("saveSettingsBtn").addEventListener("click", saveSettings);
+$("copyCodeBtn").addEventListener("click", copyProfileCode);
+$("copyLinkBtn").addEventListener("click", copyProfileLink);
+$("toggleCodeBtn").addEventListener("click", () =>
+  toggleCodeVisibility().catch((e) => handleAsyncError(e, i18n[state.currentLang].errorChats))
+);
+$("regenerateCodeBtn").addEventListener("click", () =>
+  regenerateCode().catch((e) => handleAsyncError(e, i18n[state.currentLang].errorChats))
+);
+$("deleteAllBtn").addEventListener("click", () =>
+  deleteAllConversationsNow().catch((e) => handleAsyncError(e, i18n[state.currentLang].errorChats))
+);
+
+// ============================================================
+// Event Listeners — Temporary links / Share
+// ============================================================
+$("createAskLinkBtn").addEventListener("click", () =>
+  showShareDrop("ask").catch((e) => handleAsyncError(e, i18n[state.currentLang].errorChats))
+);
+$("createRoomLinkBtn").addEventListener("click", () =>
+  showShareDrop("room").catch((e) => handleAsyncError(e, i18n[state.currentLang].errorChats))
+);
+$("copyShareLinkBtn").addEventListener("click", copyGeneratedShareLink);
+$("entrySendBtn").addEventListener("click", () =>
+  submitTemporaryEntry().catch((e) => handleAsyncError(e, i18n[state.currentLang].errorChats))
+);
+
+// ============================================================
+// Event Listeners — QR Modal
+// ============================================================
+$("profileQrBtn").addEventListener("click", openQrModal);
+$("shareQrBtn").addEventListener("click", openQrModal);
+$("closeQrModal").addEventListener("click", closeQrModal);
+$("qrBackdrop").addEventListener("click", closeQrModal);
+$("copyQrCodeBtn").addEventListener("click", copyProfileCode);
+
+// ============================================================
+// Event Listeners — Privacy / Panic
+// ============================================================
+$("panicModeBtn").addEventListener("click", toggleChatsHidden);
+$("burnToggle").addEventListener("click", () =>
+  setBurnMode(state.privacyMode !== "10s_read")
+);
+$("hiddenToggle").addEventListener("click", () =>
+  setHiddenMode(!state.hiddenMode)
+);
+$("privacyModeSelect").addEventListener("change", (event) =>
+  changePrivacyMode(event.target.value).catch((e) =>
+    handleAsyncError(e, i18n[state.currentLang].errorChats)
+  )
+);
+
+// Fake notes area — long press exits panic mode
+let panicPressTimer = null;
+$("fakeNotesArea").addEventListener("pointerdown", () => {
+  panicPressTimer = window.setTimeout(() => setPanicMode(false), 1500);
+});
+$("fakeNotesArea").addEventListener("pointerup", () =>
+  window.clearTimeout(panicPressTimer)
+);
+$("fakeNotesArea").addEventListener("pointerleave", () =>
+  window.clearTimeout(panicPressTimer)
+);
+
+// ============================================================
+// Event Listeners — Chat list
+// ============================================================
+$("startBtn").addEventListener("click", handleStartChat);
+$("codeInput").addEventListener("keydown", (event) => {
+  if (event.key === "Enter") handleStartChat();
+});
+
+document.addEventListener("click", (event) => {
+  const requestItem = event.target.closest(".request-item");
+  if (requestItem) {
+    const requestId = requestItem.dataset.requestId;
+    if (event.target.closest(".accept-request")) {
+      acceptConversationRequest(requestId).catch((e) =>
+        handleAsyncError(e, i18n[state.currentLang].errorChats)
+      );
+      return;
+    }
+    if (event.target.closest(".reject-request")) {
+      rejectConversationRequest(requestId).catch((e) =>
+        handleAsyncError(e, i18n[state.currentLang].errorChats)
+      );
+      return;
+    }
+    if (event.target.closest(".reject-block-request")) {
+      rejectConversationRequest(requestId, true).catch((e) =>
+        handleAsyncError(e, i18n[state.currentLang].errorChats)
+      );
+      return;
+    }
+  }
+
+  const expiringStrip = event.target.closest(".expiring-strip");
+  if (expiringStrip) {
+    openChat(expiringStrip.dataset.chatId);
+    return;
+  }
+
+  const item = event.target.closest(".chat-item");
+  if (!item) return;
+  openChat(item.dataset.chatId);
+});
+
+document.addEventListener("keydown", (event) => {
+  if (event.key !== "Enter" && event.key !== " ") return;
+  const item = event.target.closest(".chat-item");
+  if (!item) return;
+  event.preventDefault();
+  item.click();
+});
+
+// ============================================================
+// Event Listeners — Active chat / Messages
+// ============================================================
+$("backToChats").addEventListener("click", () =>
+  closeChat().catch((e) => handleAsyncError(e, i18n[state.currentLang].errorChats))
+);
+$("blockChatBtn").addEventListener("click", () =>
+  blockActiveChat().catch((e) => handleAsyncError(e, i18n[state.currentLang].errorChats))
+);
+$("messageForm").addEventListener("submit", handleSendMessage);
+$("messageInput").addEventListener("input", handleComposerTyping);
+$("mediaInput").addEventListener("change", () => {
+  if ($("mediaInput").files?.length) $("messageForm").requestSubmit();
+});
+
+// ============================================================
+// Event Listeners — Media sheet
+// ============================================================
+$("attachBtn").addEventListener("click", openMediaSheet);
+$("mediaSheetBackdrop").addEventListener("click", closeMediaSheet);
+$("pickMediaBtn").addEventListener("click", () => {
+  closeMediaSheet();
+  $("mediaInput").click();
+});
+document.querySelectorAll(".gif-choice").forEach((button) => {
+  button.addEventListener("click", () =>
+    sendGifMessage(button.dataset.gif).catch((e) =>
+      handleAsyncError(e, i18n[state.currentLang].errorChats)
+    )
+  );
+});
+
+// ============================================================
+// Event Listeners — Voice recording
+// ============================================================
+$("voiceBtn").addEventListener("pointerdown", (event) => {
+  event.preventDefault();
+  startVoiceRecording();
+});
+$("voiceBtn").addEventListener("pointerup", () =>
+  finishVoiceRecording(false).catch((e) =>
+    handleAsyncError(e, i18n[state.currentLang].errorChats)
+  )
+);
+$("voiceBtn").addEventListener("pointerleave", () =>
+  finishVoiceRecording(true).catch((e) =>
+    handleAsyncError(e, i18n[state.currentLang].errorChats)
+  )
+);
+$("voiceBtn").addEventListener("pointercancel", () =>
+  finishVoiceRecording(true).catch((e) =>
+    handleAsyncError(e, i18n[state.currentLang].errorChats)
+  )
+);
+
+// ============================================================
+// Event Listeners — Message actions (swipe panel)
+// ============================================================
+$("messageActionsBackdrop").addEventListener("click", closeMessageActions);
+$("replyActionBtn").addEventListener("click", replyToActiveMessage);
+$("copyMessageBtn").addEventListener("click", () =>
+  copyActiveMessage().catch((e) =>
+    handleAsyncError(e, i18n[state.currentLang].errorChats)
+  )
+);
+$("burnMessageNowBtn").addEventListener("click", burnActiveMessageNow);
+$("messageActions").addEventListener("click", (event) => {
+  const reactionButton = event.target.closest("[data-reaction]");
+  if (!reactionButton) return;
+  addReactionToActiveMessage(reactionButton.dataset.reaction);
+});
+$("cancelReplyBtn").addEventListener("click", clearReplyDraft);
+$("displayNameInput").addEventListener("input", () => {
+  $("displayNameInput").dataset.edited = "true";
+});
+
+// ============================================================
+// Event Listeners — Idle lock / Panic triggers
+// ============================================================
+["pointerdown", "keydown", "touchstart"].forEach((eventName) => {
+  document.addEventListener(eventName, resetIdleLock, { passive: true });
+});
+
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden && !$("chatView").hidden) setPanicMode(true);
+});
+
+window.addEventListener("blur", () => {
+  if (!$("chatView").hidden) setPanicMode(true);
+});
+
+// ============================================================
+// Hash routing
+// ============================================================
+window.addEventListener("hashchange", () => {
+  openRouteFromHash().catch((e) =>
+    handleAsyncError(e, i18n[state.currentLang].errorChats)
+  );
+});
+
+// ============================================================
+// Periodic refresh (every 60s)
+// ============================================================
+window.setInterval(async () => {
+  try {
+    if (isLiveMode()) {
+      await cleanupExpiredMessages();
+      if (!$("chatView").hidden && state.activeConversationId) {
+        await loadConversation(state.activeConversationId);
+      }
+      await loadConversations();
+      return;
+    }
+
+    const before = state.chats.length;
+    moveExpiredChatsToBurned();
+    renderChats();
+    if (before !== state.chats.length) {
+      showToast(i18n[state.currentLang].expired);
+    }
+  } catch (error) {
+    console.warn(error);
+  }
+}, 60000);
+
+// ============================================================
+// Attach swipe gestures + kick off onboarding → boot
+// ============================================================
+attachSwipeToMessages();
+startOnboarding(() => boot());

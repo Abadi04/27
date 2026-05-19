@@ -321,7 +321,8 @@ export function renderConversationState(stateName) {
   const isBlocked = stateName === "blocked";
   $("chatViewStatus").textContent = isBlocked ? t.blockedStateTitle : t.expiredStateTitle;
   $("messageForm").hidden = true;
-  document.querySelector(".chat-privacy-bar")?.hidden = true;
+  const privBar = document.querySelector(".chat-privacy-bar");
+  if (privBar) privBar.hidden = true;
   $("messagesList").innerHTML = `
     <div class="conversation-state ${isBlocked ? "blocked" : "expired"}">
       <div class="conversation-state-icon" aria-hidden="true">${isBlocked ? "!" : "27"}</div>

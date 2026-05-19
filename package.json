@@ -5,7 +5,12 @@
   "homepage": "https://abadi04.github.io/27/",
   "private": true,
   "scripts": {
+    "build": "esbuild public/js/app-entry.js --bundle --outfile=public/app.js --format=iife",
+    "build:watch": "esbuild public/js/app-entry.js --bundle --outfile=public/app.js --format=iife --watch",
     "serve": "cd public && python3 -m http.server 4188"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.5"
   },
   "dependencies": {
     "qrcode": "^1.5.4",
@@ -17,5 +22,8 @@
     "rtl",
     "privacy"
   ],
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "esbuild": "^0.28.0"
+  }
 }

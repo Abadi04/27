@@ -19,7 +19,8 @@ import { updatePrivacyModeUI } from "./settings.js";
 export function showHome() {
   stopChatCountdown();
   $("heroSection").hidden = false;
-  document.querySelector(".section-divider")?.hidden = false;
+  const divider = document.querySelector(".section-divider");
+  if (divider) divider.hidden = false;
   $("chatsSection").hidden = false;
   $("chatView").hidden = true;
   $("settingsView").hidden = true;
@@ -41,7 +42,8 @@ export async function openChat(chatId) {
   }
 
   $("heroSection").hidden = true;
-  document.querySelector(".section-divider")?.hidden = true;
+  const chatDivider = document.querySelector(".section-divider");
+  if (chatDivider) chatDivider.hidden = true;
   $("chatsSection").hidden = true;
   $("settingsView").hidden = true;
   $("chatView").hidden = false;
@@ -49,7 +51,8 @@ export async function openChat(chatId) {
   $("chatViewName").textContent = getChatName(chat);
   $("chatViewStatus").textContent = t.loadingConversation;
   $("messageForm").hidden = false;
-  document.querySelector(".chat-privacy-bar")?.hidden = false;
+  const privacyBar = document.querySelector(".chat-privacy-bar");
+  if (privacyBar) privacyBar.hidden = false;
 
   state.privacyMode = chat.privacyMode || "5h";
   $("privacyModeSelect").value = state.privacyMode;
@@ -107,9 +110,8 @@ export async function closeChat() {
 // ============================================================
 export function openSettings() {
   $("heroSection").hidden = true;
-  document.querySelector(".section-divider")?.hidden = true;
-  $("chatsSection").hidden = true;
-  $("chatView").hidden = true;
+  const settingsDivider = document.querySelector(".section-divider");
+  if (settingsDivider) settingsDivider.hidden = true;
   $("settingsView").hidden = false;
   window.location.hash = "#settings";
 }
