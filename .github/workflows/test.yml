@@ -1,0 +1,54 @@
+name: Quality Checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    name: ESLint
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci
+      - run: npx eslint public/js/ --ext .js --max-warnings 20
+
+  html-validate:
+    runs-on: ubuntu-latest
+    name: HTML Validation
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci
+      - run: npx html-validate public/index.html --config '{"extends":["html-validate:recommended"],"rules":{"no-inline-style":"off","require-sri":"off","long-title":"off"}}'
+
+  lighthouse:
+    runs-on: ubuntu-latest
+    name: Lighthouse CI
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci && npm run build
+      - run: npm install -g @lhci/cli
+      - name: Serve & run Lighthouse
+        run: |
+          cd public && python3 -m http.server 8080 &
+          sleep 2
+          lhci autorun \
+            --collect.url=http://localhost:8080 \
+            --collect.numberOfRuns=1 \
+            --assert.assertions.categories:performance=["warn",{"minScore":0.7}] \
+            --assert.assertions.categories:accessibility=["warn",{"minScore":0.8}] \
+            --upload.target=temporary-public-storage || true

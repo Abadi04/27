@@ -43,6 +43,10 @@ export async function copyGeneratedShareLink() {
   const link = state.generatedShareLink || $("shareLinkInput")?.value;
   if (!link) return;
   try {
+    if (navigator.share) {
+      await navigator.share({ url: link, title: "27" });
+      return;
+    }
     let copied = false;
     if (navigator.clipboard?.writeText) {
       try { await navigator.clipboard.writeText(link); copied = true; }
@@ -55,7 +59,7 @@ export async function copyGeneratedShareLink() {
     }
     showToast(copied ? i18n[state.currentLang].copied : link);
   } catch (error) {
-    handleAsyncError(error, link);
+    if (error.name !== "AbortError") handleAsyncError(error, link);
   }
 }
 

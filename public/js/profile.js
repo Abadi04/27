@@ -112,8 +112,18 @@ export function updateProfileCodeUI() {
     // Show real code
     card.hidden = false;
     card.removeAttribute("hidden");
-    $("profileCodeValue").textContent =
-      profile.code_visible === false ? "••••••" : profile.public_code;
+    const codeDisplay = profile.code_visible === false ? "••••••" : profile.public_code;
+    $("profileCodeValue").textContent = codeDisplay;
+
+    // Update header chip
+    const chip = $("headerCodeChip");
+    const chipVal = $("headerCodeValue");
+    if (chip && chipVal) {
+      chipVal.textContent = codeDisplay;
+      chip.hidden = false;
+    }
+    const qrBtn = $("headerQrBtn");
+    if (qrBtn) qrBtn.hidden = profile.code_visible === false;
   }
   // Never hide the card once the profile is loaded - it starts visible in HTML
 }
@@ -150,10 +160,14 @@ export async function copyProfileLink() {
   if (!state.currentProfile?.public_code || state.currentProfile.code_visible === false) return;
   const link = getShareLink();
   try {
+    if (navigator.share) {
+      await navigator.share({ url: link, title: "27 — " + state.currentProfile.public_code });
+      return;
+    }
     if (navigator.clipboard?.writeText) await navigator.clipboard.writeText(link);
     showToast(i18n[state.currentLang].copied);
   } catch (error) {
-    handleAsyncError(error, link);
+    if (error.name !== "AbortError") handleAsyncError(error, link);
   }
 }
 

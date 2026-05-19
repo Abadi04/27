@@ -294,11 +294,13 @@ export function renderMessages(chat, onRendered) {
     const ttlLabel = ttlInfo
       ? `<span class="message-ttl ${ttlInfo.cls}">${escapeHtml(ttlInfo.text)}</span>` : "";
 
+    const blurClass = (message.burnAfterRead && message.type === "incoming" && !message.readAt) ? " blur-until-read" : "";
+    const tapHint = blurClass ? (i18n[state.currentLang].tapToRead || "اضغط للقراءة") : "";
     return `
       <div class="message-shell ${message.type}" data-message-id="${escapeHtml(message.id || "")}">
         <div class="swipe-reply-cue" aria-hidden="true">↩</div>
         <div class="swipe-delete-cue" aria-hidden="true">🔥</div>
-        <div class="message ${message.type}" style="--swipe-x: 0px; --delete-opacity: 0;">
+        <div class="message ${message.type}${blurClass}" data-tap-hint="${escapeHtml(tapHint)}" style="--swipe-x: 0px; --delete-opacity: 0;">
           ${replyQuote}
           ${renderMessageContent(message)}
           ${burnLabel}

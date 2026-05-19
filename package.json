@@ -10,7 +10,9 @@
     "serve": "cd public && python3 -m http.server 4188"
   },
   "devDependencies": {
-    "esbuild": "^0.25.5"
+    "esbuild": "^0.28.0",
+    "eslint": "^8.57.0",
+    "html-validate": "^9.0.0"
   },
   "dependencies": {
     "qrcode": "^1.5.4",
@@ -22,8 +24,5 @@
     "rtl",
     "privacy"
   ],
-  "license": "MIT",
-  "devDependencies": {
-    "esbuild": "^0.28.0"
-  }
+  "license": "MIT"
 }

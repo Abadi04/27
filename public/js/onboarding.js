@@ -26,30 +26,43 @@ export function startOnboarding(onComplete) {
       : "هذا رقمك الخاص — شاركه لبدء محادثة مجهولة";
   }
 
-  let step = 0;
-  const typeNext = () => {
-    if (step < randomCode.length) {
-      code.textContent += randomCode[step];
-      step += 1;
-      window.setTimeout(typeNext, 120);
-      return;
-    }
-    window.setTimeout(eraseNext, 800);
-  };
+  // Show 3-step guide then dismiss on tap/click
+  const ar = state.currentLang !== "en";
+  const steps = ar
+    ? ["هذا رقمك الخاص 👆", "شاركه مع من تريد", "ستصلك المحادثات هنا ✓"]
+    : ["This is your code 👆", "Share it with anyone", "Chats will appear here ✓"];
 
-  const eraseNext = () => {
-    if (code.textContent.length) {
-      code.textContent = code.textContent.slice(0, -1);
-      window.setTimeout(eraseNext, 80);
+  let currentStep = 0;
+  if (hint) hint.textContent = steps[0];
+
+  // Type the random code to introduce the concept
+  let i = 0;
+  const typeNext = () => {
+    if (i < randomCode.length) {
+      code.textContent += randomCode[i++];
+      window.setTimeout(typeNext, 110);
       return;
     }
-    screen.classList.add("done");
-    window.setTimeout(() => {
-      screen.hidden = true;
-      screen.classList.remove("done");
-      localStorage.setItem(ONBOARDING_STORAGE_KEY, "1");
-      onComplete();
-    }, 420);
+    // Cycle through hints
+    const cycleHints = () => {
+      currentStep = (currentStep + 1) % steps.length;
+      if (hint) hint.textContent = steps[currentStep];
+    };
+    const hintTimer = window.setInterval(cycleHints, 1800);
+
+    const dismiss = () => {
+      window.clearInterval(hintTimer);
+      screen.classList.add("done");
+      window.setTimeout(() => {
+        screen.hidden = true;
+        screen.classList.remove("done");
+        localStorage.setItem(ONBOARDING_STORAGE_KEY, "1");
+        onComplete();
+      }, 350);
+    };
+
+    screen.addEventListener("click", dismiss, { once: true });
+    window.setTimeout(dismiss, 6000); // auto-dismiss after 6s
   };
 
   typeNext();

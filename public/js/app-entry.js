@@ -430,3 +430,136 @@ window.setInterval(async () => {
 // ============================================================
 attachSwipeToMessages();
 startOnboarding(() => boot());
+
+// ============================================================
+// FAB: Floating Action Button
+// ============================================================
+function openFabSheet() {
+  $("fabSheet").hidden = false;
+  $("fabBtn").classList.add("open");
+  $("fabBtn").setAttribute("aria-expanded", "true");
+}
+function closeFabSheet() {
+  $("fabSheet").hidden = true;
+  $("fabBtn").classList.remove("open");
+  $("fabBtn").setAttribute("aria-expanded", "false");
+}
+function openCodeModal() {
+  closeFabSheet();
+  $("codeModal").hidden = false;
+  setTimeout(() => $("codeModalInput").focus(), 50);
+}
+function closeCodeModal() {
+  $("codeModal").hidden = true;
+  $("codeModalInput").value = "";
+}
+
+$("fabBtn").addEventListener("click", () => {
+  if ($("fabSheet").hidden) openFabSheet();
+  else closeFabSheet();
+});
+$("fabSheetBackdrop").addEventListener("click", closeFabSheet);
+$("codeModalBackdrop").addEventListener("click", closeCodeModal);
+
+$("fabStartChat").addEventListener("click", openCodeModal);
+$("fabCreateRoom").addEventListener("click", () => {
+  closeFabSheet();
+  showShareDrop("room").catch((e) => handleAsyncError(e, i18n[state.currentLang].errorChats));
+});
+$("fabCreateAsk").addEventListener("click", () => {
+  closeFabSheet();
+  showShareDrop("ask").catch((e) => handleAsyncError(e, i18n[state.currentLang].errorChats));
+});
+
+// Code modal: start chat
+async function handleCodeModalStart() {
+  const input = $("codeModalInput");
+  const code = input.value.trim();
+  if (!/^\d{6}$/.test(code)) {
+    input.style.borderColor = "rgba(244,63,94,.5)";
+    flashError(i18n[state.currentLang].invalidCode);
+    setTimeout(() => { input.style.borderColor = ""; }, 1200);
+    return;
+  }
+  try {
+    setButtonBusy($("codeModalStartBtn"), true, i18n[state.currentLang].searchingCode);
+    const id = await startConversationWithCode(code);
+    if (id) { closeCodeModal(); showToast(i18n[state.currentLang].starting); }
+  } catch (e) {
+    handleAsyncError(e, i18n[state.currentLang].errorChats);
+  } finally {
+    setButtonBusy($("codeModalStartBtn"), false);
+  }
+}
+$("codeModalStartBtn").addEventListener("click", handleCodeModalStart);
+$("codeModalInput").addEventListener("keydown", (e) => {
+  if (e.key === "Enter") handleCodeModalStart();
+  if (e.key === "Escape") closeCodeModal();
+});
+
+// Header chip/QR shortcuts
+$("headerCodeChip").addEventListener("click", copyProfileCode);
+$("headerQrBtn").addEventListener("click", openQrModal);
+
+// ============================================================
+// BurnAfterRead: tap to unblur
+// ============================================================
+$("messagesList").addEventListener("click", (e) => {
+  const msg = e.target.closest(".message.blur-until-read");
+  if (!msg) return;
+  msg.classList.remove("blur-until-read");
+  msg.classList.add("blur-reading");
+  showToast(i18n[state.currentLang].tapToRead || "سيتم حذف الرسالة خلال 10 ثوانٍ");
+  if (navigator.vibrate) navigator.vibrate([10, 30, 10]);
+});
+
+// Screenshot / visibility detection during burn-read
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) {
+    const hasBurnMsg = $("messagesList")?.querySelector(".burn-label");
+    if (hasBurnMsg && !$("chatView").hidden) {
+      showToast("⚠️ تحذير: تم اكتشاف مغادرة التطبيق");
+    }
+  }
+});
+
+// ============================================================
+// Pull-to-refresh
+// ============================================================
+(function initPullToRefresh() {
+  const list = $("chatsList");
+  const indicator = $("ptrIndicator");
+  if (!list || !indicator) return;
+
+  let startY = 0;
+  let pulling = false;
+  const THRESHOLD = 80;
+
+  list.addEventListener("touchstart", (e) => {
+    if (list.scrollTop === 0) {
+      startY = e.touches[0].clientY;
+      pulling = true;
+    }
+  }, { passive: true });
+
+  list.addEventListener("touchmove", (e) => {
+    if (!pulling) return;
+    const dy = e.touches[0].clientY - startY;
+    if (dy > 20) indicator.classList.add("ptr-visible");
+  }, { passive: true });
+
+  list.addEventListener("touchend", async (e) => {
+    if (!pulling) return;
+    pulling = false;
+    const dy = e.changedTouches[0].clientY - startY;
+    if (dy >= THRESHOLD) {
+      indicator.classList.add("ptr-refreshing");
+      indicator.querySelector(".ptr-arrow").textContent = "↻";
+      if (navigator.vibrate) navigator.vibrate(15);
+      try { await loadConversations(); } catch {}
+      indicator.querySelector(".ptr-arrow").textContent = "↓";
+      indicator.classList.remove("ptr-refreshing");
+    }
+    indicator.classList.remove("ptr-visible");
+  }, { passive: true });
+})();

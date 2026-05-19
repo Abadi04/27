@@ -16,8 +16,13 @@
 
     <header class="app-header" id="appHeader">
       <div class="header-logo">27</div>
+      <div class="header-center">
+        <button class="header-code-chip" id="headerCodeChip" type="button" aria-label="رقمك الشخصي" hidden>
+          <span class="header-code-value" id="headerCodeValue">------</span>
+        </button>
+      </div>
       <div class="header-right">
-        <span class="header-status" id="headerStatus">مشفّر · بدون تسجيل</span>
+        <button class="header-qr-btn" id="headerQrBtn" type="button" aria-label="QR" hidden>QR</button>
         <button class="settings-toggle" id="settingsToggle" type="button">الإعدادات</button>
         <button class="lang-toggle" id="langToggle" type="button" aria-label="Switch language">
           العربية / English
@@ -99,7 +104,11 @@
 
       <section class="chats-section" id="chatsSection">
         <h2 class="chats-header" id="chatsHeader">المحادثات النشطة</h2>
-        <div class="state-card loading-state" id="loadingState" hidden>جارٍ تحميل المحادثات...</div>
+        <div class="skeleton-list" id="loadingState" hidden aria-label="جارٍ التحميل">
+          <div class="skeleton-item"><div class="skeleton-avatar"></div><div class="skeleton-lines"><div class="skeleton-line w70"></div><div class="skeleton-line w45"></div></div></div>
+          <div class="skeleton-item"><div class="skeleton-avatar"></div><div class="skeleton-lines"><div class="skeleton-line w55"></div><div class="skeleton-line w80"></div></div></div>
+          <div class="skeleton-item"><div class="skeleton-avatar"></div><div class="skeleton-lines"><div class="skeleton-line w65"></div><div class="skeleton-line w35"></div></div></div>
+        </div>
         <div class="state-card error-state" id="errorState" hidden>تعذر تحميل المحادثات. حاول مرة أخرى.</div>
         <div class="chats-list" id="chatsList"></div>
         <div class="empty-state" id="emptyState" hidden>
@@ -252,6 +261,56 @@
       <p class="onboarding-hint" id="onboardingHint">هذا رقمك الخاص — شاركه لبدء محادثة مجهولة</p>
     </div>
 
+
+    <!-- FAB -->
+    <button class="fab" id="fabBtn" type="button" aria-label="محادثة جديدة" aria-expanded="false">+</button>
+
+    <!-- FAB Sheet -->
+    <div class="fab-sheet" id="fabSheet" hidden>
+      <div class="fab-sheet-backdrop" id="fabSheetBackdrop"></div>
+      <div class="fab-sheet-panel" role="dialog" aria-modal="true" aria-labelledby="fabSheetTitle">
+        <div class="sheet-handle" aria-hidden="true"></div>
+        <h2 class="fab-sheet-title" id="fabSheetTitle">إجراء جديد</h2>
+        <button class="fab-action-btn" id="fabStartChat" type="button">
+          <span class="fab-action-icon" aria-hidden="true">#</span>
+          <span class="fab-action-text">
+            <strong id="fabStartChatLabel">بدء محادثة</strong>
+            <small id="fabStartChatHint">أدخل رقم المستخدم</small>
+          </span>
+        </button>
+        <button class="fab-action-btn" id="fabCreateRoom" type="button">
+          <span class="fab-action-icon" aria-hidden="true">⬡</span>
+          <span class="fab-action-text">
+            <strong id="fabRoomLabel">غرفة مؤقتة</strong>
+            <small id="fabRoomHint">رابط خاص ينتهي تلقائياً</small>
+          </span>
+        </button>
+        <button class="fab-action-btn" id="fabCreateAsk" type="button">
+          <span class="fab-action-icon" aria-hidden="true">?</span>
+          <span class="fab-action-text">
+            <strong id="fabAskLabel">Ask Anonymously</strong>
+            <small id="fabAskHint">رابط أسئلة مجهول</small>
+          </span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Code Input Modal (from FAB) -->
+    <div class="code-modal" id="codeModal" hidden>
+      <div class="code-modal-backdrop" id="codeModalBackdrop"></div>
+      <div class="code-modal-panel" role="dialog" aria-modal="true">
+        <div class="sheet-handle" aria-hidden="true"></div>
+        <h2 id="codeModalTitle">بدء محادثة</h2>
+        <input class="code-input" id="codeModalInput" type="text" inputmode="numeric"
+          placeholder="أدخل رقم المستخدم" autocomplete="off" maxlength="6" />
+        <button class="start-btn" id="codeModalStartBtn" type="button">بدء المحادثة</button>
+      </div>
+    </div>
+
+    <!-- Pull-to-refresh indicator -->
+    <div class="ptr-indicator" id="ptrIndicator" aria-hidden="true">
+      <span class="ptr-arrow">↓</span>
+    </div>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="vendor/qrcode.min.js?v=privacy-core-1"></script>
     <script src="app.js?v=hotfix-1"></script>
