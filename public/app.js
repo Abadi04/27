@@ -2832,6 +2832,20 @@
   }, 6e4);
   attachSwipeToMessages();
   startOnboarding(() => boot());
+  function updateFabVisibility() {
+    const fab = $("fabBtn");
+    if (!fab) return;
+    const inChat = $("chatView") && !$("chatView").hidden;
+    const inSettings = $("settingsView") && !$("settingsView").hidden;
+    fab.hidden = inChat || inSettings;
+  }
+  var _fabObserver = new MutationObserver(updateFabVisibility);
+  document.addEventListener("DOMContentLoaded", () => {
+    const chatView = $("chatView");
+    const settingsView = $("settingsView");
+    if (chatView) _fabObserver.observe(chatView, { attributes: true, attributeFilter: ["hidden"] });
+    if (settingsView) _fabObserver.observe(settingsView, { attributes: true, attributeFilter: ["hidden"] });
+  });
   function openFabSheet() {
     $("fabSheet").hidden = false;
     $("fabBtn").classList.add("open");
@@ -2914,28 +2928,33 @@
     }
   });
   (function initPullToRefresh() {
-    const list = $("chatsList");
     const indicator = $("ptrIndicator");
-    if (!list || !indicator) return;
+    if (!indicator) return;
     let startY = 0;
     let pulling = false;
+    let refreshing = false;
     const THRESHOLD = 80;
-    list.addEventListener("touchstart", (e) => {
-      if (list.scrollTop === 0) {
+    function isHomeVisible() {
+      return $("chatView")?.hidden !== false && $("settingsView")?.hidden !== false;
+    }
+    document.addEventListener("touchstart", (e) => {
+      if (!isHomeVisible()) return;
+      if (window.scrollY <= 1) {
         startY = e.touches[0].clientY;
         pulling = true;
       }
     }, { passive: true });
-    list.addEventListener("touchmove", (e) => {
-      if (!pulling) return;
+    document.addEventListener("touchmove", (e) => {
+      if (!pulling || refreshing) return;
       const dy = e.touches[0].clientY - startY;
       if (dy > 20) indicator.classList.add("ptr-visible");
     }, { passive: true });
-    list.addEventListener("touchend", async (e) => {
+    document.addEventListener("touchend", async (e) => {
       if (!pulling) return;
       pulling = false;
       const dy = e.changedTouches[0].clientY - startY;
-      if (dy >= THRESHOLD) {
+      if (dy >= THRESHOLD && !refreshing) {
+        refreshing = true;
         indicator.classList.add("ptr-refreshing");
         indicator.querySelector(".ptr-arrow").textContent = "\u21BB";
         if (navigator.vibrate) navigator.vibrate(15);
@@ -2945,6 +2964,7 @@
         }
         indicator.querySelector(".ptr-arrow").textContent = "\u2193";
         indicator.classList.remove("ptr-refreshing");
+        refreshing = false;
       }
       indicator.classList.remove("ptr-visible");
     }, { passive: true });
