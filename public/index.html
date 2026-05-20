@@ -22,6 +22,7 @@
         </button>
       </div>
       <div class="header-right">
+        <span class="header-status" id="headerStatus">مشفّر · بدون تسجيل</span>
         <button class="header-qr-btn" id="headerQrBtn" type="button" aria-label="QR">QR</button>
         <button class="settings-toggle" id="settingsToggle" type="button">الإعدادات</button>
         <button class="lang-toggle" id="langToggle" type="button" aria-label="Switch language">
@@ -32,27 +33,43 @@
 
     <main class="main-content">
       <!-- heroSection kept hidden; shareDrop/entryCard shown as overlays via JS -->
-      <section class="hero" id="heroSection" hidden aria-hidden="true">
-        <!-- shareDrop and entryCard moved to overlays below -->
-        <!-- Hidden but kept for JS/i18n compatibility -->
-        <p id="heroTagline" hidden></p>
-        <div id="heroDesc" hidden></div>
-        <p id="heroLine1" hidden></p>
-        <p id="secondaryOptionsLabel" hidden></p>
-        <span id="roomActionTitle" hidden></span>
-        <small id="roomActionHint" hidden></small>
-        <span id="askActionTitle" hidden></span>
-        <small id="askActionHint" hidden></small>
-        <div class="profile-code-card" id="profileCodeCard" hidden>
+      <section class="hero" id="heroSection">
+        <h1 class="hero-title" aria-label="27">
+          <img class="hero-mark" src="new-main-icon.jpg?v=main-icon-2" alt="" aria-hidden="true" />
+          <span class="sr-only">27</span>
+        </h1>
+        <p class="hero-tagline" id="heroTagline">خاص. سريع. يختفي.</p>
+        <div class="hero-desc" id="heroDesc">
+          <p id="heroLine1">افتح قناة سرية خلال ثوان: سؤال مجهول، غرفة مؤقتة، أو محادثة بكود.</p>
+          <p>كل رابط له عمر قصير، وكل محادثة قابلة للاختفاء.</p>
+        </div>
+        <div class="input-group">
+          <input type="text" class="code-input" id="codeInput" placeholder="أدخل رقم المستخدم المراد التواصل معه" inputmode="numeric" autocomplete="off">
+          <button class="start-btn primary-cta" id="startBtn" type="button">بدء المحادثة</button>
+        </div>
+        <div class="secondary-options">
+          <p class="secondary-options-label" id="secondaryOptionsLabel">خيارات أخرى</p>
+          <div class="viral-actions" aria-label="روابط قابلة للمشاركة">
+            <button class="viral-action" id="createRoomLinkBtn" type="button">
+              <span id="roomActionTitle">Temporary Room</span>
+              <small id="roomActionHint">غرفة خاصة برابط مؤقت</small>
+            </button>
+            <button class="viral-action" id="createAskLinkBtn" type="button">
+              <span id="askActionTitle">Ask Me Anonymously</span>
+              <small id="askActionHint">رابط أسئلة مجهول ينتهي تلقائيًا</small>
+            </button>
+          </div>
+        </div>
+        <div class="profile-code-card" id="profileCodeCard">
           <div class="profile-code-content">
             <div class="profile-code-header">
-              <span class="profile-code-kicker" id="profileCodeKicker"></span>
+              <span class="profile-code-kicker" id="profileCodeKicker">شارك رابطك</span>
               <button class="profile-qr-btn" id="profileQrBtn" type="button" aria-label="شارك كـ QR">
                 <span class="qr-icon" aria-hidden="true"></span>
               </button>
             </div>
             <div class="profile-code-main">
-              <span class="profile-code-label" id="profileCodeLabel"></span>
+              <span class="profile-code-label" id="profileCodeLabel">رقمك</span>
               <strong class="profile-code-value" id="profileCodeValue">------</strong>
             </div>
             <div class="profile-code-actions">
@@ -61,12 +78,6 @@
             </div>
           </div>
         </div>
-        <div class="input-group" hidden>
-          <input type="text" class="code-input" id="codeInput" inputmode="numeric" autocomplete="off">
-          <button id="startBtn" type="button" hidden></button>
-        </div>
-        <button id="createRoomLinkBtn" type="button" hidden></button>
-        <button id="createAskLinkBtn" type="button" hidden></button>
       </section>
 
       <section class="chats-section" id="chatsSection">

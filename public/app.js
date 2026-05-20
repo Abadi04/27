@@ -2269,6 +2269,7 @@
   init_demo();
   function showHome() {
     stopChatCountdown();
+    $("heroSection").hidden = false;
     const divider = document.querySelector(".section-divider");
     if (divider) divider.hidden = true;
     $("chatsSection").hidden = false;
