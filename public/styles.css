@@ -3129,3 +3129,259 @@ html[dir="rtl"] .setting-switch-row.is-on .switch-thumb {
   .splash-phase3 .splash-light   { opacity: 1; transform: scale(1); }
   .splash-phase3 .splash-logo    { opacity: 1; }
 }
+
+/* ============================================================
+   ENHANCEMENTS v2 — Particles · Cat · Glow · Tooltips · Card
+   ============================================================ */
+
+/* Particle Canvas */
+#particleCanvas {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.45;
+}
+
+/* Cat Logo — wiggle + glow every 5s */
+@keyframes catWiggle {
+  0%, 80%, 100% { transform: scale(1) rotate(0deg); }
+  82% { transform: scale(1.05) rotate(-5deg); }
+  85% { transform: scale(0.97) rotate(4deg); }
+  88% { transform: scale(1.03) rotate(-2deg); }
+  91% { transform: scale(1) rotate(1deg); }
+  94% { transform: scale(1) rotate(0deg); }
+}
+@keyframes catGlow {
+  0%, 80%, 100% {
+    box-shadow: 0 0 0 6px rgba(255,255,255,.02), 0 24px 48px rgba(0,0,0,.5);
+    filter: brightness(1);
+  }
+  87% {
+    box-shadow: 0 0 0 6px rgba(58,110,165,.08), 0 24px 48px rgba(0,0,0,.5), 0 0 28px rgba(58,110,165,.2);
+    filter: brightness(1.08);
+  }
+}
+.hero-mark {
+  animation: catWiggle 5s ease-in-out infinite, catGlow 5s ease-in-out infinite;
+  transform-origin: center 70%;
+}
+
+/* User Number — Blue Glow */
+@keyframes numberPulse {
+  0%, 100% {
+    text-shadow: 0 0 6px rgba(58,110,165,.55), 0 0 14px rgba(58,110,165,.28);
+    color: rgba(130,185,255,.92);
+  }
+  50% {
+    text-shadow: 0 0 10px rgba(80,145,225,.75), 0 0 22px rgba(58,110,165,.4), 0 0 40px rgba(40,90,170,.18);
+    color: rgba(155,205,255,.98);
+  }
+}
+.header-code-value {
+  animation: numberPulse 3s ease-in-out infinite;
+  color: rgba(130,185,255,.92);
+}
+.header-code-chip {
+  border-color: rgba(58,110,165,.25) !important;
+  box-shadow: 0 0 0 1px rgba(58,110,165,.1), inset 0 1px 0 rgba(58,110,165,.08);
+}
+
+/* Tooltips — على أزرار التولبار */
+[data-tooltip] { position: relative; }
+[data-tooltip]::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: calc(100% + 9px);
+  left: 50%;
+  transform: translateX(-50%) translateY(5px);
+  background: rgba(4,8,20,.97);
+  border: 1px solid rgba(58,110,165,.32);
+  color: rgba(190,215,245,.92);
+  font-size: .68rem;
+  font-family: var(--font-base);
+  white-space: nowrap;
+  padding: 5px 11px;
+  border-radius: 8px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity .18s ease, transform .18s ease;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  z-index: 500;
+  box-shadow: 0 6px 18px rgba(0,0,0,.45);
+}
+[data-tooltip]::before {
+  content: '';
+  position: absolute;
+  bottom: calc(100% + 4px);
+  left: 50%;
+  transform: translateX(-50%) translateY(5px);
+  border: 5px solid transparent;
+  border-top-color: rgba(58,110,165,.32);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity .18s ease, transform .18s ease;
+  z-index: 500;
+}
+[data-tooltip]:hover::after,
+[data-tooltip]:focus-visible::after {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+[data-tooltip]:hover::before,
+[data-tooltip]:focus-visible::before {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* Empty State — شاشة المحادثة الفارغة */
+.empty-chat-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 52px 24px;
+  text-align: center;
+  min-height: 280px;
+}
+.empty-chat-cat {
+  width: 72px;
+  height: 72px;
+  border-radius: 20px;
+  border: 1px solid rgba(58,110,165,.2);
+  box-shadow: 0 0 24px rgba(58,110,165,.12);
+  object-fit: cover;
+  animation: catWiggle 5s ease-in-out infinite;
+  transform-origin: center 70%;
+}
+.empty-chat-text {
+  color: rgba(180,205,235,.55);
+  font-size: .9rem;
+  line-height: 1.6;
+  margin: 0;
+}
+.empty-chat-share-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 20px;
+  border: 1px solid rgba(58,110,165,.3);
+  border-radius: 999px;
+  background: rgba(58,110,165,.1);
+  color: rgba(130,185,255,.9);
+  cursor: pointer;
+  font: inherit;
+  font-size: .82rem;
+  transition: all .2s ease;
+}
+.empty-chat-share-btn:hover {
+  background: rgba(58,110,165,.18);
+  border-color: rgba(58,110,165,.48);
+  transform: translateY(-1px);
+}
+
+/* FAB Room Icon — أوضح */
+.fab-room-icon {
+  width: 22px; height: 22px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Share Card Modal */
+.share-card-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 650;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+}
+.share-card-modal[hidden] { display: none; }
+.share-card-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,.82);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+.share-card-dialog {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 360px);
+  border: 1px solid rgba(58,110,165,.28);
+  border-radius: 22px;
+  background: linear-gradient(145deg, #060911, #030508);
+  box-shadow: 0 30px 80px rgba(0,0,0,.7), 0 0 50px rgba(58,110,165,.1);
+  padding: 22px;
+  display: grid;
+  gap: 14px;
+  text-align: center;
+}
+.share-card-title {
+  color: rgba(200,220,245,.85);
+  font-size: .9rem;
+  font-weight: 600;
+}
+.share-card-close {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,.1);
+  background: rgba(255,255,255,.05);
+  color: rgba(255,255,255,.65);
+  cursor: pointer;
+  font-size: 1.1rem;
+  display: grid;
+  place-items: center;
+  transition: background .15s;
+}
+.share-card-close:hover { background: rgba(255,255,255,.1); }
+.share-card-preview {
+  width: 100%;
+  border-radius: 14px;
+  border: 1px solid rgba(58,110,165,.2);
+  display: block;
+}
+.share-card-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.share-card-download {
+  background: linear-gradient(135deg, rgba(58,110,165,.28), rgba(30,60,120,.38));
+  border: 1px solid rgba(58,110,165,.38);
+  border-radius: 12px;
+  color: rgba(140,200,255,.95);
+  cursor: pointer;
+  font: inherit;
+  font-size: .84rem;
+  font-weight: 700;
+  min-height: 44px;
+  transition: all .2s ease;
+}
+.share-card-download:hover {
+  background: linear-gradient(135deg, rgba(58,110,165,.42), rgba(30,60,120,.52));
+  transform: translateY(-1px);
+}
+.share-card-copy-link {
+  background: rgba(255,255,255,.05);
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 12px;
+  color: rgba(200,215,235,.78);
+  cursor: pointer;
+  font: inherit;
+  font-size: .84rem;
+  min-height: 44px;
+  transition: all .2s ease;
+}
+.share-card-copy-link:hover {
+  background: rgba(255,255,255,.09);
+  border-color: rgba(255,255,255,.18);
+}

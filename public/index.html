@@ -9,7 +9,7 @@
     <link rel="apple-touch-icon" href="apple-touch-icon.png?v=official-icon-1">
     <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png?v=official-icon-1">
     <title>27</title>
-    <link rel="stylesheet" href="styles.css?v=cta-logo-tune-1">
+    <link rel="stylesheet" href="styles.css?v=enhancements-v2">
   </head>
   <body>
     <!-- ============================================================
@@ -50,6 +50,7 @@
       <div class="splash-logo" aria-hidden="true">27</div>
     </div>
 
+    <canvas id="particleCanvas" aria-hidden="true"></canvas>
     <div class="bg-glow" aria-hidden="true"></div>
 
     <header class="app-header" id="appHeader">
@@ -128,8 +129,15 @@
         <div class="state-card error-state" id="errorState" hidden>تعذر تحميل المحادثات. حاول مرة أخرى.</div>
         <div class="chats-list" id="chatsList"></div>
         <div class="empty-state" id="emptyState" hidden>
-          <strong id="emptyTitle">لا توجد محادثات بعد</strong>
-          <p id="emptyText">اضغط على زر <strong>+</strong> لبدء محادثة جديدة أو إنشاء رابط مجهول.</p>
+          <div class="empty-chat-state">
+            <img class="empty-chat-cat" src="new-main-icon.jpg?v=main-icon-2" alt="" aria-hidden="true">
+            <p class="empty-chat-text" id="emptyTitle">انتظر… أو ابدأ أنت</p>
+            <p class="empty-chat-text" id="emptyText" style="font-size:.8rem;opacity:.65">لا توجد محادثات بعد. شارك رقمك لتصلك رسائل مجهولة.</p>
+            <button class="empty-chat-share-btn" id="emptyShareBtn" type="button">
+              <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+              شارك كصورة
+            </button>
+          </div>
         </div>
       </section>
 
@@ -168,9 +176,9 @@
             type="text"
             autocomplete="off"
             placeholder="اكتب رسالة مؤقتة...">
-          <button class="burn-toggle" id="burnToggle" type="button" aria-label="رسالة تحترق" title="رسالة تحترق">🔥</button>
-          <button class="hidden-toggle" id="hiddenToggle" type="button" aria-label="رسالة مخفية" title="رسالة مخفية">◐</button>
-          <button class="voice-btn" id="voiceBtn" type="button" aria-label="تسجيل صوتي" title="تسجيل صوتي">●</button>
+          <button class="burn-toggle" id="burnToggle" type="button" aria-label="رسالة تحترق" data-tooltip="تحترق بعد القراءة">🔥</button>
+          <button class="hidden-toggle" id="hiddenToggle" type="button" aria-label="رسالة مخفية" data-tooltip="مخفية — اضغط لتظهر">◐</button>
+          <button class="voice-btn" id="voiceBtn" type="button" aria-label="تسجيل صوتي" data-tooltip="رسالة صوتية">●</button>
           <button class="send-btn" id="sendBtn" type="submit">إرسال</button>
         </form>
       </section>
@@ -351,7 +359,9 @@
           </span>
         </button>
         <button class="fab-action-btn" id="fabCreateRoom" type="button">
-          <span class="fab-action-icon" aria-hidden="true">⬡</span>
+          <span class="fab-action-icon" aria-hidden="true">
+            <svg class="fab-room-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 4H6a2 2 0 0 0-2 2v14"/><path d="M20 20H4"/><path d="M20 8v12"/><rect x="13" y="4" width="7" height="16" rx="1"/><circle cx="17" cy="13" r="1" fill="currentColor"/></svg>
+          </span>
           <span class="fab-action-text">
             <strong id="fabRoomLabel">غرفة مؤقتة</strong>
             <small id="fabRoomHint">رابط خاص ينتهي تلقائياً</small>
@@ -383,8 +393,250 @@
     <div class="ptr-indicator" id="ptrIndicator" aria-hidden="true">
       <span class="ptr-arrow">↓</span>
     </div>
+    <!-- Share Card Modal -->
+    <div class="share-card-modal" id="shareCardModal" hidden>
+      <div class="share-card-backdrop" id="shareCardBackdrop"></div>
+      <div class="share-card-dialog" role="dialog" aria-modal="true" aria-labelledby="shareCardTitle">
+        <button class="share-card-close" id="closeShareCard" type="button" aria-label="إغلاق">×</button>
+        <h2 class="share-card-title" id="shareCardTitle">شارك كصورة فاخرة</h2>
+        <img class="share-card-preview" id="shareCardPreview" src="" alt="بطاقة المشاركة">
+        <div class="share-card-actions">
+          <button class="share-card-download" id="downloadShareCard" type="button">⬇ تحميل</button>
+          <button class="share-card-copy-link" id="copyCardLink" type="button">نسخ الرابط</button>
+        </div>
+      </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="vendor/qrcode.min.js?v=privacy-core-1"></script>
     <script src="app.js?v=hotfix-1"></script>
+    <script>
+    /* ============================================================
+       27 Enhancements — Particles · Share Card · Wiring
+       ============================================================ */
+    (function() {
+
+      /* -- Particle System -- */
+      var canvas = document.getElementById('particleCanvas');
+      if (canvas) {
+        var ctx = canvas.getContext('2d');
+        var particles = [];
+        function resize() {
+          canvas.width = window.innerWidth;
+          canvas.height = window.innerHeight;
+        }
+        function newParticle(fromBottom) {
+          return {
+            x: Math.random() * (canvas.width || 400),
+            y: fromBottom ? (canvas.height || 800) + 5 : Math.random() * (canvas.height || 800),
+            size: Math.random() * 1.8 + 0.4,
+            opacity: fromBottom ? 0 : (Math.random() * 0.4 + 0.05),
+            maxOpacity: Math.random() * 0.42 + 0.08,
+            fadeSpeed: Math.random() * 0.0025 + 0.0008,
+            speed: Math.random() * 0.35 + 0.08,
+            dx: (Math.random() - 0.5) * 0.25,
+            rising: fromBottom
+          };
+        }
+        function initParticles() {
+          resize();
+          particles = [];
+          for (var i = 0; i < 65; i++) particles.push(newParticle(false));
+          animate();
+        }
+        function animate() {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          for (var i = 0; i < particles.length; i++) {
+            var p = particles[i];
+            if (p.rising) {
+              p.opacity = Math.min(p.opacity + p.fadeSpeed * 2, p.maxOpacity);
+              if (p.opacity >= p.maxOpacity) p.rising = false;
+            } else {
+              p.opacity -= p.fadeSpeed;
+            }
+            p.x += p.dx;
+            p.y -= p.speed;
+            if (p.opacity <= 0 || p.y < -10) {
+              particles[i] = newParticle(true);
+              particles[i].x = Math.random() * canvas.width;
+              continue;
+            }
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(72,130,210,' + p.opacity + ')';
+            ctx.fill();
+          }
+          requestAnimationFrame(animate);
+        }
+        window.addEventListener('resize', resize);
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', initParticles);
+        } else {
+          initParticles();
+        }
+      }
+
+      /* -- Share Card Generator -- */
+      function buildShareCard(cb) {
+        var code = (document.getElementById('headerCodeValue') || {}).textContent || '------';
+        code = code.trim();
+        var link = 'https://abadi04.github.io/27/?c=' + code;
+
+        var c = document.createElement('canvas');
+        c.width = 600; c.height = 320;
+        var g = c.getContext('2d');
+
+        // Background
+        var bg = g.createLinearGradient(0, 0, 600, 320);
+        bg.addColorStop(0, '#060911');
+        bg.addColorStop(0.6, '#080d1c');
+        bg.addColorStop(1, '#030508');
+        g.fillStyle = bg;
+        g.beginPath();
+        if (g.roundRect) g.roundRect(0, 0, 600, 320, 22);
+        else g.rect(0, 0, 600, 320);
+        g.fill();
+
+        // Top glow
+        var glow = g.createRadialGradient(300, 0, 0, 300, 0, 260);
+        glow.addColorStop(0, 'rgba(58,110,165,.2)');
+        glow.addColorStop(1, 'transparent');
+        g.fillStyle = glow;
+        g.fillRect(0, 0, 600, 320);
+
+        // Border
+        g.strokeStyle = 'rgba(58,110,165,.32)';
+        g.lineWidth = 1.5;
+        g.beginPath();
+        if (g.roundRect) g.roundRect(1, 1, 598, 318, 21);
+        else g.rect(1, 1, 598, 318);
+        g.stroke();
+
+        // "27" logo
+        g.font = '700 52px "Bradley Hand", "Segoe Print", cursive, sans-serif';
+        g.fillStyle = 'rgba(255,255,255,.92)';
+        g.textAlign = 'right';
+        g.textBaseline = 'top';
+        g.fillText('27', 560, 28);
+
+        // Tagline
+        g.font = '400 13px -apple-system, system-ui, sans-serif';
+        g.fillStyle = 'rgba(140,170,210,.5)';
+        g.fillText('خاص · سريع · يختفي', 560, 84);
+
+        // Number label
+        g.font = '600 11px -apple-system, system-ui, sans-serif';
+        g.fillStyle = 'rgba(80,130,200,.65)';
+        g.textAlign = 'left';
+        g.fillText('رقمك الشخصي', 44, 130);
+
+        // Number with glow
+        g.textBaseline = 'alphabetic';
+        g.font = '800 62px -apple-system, "SF Mono", monospace';
+        g.shadowColor = 'rgba(58,110,165,.7)';
+        g.shadowBlur = 28;
+        g.fillStyle = 'rgba(135,195,255,.96)';
+        g.fillText(code, 44, 208);
+        g.shadowBlur = 0;
+
+        // Bottom strip
+        g.fillStyle = 'rgba(58,110,165,.1)';
+        g.fillRect(0, 260, 600, 60);
+        g.strokeStyle = 'rgba(58,110,165,.18)';
+        g.lineWidth = 1;
+        g.beginPath();
+        g.moveTo(0, 260); g.lineTo(600, 260);
+        g.stroke();
+
+        // Link text
+        g.font = '400 11px -apple-system, system-ui, sans-serif';
+        g.fillStyle = 'rgba(100,145,200,.52)';
+        g.textAlign = 'left';
+        g.fillText(link, 44, 287);
+
+        // QR code
+        var qrDiv = document.createElement('div');
+        try {
+          new QRCode(qrDiv, {
+            text: link, width: 110, height: 110,
+            colorDark: '#08122a', colorLight: '#ffffff',
+            correctLevel: QRCode.CorrectLevel ? QRCode.CorrectLevel.M : 1
+          });
+          setTimeout(function() {
+            var qrImg = qrDiv.querySelector('img') || qrDiv.querySelector('canvas');
+            if (qrImg) {
+              // White bg for QR
+              g.fillStyle = '#ffffff';
+              g.beginPath();
+              if (g.roundRect) g.roundRect(424, 80, 130, 130, 12);
+              else g.rect(424, 80, 130, 130);
+              g.fill();
+              g.drawImage(qrImg, 434, 90, 110, 110);
+            }
+            cb(c, link);
+          }, 120);
+        } catch(e) { cb(c, link); }
+      }
+
+      function openShareCard() {
+        var modal = document.getElementById('shareCardModal');
+        if (!modal) return;
+        var preview = document.getElementById('shareCardPreview');
+        if (preview) preview.src = '';
+        modal.removeAttribute('hidden');
+        buildShareCard(function(c, link) {
+          if (preview) preview.src = c.toDataURL('image/png');
+          modal._canvas = c;
+          modal._link = link;
+        });
+      }
+
+      // Close
+      var closeBtn = document.getElementById('closeShareCard');
+      var backdrop = document.getElementById('shareCardBackdrop');
+      if (closeBtn) closeBtn.addEventListener('click', function() {
+        document.getElementById('shareCardModal').setAttribute('hidden','');
+      });
+      if (backdrop) backdrop.addEventListener('click', function() {
+        document.getElementById('shareCardModal').setAttribute('hidden','');
+      });
+
+      // Download
+      var dlBtn = document.getElementById('downloadShareCard');
+      if (dlBtn) dlBtn.addEventListener('click', function() {
+        var m = document.getElementById('shareCardModal');
+        if (!m || !m._canvas) return;
+        var a = document.createElement('a');
+        a.href = m._canvas.toDataURL('image/png');
+        a.download = '27-card.png';
+        a.click();
+      });
+
+      // Copy link
+      var copyLinkBtn = document.getElementById('copyCardLink');
+      if (copyLinkBtn) copyLinkBtn.addEventListener('click', function() {
+        var m = document.getElementById('shareCardModal');
+        if (!m || !m._link) return;
+        navigator.clipboard.writeText(m._link).then(function() {
+          copyLinkBtn.textContent = 'تم النسخ ✓';
+          setTimeout(function(){ copyLinkBtn.textContent = 'نسخ الرابط'; }, 2000);
+        });
+      });
+
+      // Wire all "شارك كصورة" triggers
+      function wireShareTrigger(id) {
+        var el = document.getElementById(id);
+        if (el) el.addEventListener('click', openShareCard);
+      }
+      // Wait for DOM + app.js to finish
+      setTimeout(function() {
+        wireShareTrigger('emptyShareBtn');
+        wireShareTrigger('shareQrBtn');      // settings button repurposed
+        wireShareTrigger('profileQrBtn');    // profile QR button
+        wireShareTrigger('headerQrBtn');     // header QR
+      }, 600);
+
+    })();
+    </script>
   </body>
 </html>
