@@ -151,6 +151,18 @@ export const i18n = {
     ttlSeconds: "< ١ د",
     userPrefix: "مستخدم",
     demoMode: "وضع تجريبي: أضف مفاتيح Supabase ليصبح حقيقيًا.",
+    // Arena
+    arenaNav: "الساحة",
+    homeNav: "المحادثات",
+    arenaEmpty: "لا توجد رسائل بعد. كن أول من يكتب.",
+    arenaPlaceholder: "شاركهم ما يدور في بالك… تختفي خلال ٦٠ دقيقة",
+    arenaSend: "أرسل",
+    arenaDelete: "حذف",
+    arenaLoadError: "تعذر تحميل الساحة.",
+    arenaSendError: "تعذر إرسال الرسالة.",
+    arenaTooLong: "الحد الأقصى ٢٨٠ حرفاً.",
+    arenaOffensive: "هذا المحتوى غير مسموح به.",
+    arenaRateLimit: "انتظر {m} دقيقة قبل الإرسال مجدداً.",
   },
   en: {
     headerStatus: "Encrypted · No login",
@@ -304,6 +316,18 @@ export const i18n = {
     ttlSeconds: "< 1m",
     userPrefix: "User",
     demoMode: "Demo mode: add Supabase keys to make it real.",
+    // Arena
+    arenaNav: "Arena",
+    homeNav: "Chats",
+    arenaEmpty: "No messages yet. Be the first to write.",
+    arenaPlaceholder: "Share what's on your mind… vanishes in 60 min",
+    arenaSend: "Send",
+    arenaDelete: "Delete",
+    arenaLoadError: "Could not load the arena.",
+    arenaSendError: "Could not send the message.",
+    arenaTooLong: `Max ${280} characters.`,
+    arenaOffensive: "This content is not allowed.",
+    arenaRateLimit: "Wait {m} more minute(s) before sending again.",
   },
 };
 

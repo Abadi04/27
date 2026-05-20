@@ -243,7 +243,19 @@
           now: "\u0627\u0644\u0622\u0646",
           ttlSeconds: "< \u0661 \u062F",
           userPrefix: "\u0645\u0633\u062A\u062E\u062F\u0645",
-          demoMode: "\u0648\u0636\u0639 \u062A\u062C\u0631\u064A\u0628\u064A: \u0623\u0636\u0641 \u0645\u0641\u0627\u062A\u064A\u062D Supabase \u0644\u064A\u0635\u0628\u062D \u062D\u0642\u064A\u0642\u064A\u064B\u0627."
+          demoMode: "\u0648\u0636\u0639 \u062A\u062C\u0631\u064A\u0628\u064A: \u0623\u0636\u0641 \u0645\u0641\u0627\u062A\u064A\u062D Supabase \u0644\u064A\u0635\u0628\u062D \u062D\u0642\u064A\u0642\u064A\u064B\u0627.",
+          // Arena
+          arenaNav: "\u0627\u0644\u0633\u0627\u062D\u0629",
+          homeNav: "\u0627\u0644\u0645\u062D\u0627\u062F\u062B\u0627\u062A",
+          arenaEmpty: "\u0644\u0627 \u062A\u0648\u062C\u062F \u0631\u0633\u0627\u0626\u0644 \u0628\u0639\u062F. \u0643\u0646 \u0623\u0648\u0644 \u0645\u0646 \u064A\u0643\u062A\u0628.",
+          arenaPlaceholder: "\u0634\u0627\u0631\u0643\u0647\u0645 \u0645\u0627 \u064A\u062F\u0648\u0631 \u0641\u064A \u0628\u0627\u0644\u0643\u2026 \u062A\u062E\u062A\u0641\u064A \u062E\u0644\u0627\u0644 \u0666\u0660 \u062F\u0642\u064A\u0642\u0629",
+          arenaSend: "\u0623\u0631\u0633\u0644",
+          arenaDelete: "\u062D\u0630\u0641",
+          arenaLoadError: "\u062A\u0639\u0630\u0631 \u062A\u062D\u0645\u064A\u0644 \u0627\u0644\u0633\u0627\u062D\u0629.",
+          arenaSendError: "\u062A\u0639\u0630\u0631 \u0625\u0631\u0633\u0627\u0644 \u0627\u0644\u0631\u0633\u0627\u0644\u0629.",
+          arenaTooLong: "\u0627\u0644\u062D\u062F \u0627\u0644\u0623\u0642\u0635\u0649 \u0662\u0668\u0660 \u062D\u0631\u0641\u0627\u064B.",
+          arenaOffensive: "\u0647\u0630\u0627 \u0627\u0644\u0645\u062D\u062A\u0648\u0649 \u063A\u064A\u0631 \u0645\u0633\u0645\u0648\u062D \u0628\u0647.",
+          arenaRateLimit: "\u0627\u0646\u062A\u0638\u0631 {m} \u062F\u0642\u064A\u0642\u0629 \u0642\u0628\u0644 \u0627\u0644\u0625\u0631\u0633\u0627\u0644 \u0645\u062C\u062F\u062F\u0627\u064B."
         },
         en: {
           headerStatus: "Encrypted \xB7 No login",
@@ -396,7 +408,19 @@
           now: "Now",
           ttlSeconds: "< 1m",
           userPrefix: "User",
-          demoMode: "Demo mode: add Supabase keys to make it real."
+          demoMode: "Demo mode: add Supabase keys to make it real.",
+          // Arena
+          arenaNav: "Arena",
+          homeNav: "Chats",
+          arenaEmpty: "No messages yet. Be the first to write.",
+          arenaPlaceholder: "Share what's on your mind\u2026 vanishes in 60 min",
+          arenaSend: "Send",
+          arenaDelete: "Delete",
+          arenaLoadError: "Could not load the arena.",
+          arenaSendError: "Could not send the message.",
+          arenaTooLong: `Max ${280} characters.`,
+          arenaOffensive: "This content is not allowed.",
+          arenaRateLimit: "Wait {m} more minute(s) before sending again."
         }
       };
     }
@@ -2032,6 +2056,310 @@
     $("qrModal").hidden = true;
   }
 
+  // public/js/arena.js
+  init_db();
+  init_state();
+  init_i18n();
+  init_utils();
+  var arena = {
+    messages: [],
+    subscription: null,
+    countdownTimer: null,
+    lastSentAt: 0
+  };
+  var RATE_LIMIT_MS = 3 * 60 * 1e3;
+  var MAX_CHARS = 280;
+  var EXPIRE_MS = 60 * 60 * 1e3;
+  var BLOCKED = [
+    "fuck",
+    "shit",
+    "bitch",
+    "cunt",
+    "nigger",
+    "faggot",
+    "\u062E\u0631\u0627",
+    "\u0643\u0644\u0628",
+    "\u0639\u0627\u0647\u0631",
+    "\u062D\u0645\u0627\u0631",
+    "\u0634\u0631\u0645\u0648\u0637\u0629",
+    "\u0632\u0628\u0627\u0644\u0629",
+    "\u0642\u062D\u0628\u0629",
+    "\u0645\u0646\u064A\u0648\u0643"
+  ];
+  function isOffensive(text) {
+    const lower = text.toLowerCase();
+    return BLOCKED.some((w) => lower.includes(w));
+  }
+  function esc(text) {
+    return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  }
+  function shapeAvatar(anonId) {
+    const seed = [...String(anonId)].reduce((acc, ch) => acc * 31 + ch.charCodeAt(0) & 16777215, 0);
+    const hue = seed % 360;
+    const sat = 50 + seed % 35;
+    const lgt = 52 + seed % 20;
+    const color = `hsl(${hue},${sat}%,${lgt}%)`;
+    const idx = seed % 5;
+    const shapes = [
+      `<circle cx="20" cy="20" r="14"/>`,
+      `<polygon points="20,6 34,34 6,34"/>`,
+      `<rect x="6" y="6" width="28" height="28" rx="5"/>`,
+      `<polygon points="20,4 34,12 34,28 20,36 6,28 6,12"/>`,
+      `<polygon points="20,5 32,13 28,30 12,30 8,13"/>`
+    ];
+    return `<svg width="36" height="36" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <g fill="${color}">${shapes[idx]}</g>
+  </svg>`;
+  }
+  function countdown(expiresAt) {
+    const ms = Math.max(0, new Date(expiresAt).getTime() - Date.now());
+    const m = Math.floor(ms / 6e4);
+    const s = Math.floor(ms % 6e4 / 1e3);
+    return `${m}:${String(s).padStart(2, "0")}`;
+  }
+  function updateArenaBadge() {
+    const badge = $("arenaBadge");
+    if (!badge) return;
+    const count = arena.messages.filter(
+      (m) => new Date(m.expires_at).getTime() > Date.now()
+    ).length;
+    badge.textContent = count;
+    badge.hidden = count === 0;
+  }
+  function renderArenaFeed() {
+    const feed = $("arenaFeed");
+    if (!feed) return;
+    const t = i18n[state.currentLang];
+    const now = Date.now();
+    const live = arena.messages.filter((m) => new Date(m.expires_at).getTime() > now).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    if (!live.length) {
+      feed.innerHTML = `<div class="arena-empty">
+      <div class="arena-empty-icon" aria-hidden="true">\u26A1</div>
+      <p>${esc(t.arenaEmpty)}</p>
+    </div>`;
+      return;
+    }
+    const myId = state.currentProfile?.id || "demo-self";
+    feed.innerHTML = live.map((msg) => {
+      const isMine = msg.anonymous_id === myId;
+      const remaining = Math.max(0, new Date(msg.expires_at).getTime() - now);
+      const urgentClass = remaining < 5 * 60 * 1e3 ? " arena-msg--urgent" : "";
+      const mineClass = isMine ? " arena-msg--mine" : "";
+      return `
+      <div class="arena-msg${urgentClass}${mineClass}"
+           data-id="${esc(msg.id)}"
+           data-expires="${esc(msg.expires_at)}">
+        <div class="arena-avatar">${shapeAvatar(msg.anonymous_id)}</div>
+        <div class="arena-bubble">
+          <p class="arena-msg-text">${esc(msg.content)}</p>
+          <span class="arena-msg-ttl" data-expires="${esc(msg.expires_at)}">
+            ${countdown(msg.expires_at)}
+          </span>
+        </div>
+        ${isMine ? `<button class="arena-delete-btn" data-id="${esc(msg.id)}" type="button" aria-label="${esc(t.arenaDelete)}">\xD7</button>` : ""}
+      </div>`;
+    }).join("");
+    feed.querySelectorAll(".arena-delete-btn").forEach((btn) => {
+      btn.addEventListener("click", () => deleteArenaMessage(btn.dataset.id));
+    });
+  }
+  function startCountdownTicker() {
+    if (arena.countdownTimer) clearInterval(arena.countdownTimer);
+    arena.countdownTimer = setInterval(() => {
+      const now = Date.now();
+      document.querySelectorAll(".arena-msg-ttl[data-expires]").forEach((el) => {
+        const ms = new Date(el.dataset.expires).getTime() - now;
+        if (ms <= 0) {
+          const msgEl = el.closest(".arena-msg");
+          if (msgEl && !msgEl.classList.contains("arena-msg--fading")) {
+            msgEl.classList.add("arena-msg--fading");
+            setTimeout(() => {
+              const id = msgEl.dataset.id;
+              arena.messages = arena.messages.filter((m) => m.id !== id);
+              renderArenaFeed();
+              updateArenaBadge();
+            }, 820);
+          }
+        } else {
+          el.textContent = countdown(el.dataset.expires);
+        }
+      });
+    }, 1e3);
+  }
+  function buildDemoMessages() {
+    const now = Date.now();
+    return [
+      {
+        id: "d1",
+        anonymous_id: "seed-cafe42",
+        content: "\u0645\u0631\u062D\u0628\u0627\u064B \u0628\u0627\u0644\u062C\u0645\u064A\u0639 \u0641\u064A \u0627\u0644\u0633\u0627\u062D\u0629! \u0643\u0644 \u0631\u0633\u0627\u0644\u0629 \u0647\u0646\u0627 \u062A\u062E\u062A\u0641\u064A \u062E\u0644\u0627\u0644 \u0633\u0627\u0639\u0629.",
+        created_at: new Date(now - 8 * 6e4).toISOString(),
+        expires_at: new Date(now + 52 * 6e4).toISOString()
+      },
+      {
+        id: "d2",
+        anonymous_id: "seed-7b3f91",
+        content: "Hello from the arena! Anonymous, temporary, real.",
+        created_at: new Date(now - 18 * 6e4).toISOString(),
+        expires_at: new Date(now + 42 * 6e4).toISOString()
+      },
+      {
+        id: "d3",
+        anonymous_id: "seed-a1d55e",
+        content: "\u0644\u0627 \u0647\u0648\u064A\u0629\u060C \u0644\u0627 \u062A\u0627\u0631\u064A\u062E \u2014 \u0641\u0642\u0637 \u0627\u0644\u0643\u0644\u0645\u0627\u062A \u0648\u0647\u064A \u062A\u062A\u0644\u0627\u0634\u0649.",
+        created_at: new Date(now - 35 * 6e4).toISOString(),
+        expires_at: new Date(now + 25 * 6e4).toISOString()
+      },
+      {
+        id: "d4",
+        anonymous_id: "seed-2c8e04",
+        content: "\u0623\u0643\u062A\u0628 \u0645\u0627 \u062A\u0634\u0627\u0621. \u0633\u064A\u062E\u062A\u0641\u064A \u0642\u0631\u064A\u0628\u0627\u064B \u0643\u0623\u0646\u0647 \u0644\u0645 \u064A\u0643\u0646.",
+        created_at: new Date(now - 50 * 6e4).toISOString(),
+        expires_at: new Date(now + 10 * 6e4).toISOString()
+      }
+    ];
+  }
+  async function loadArena() {
+    if (!isLiveMode()) {
+      arena.messages = buildDemoMessages();
+      renderArenaFeed();
+      updateArenaBadge();
+      startCountdownTicker();
+      return;
+    }
+    try {
+      const { data, error } = await db.from("arena_messages").select("id, anonymous_id, content, created_at, expires_at").gt("expires_at", (/* @__PURE__ */ new Date()).toISOString()).order("created_at", { ascending: false });
+      if (error) throw error;
+      arena.messages = data || [];
+    } catch {
+      showToast(i18n[state.currentLang].arenaLoadError);
+      arena.messages = [];
+    }
+    renderArenaFeed();
+    updateArenaBadge();
+    startCountdownTicker();
+  }
+  function subscribeToArena() {
+    if (!isLiveMode() || arena.subscription) return;
+    arena.subscription = db.channel("arena-realtime").on(
+      "postgres_changes",
+      { event: "INSERT", schema: "public", table: "arena_messages" },
+      (payload) => {
+        const msg = payload.new;
+        if (new Date(msg.expires_at).getTime() <= Date.now()) return;
+        if (arena.messages.find((m) => m.id === msg.id)) return;
+        arena.messages.push(msg);
+        renderArenaFeed();
+        updateArenaBadge();
+      }
+    ).on(
+      "postgres_changes",
+      { event: "DELETE", schema: "public", table: "arena_messages" },
+      (payload) => {
+        arena.messages = arena.messages.filter((m) => m.id !== payload.old.id);
+        renderArenaFeed();
+        updateArenaBadge();
+      }
+    ).subscribe();
+  }
+  async function sendArenaMessage() {
+    const input = $("arenaInput");
+    const content = (input?.value || "").trim();
+    const t = i18n[state.currentLang];
+    if (!content) return;
+    if (content.length > MAX_CHARS) {
+      showToast(t.arenaTooLong);
+      return;
+    }
+    if (isOffensive(content)) {
+      showToast(t.arenaOffensive);
+      return;
+    }
+    const now = Date.now();
+    if (now - arena.lastSentAt < RATE_LIMIT_MS) {
+      const waitMs = RATE_LIMIT_MS - (now - arena.lastSentAt);
+      const waitMin = Math.ceil(waitMs / 6e4);
+      showToast(t.arenaRateLimit.replace("{m}", waitMin));
+      return;
+    }
+    if (!isLiveMode()) {
+      arena.messages.push({
+        id: `local-${Date.now()}`,
+        anonymous_id: "demo-self",
+        content,
+        created_at: (/* @__PURE__ */ new Date()).toISOString(),
+        expires_at: new Date(Date.now() + EXPIRE_MS).toISOString()
+      });
+      arena.lastSentAt = Date.now();
+      if (input) input.value = "";
+      updateCharCount();
+      renderArenaFeed();
+      updateArenaBadge();
+      return;
+    }
+    const sendBtn = $("arenaSendBtn");
+    if (sendBtn) {
+      sendBtn.disabled = true;
+    }
+    try {
+      const { error } = await db.from("arena_messages").insert({
+        anonymous_id: state.currentProfile.id,
+        content,
+        expires_at: new Date(Date.now() + EXPIRE_MS).toISOString()
+      });
+      if (error) throw error;
+      arena.lastSentAt = Date.now();
+      if (input) input.value = "";
+      updateCharCount();
+    } catch {
+      showToast(t.arenaSendError);
+    } finally {
+      if (sendBtn) {
+        sendBtn.disabled = false;
+      }
+    }
+  }
+  async function deleteArenaMessage(msgId) {
+    if (!isLiveMode()) {
+      arena.messages = arena.messages.filter((m) => m.id !== msgId);
+      renderArenaFeed();
+      updateArenaBadge();
+      return;
+    }
+    try {
+      const { error } = await db.from("arena_messages").delete().eq("id", msgId).eq("anonymous_id", state.currentProfile.id);
+      if (error) throw error;
+      arena.messages = arena.messages.filter((m) => m.id !== msgId);
+      renderArenaFeed();
+      updateArenaBadge();
+    } catch {
+      showToast(i18n[state.currentLang].arenaSendError);
+    }
+  }
+  function updateCharCount() {
+    const input = $("arenaInput");
+    const counter = $("arenaCharCount");
+    if (!counter) return;
+    const remaining = MAX_CHARS - (input?.value?.length || 0);
+    counter.textContent = remaining;
+    counter.style.color = remaining < 30 ? "rgba(244,63,94,0.9)" : "";
+  }
+  function handleArenaInput() {
+    updateCharCount();
+  }
+  function updateArenaLang() {
+    const t = i18n[state.currentLang];
+    const ph = $("arenaInput");
+    if (ph) ph.placeholder = t.arenaPlaceholder;
+    const btn = $("arenaSendBtn");
+    if (btn) btn.textContent = t.arenaSend;
+    const label = $("arenaNavLabel");
+    if (label) label.textContent = t.arenaNav;
+    const homeLabel = $("homeNavLabel");
+    if (homeLabel) homeLabel.textContent = t.homeNav;
+    renderArenaFeed();
+  }
+
   // public/js/temporary.js
   init_db();
   init_state();
@@ -2161,7 +2489,8 @@
     const root = document.documentElement;
     root.lang = lang;
     root.dir = lang === "ar" ? "rtl" : "ltr";
-    $("headerStatus").textContent = isLiveMode() ? t.headerStatusLive : t.headerStatus;
+    const headerStatus = $("headerStatus");
+    if (headerStatus) headerStatus.textContent = isLiveMode() ? t.headerStatusLive : t.headerStatus;
     $("langToggle").textContent = t.langToggle;
     $("settingsToggle").textContent = t.settings;
     $("heroTagline").textContent = t.heroTagline;
@@ -2181,7 +2510,10 @@
     }
     $("chatsHeader").textContent = t.chatsHeader;
     if ($("emptyText")) $("emptyText").textContent = t.emptyText;
-    $("footerText").textContent = state.currentProfile?.public_code ? t.footerTextWithCode.replace("{code}", state.currentProfile.public_code) : t.footerText;
+    const footerEl = $("footerText");
+    if (footerEl) {
+      footerEl.textContent = state.currentProfile?.public_code ? t.footerTextWithCode.replace("{code}", state.currentProfile.public_code) : t.footerText;
+    }
     $("backToChats").textContent = t.back;
     $("backFromSettings").textContent = t.back;
     $("chatViewStatus").textContent = t.chatExpiry;
@@ -2232,6 +2564,7 @@
     $("burnMessageNowBtn").textContent = t.burnNow;
     updateProfileCodeUI();
     updateSettingsToggles();
+    updateArenaLang();
     updateReplyComposer();
     if (!$("displayNameInput").dataset.edited) {
       state.displayName = lang === "ar" ? "\u0632\u0627\u0626\u0631 27" : "Guest 27";
@@ -2269,11 +2602,20 @@
   init_demo();
   function showHome() {
     stopChatCountdown();
+    $("heroSection").hidden = false;
+    $("arenaView").hidden = true;
     const divider = document.querySelector(".section-divider");
     if (divider) divider.hidden = true;
     $("chatsSection").hidden = false;
     $("chatView").hidden = true;
     $("settingsView").hidden = true;
+    $("tabHome")?.setAttribute("aria-selected", "true");
+    $("tabHome")?.classList.add("tab-btn--active");
+    $("tabArena")?.setAttribute("aria-selected", "false");
+    $("tabArena")?.classList.remove("tab-btn--active");
+    $("tabBar")?.classList.remove("tab-bar--hidden");
+    const fab = $("fabBtn");
+    if (fab) fab.hidden = false;
   }
   async function openChat(chatId) {
     const chat = getChat(chatId);
@@ -2290,7 +2632,10 @@
     if (chatDivider) chatDivider.hidden = true;
     $("chatsSection").hidden = true;
     $("settingsView").hidden = true;
+    $("arenaView").hidden = true;
     $("chatView").hidden = false;
+    $("tabBar")?.classList.add("tab-bar--hidden");
+    $("fabBtn").hidden = true;
     $("chatView").dataset.activeChat = chat.id;
     $("chatViewName").textContent = getChatName(chat);
     $("chatViewStatus").textContent = t.loadingConversation;
@@ -2343,12 +2688,39 @@
     $("heroSection").hidden = true;
     $("chatsSection").hidden = true;
     $("chatView").hidden = true;
+    $("arenaView").hidden = true;
     const settingsDivider = document.querySelector(".section-divider");
     if (settingsDivider) settingsDivider.hidden = true;
     $("settingsView").hidden = false;
+    $("tabBar")?.classList.add("tab-bar--hidden");
+    $("fabBtn").hidden = true;
     window.location.hash = "#settings";
   }
   function closeSettings() {
+    showHome();
+    window.location.hash = "";
+  }
+  function openArena() {
+    stopChatCountdown();
+    $("heroSection").hidden = true;
+    $("chatsSection").hidden = true;
+    $("chatView").hidden = true;
+    $("settingsView").hidden = true;
+    $("arenaView").hidden = false;
+    $("tabHome")?.setAttribute("aria-selected", "false");
+    $("tabHome")?.classList.remove("tab-btn--active");
+    $("tabArena")?.setAttribute("aria-selected", "true");
+    $("tabArena")?.classList.add("tab-btn--active");
+    $("tabBar")?.classList.remove("tab-bar--hidden");
+    $("fabBtn").hidden = true;
+    window.location.hash = "#arena";
+  }
+  function closeArena() {
+    $("arenaView").hidden = true;
+    $("tabArena")?.setAttribute("aria-selected", "false");
+    $("tabArena")?.classList.remove("tab-btn--active");
+    $("tabHome")?.setAttribute("aria-selected", "true");
+    $("tabHome")?.classList.add("tab-btn--active");
     showHome();
     window.location.hash = "";
   }
@@ -2363,7 +2735,14 @@
       await openChat(chatId);
       return;
     }
-    if (route === "settings") openSettings();
+    if (route === "settings") {
+      openSettings();
+      return;
+    }
+    if (route === "arena") {
+      openArena();
+      return;
+    }
   }
 
   // public/js/app-entry.js
@@ -2656,6 +3035,7 @@
     if (!db) {
       await loadConversationRequests();
       renderChats();
+      loadArena();
       registerPwa();
       showToast(i18n[state.currentLang].demoMode);
       return;
@@ -2673,6 +3053,8 @@
       registerPwa();
       await loadConversations();
       subscribeToRequests();
+      subscribeToArena();
+      loadArena();
       setLanguage(state.currentLang);
       await openRouteFromHash();
     } catch (error) {
@@ -2682,6 +3064,7 @@
       } else {
         handleAsyncError(error, i18n[state.currentLang].errorChats);
       }
+      loadArena();
       renderChats();
     }
   }
@@ -2866,6 +3249,25 @@
   document.addEventListener("visibilitychange", () => {
     if (document.hidden && !$("chatView").hidden) setPanicMode(true);
   });
+  $("tabArena").addEventListener("click", async () => {
+    openArena();
+    await loadArena().catch(() => {
+    });
+  });
+  $("tabHome").addEventListener("click", () => {
+    closeArena();
+  });
+  $("arenaSendBtn").addEventListener(
+    "click",
+    () => sendArenaMessage().catch((e) => handleAsyncError(e, i18n[state.currentLang].arenaSendError))
+  );
+  $("arenaInput").addEventListener("input", handleArenaInput);
+  $("arenaInput").addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      sendArenaMessage().catch((e2) => handleAsyncError(e2, i18n[state.currentLang].arenaSendError));
+    }
+  });
   window.addEventListener("hashchange", () => {
     openRouteFromHash().catch(
       (e) => handleAsyncError(e, i18n[state.currentLang].errorChats)
@@ -2897,14 +3299,17 @@
     if (!fab) return;
     const inChat = $("chatView") && !$("chatView").hidden;
     const inSettings = $("settingsView") && !$("settingsView").hidden;
-    fab.hidden = inChat || inSettings;
+    const inArena = $("arenaView") && !$("arenaView").hidden;
+    fab.hidden = inChat || inSettings || inArena;
   }
   var _fabObserver = new MutationObserver(updateFabVisibility);
   function _attachFabObserver() {
     const chatView = $("chatView");
     const settingsView = $("settingsView");
+    const arenaView = $("arenaView");
     if (chatView) _fabObserver.observe(chatView, { attributes: true, attributeFilter: ["hidden"] });
     if (settingsView) _fabObserver.observe(settingsView, { attributes: true, attributeFilter: ["hidden"] });
+    if (arenaView) _fabObserver.observe(arenaView, { attributes: true, attributeFilter: ["hidden"] });
   }
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", _attachFabObserver);

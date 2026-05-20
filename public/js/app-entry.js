@@ -53,7 +53,11 @@ import {
 } from "./media.js";
 import { registerPwa } from "./pwa.js";
 import { startOnboarding } from "./onboarding.js";
-import { showSplash } from "./splash.js";
+import {
+  loadArena, subscribeToArena, unsubscribeFromArena,
+  sendArenaMessage, handleArenaInput, updateArenaLang, updateArenaBadge,
+} from "./arena.js";
+import { openArena, closeArena } from "./routing.js";
 
 // ============================================================
 // UI Handler: Start chat from code input
@@ -156,6 +160,7 @@ async function boot() {
   if (!db) {
     await loadConversationRequests();
     renderChats();
+    loadArena();
     registerPwa();
     showToast(i18n[state.currentLang].demoMode);
     return;
@@ -176,16 +181,18 @@ async function boot() {
     registerPwa();
     await loadConversations();
     subscribeToRequests();
+    subscribeToArena();
+    loadArena(); // load arena in background — non-blocking
     setLanguage(state.currentLang);
     await openRouteFromHash();
   } catch (error) {
     if (error.message === "boot_timeout") {
-      // Supabase took too long — stay on demo data, show gentle warning
       showToast(i18n[state.currentLang].demoMode);
       console.warn("boot: Supabase timeout — running in demo mode");
     } else {
       handleAsyncError(error, i18n[state.currentLang].errorChats);
     }
+    loadArena();
     renderChats();
   }
 }
@@ -404,6 +411,32 @@ document.addEventListener("visibilitychange", () => {
 // visibilitychange below is the correct trigger for panic mode
 
 // ============================================================
+// Arena tab navigation
+// ============================================================
+$("tabArena").addEventListener("click", async () => {
+  openArena();
+  // Load arena if not already loaded (handles case where badge is 0)
+  await loadArena().catch(() => {});
+});
+
+$("tabHome").addEventListener("click", () => {
+  closeArena();
+});
+
+// Arena send
+$("arenaSendBtn").addEventListener("click", () =>
+  sendArenaMessage().catch((e) => handleAsyncError(e, i18n[state.currentLang].arenaSendError))
+);
+
+$("arenaInput").addEventListener("input", handleArenaInput);
+$("arenaInput").addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && !e.shiftKey) {
+    e.preventDefault();
+    sendArenaMessage().catch((e) => handleAsyncError(e, i18n[state.currentLang].arenaSendError));
+  }
+});
+
+// ============================================================
 // Hash routing
 // ============================================================
 window.addEventListener("hashchange", () => {
@@ -438,10 +471,9 @@ window.setInterval(async () => {
 }, 60000);
 
 // ============================================================
-// Entry chain: Splash → Onboarding → Boot
-// Splash shows on first visit or after 30+ min inactivity
+// Attach onboarding → boot (swipe gestures now attached inside renderMessages)
 // ============================================================
-showSplash(() => startOnboarding(() => boot()));
+startOnboarding(() => boot());
 
 // ============================================================
 // FAB: Floating Action Button
@@ -451,7 +483,8 @@ function updateFabVisibility() {
   if (!fab) return;
   const inChat = $("chatView") && !$("chatView").hidden;
   const inSettings = $("settingsView") && !$("settingsView").hidden;
-  fab.hidden = inChat || inSettings;
+  const inArena = $("arenaView") && !$("arenaView").hidden;
+  fab.hidden = inChat || inSettings || inArena;
 }
 
 // We observe chatView/settingsView visibility changes via MutationObserver
@@ -459,8 +492,10 @@ const _fabObserver = new MutationObserver(updateFabVisibility);
 function _attachFabObserver() {
   const chatView = $("chatView");
   const settingsView = $("settingsView");
+  const arenaView = $("arenaView");
   if (chatView) _fabObserver.observe(chatView, { attributes: true, attributeFilter: ["hidden"] });
   if (settingsView) _fabObserver.observe(settingsView, { attributes: true, attributeFilter: ["hidden"] });
+  if (arenaView) _fabObserver.observe(arenaView, { attributes: true, attributeFilter: ["hidden"] });
 }
 // Script loads at end of <body> so DOM is already ready — DOMContentLoaded may have already fired
 if (document.readyState === "loading") {

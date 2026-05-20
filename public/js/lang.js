@@ -4,6 +4,7 @@ import { $, isLiveMode } from "./utils.js";
 import { renderChats, renderMessages, getChat, updateChatCountdown } from "./render.js";
 import { updateProfileCodeUI } from "./profile.js";
 import { updateSettingsToggles, updatePrivacyModeUI } from "./settings.js";
+import { updateArenaLang } from "./arena.js";
 import { showEntryCard } from "./temporary.js";
 import { updateReplyComposer } from "./messages.js";
 
@@ -19,7 +20,8 @@ export function setLanguage(lang) {
   root.dir = lang === "ar" ? "rtl" : "ltr";
 
   // Header
-  $("headerStatus").textContent = isLiveMode() ? t.headerStatusLive : t.headerStatus;
+  const headerStatus = $("headerStatus");
+  if (headerStatus) headerStatus.textContent = isLiveMode() ? t.headerStatusLive : t.headerStatus;
   $("langToggle").textContent = t.langToggle;
   $("settingsToggle").textContent = t.settings;
 
@@ -45,9 +47,12 @@ export function setLanguage(lang) {
   // Chats section
   $("chatsHeader").textContent = t.chatsHeader;
   if ($("emptyText")) $("emptyText").textContent = t.emptyText;
-  $("footerText").textContent = state.currentProfile?.public_code
-    ? t.footerTextWithCode.replace("{code}", state.currentProfile.public_code)
-    : t.footerText;
+  const footerEl = $("footerText");
+  if (footerEl) {
+    footerEl.textContent = state.currentProfile?.public_code
+      ? t.footerTextWithCode.replace("{code}", state.currentProfile.public_code)
+      : t.footerText;
+  }
 
   // Chat view
   $("backToChats").textContent = t.back;
@@ -113,6 +118,7 @@ export function setLanguage(lang) {
 
   updateProfileCodeUI();
   updateSettingsToggles();
+  updateArenaLang();
   updateReplyComposer();
 
   // Reset placeholder name if user hasn't edited it
