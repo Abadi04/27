@@ -2770,7 +2770,7 @@ html[dir="rtl"] .setting-switch-row.is-on .switch-thumb {
 }
 
 .tab-btn--active {
-  color: #b48cff;
+  color: var(--text-primary);
 }
 
 .tab-icon {
@@ -2792,7 +2792,7 @@ html[dir="rtl"] .setting-switch-row.is-on .switch-thumb {
   min-width: 18px;
   height: 18px;
   padding: 0 5px;
-  background: #b48cff;
+  background: var(--text-primary);
   color: #000;
   border-radius: 99px;
   font-size: 0.65rem;

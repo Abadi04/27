@@ -93,7 +93,7 @@
     "public/js/i18n.js"() {
       i18n = {
         ar: {
-          headerStatus: "\u0645\u0634\u0641\u0651\u0631 \xB7 \u0628\u062F\u0648\u0646 \u062A\u0633\u062C\u064A\u0644",
+          headerStatus: "\u062E\u0627\u0635 \xB7 \u0628\u062F\u0648\u0646 \u062A\u0633\u062C\u064A\u0644",
           headerStatusLive: "\u0645\u062A\u0635\u0644 \xB7 Supabase Realtime",
           langToggle: "\u0627\u0644\u0639\u0631\u0628\u064A\u0629 / English",
           heroTagline: "\u062E\u0627\u0635. \u0633\u0631\u064A\u0639. \u064A\u062E\u062A\u0641\u064A.",
@@ -131,7 +131,7 @@
           copied: "\u062A\u0645 \u0627\u0644\u0646\u0633\u062E",
           chatsHeader: "\u0627\u0644\u0645\u062D\u0627\u062F\u062B\u0627\u062A \u0627\u0644\u0646\u0634\u0637\u0629",
           emptyTitle: "\u0644\u0627 \u062A\u0648\u062C\u062F \u0645\u062D\u0627\u062F\u062B\u0627\u062A \u0628\u0639\u062F",
-          emptyText: "\u0623\u062F\u062E\u0644 \u0631\u0642\u0645 \u0645\u0633\u062A\u062E\u062F\u0645 \u0623\u0639\u0644\u0627\u0647 \u0644\u0628\u062F\u0621 \u0645\u062D\u0627\u062F\u062B\u0629 \u0645\u0634\u0641\u0651\u0631\u0629 \u062A\u062E\u062A\u0641\u064A \u062A\u0644\u0642\u0627\u0626\u064A\u064B\u0627.",
+          emptyText: "\u0623\u062F\u062E\u0644 \u0631\u0642\u0645 \u0645\u0633\u062A\u062E\u062F\u0645 \u0623\u0639\u0644\u0627\u0647 \u0644\u0628\u062F\u0621 \u0645\u062D\u0627\u062F\u062B\u0629 \u062E\u0627\u0635\u0629 \u062A\u062E\u062A\u0641\u064A \u062A\u0644\u0642\u0627\u0626\u064A\u064B\u0627.",
           footerText: "\u062C\u0645\u064A\u0639 \u0627\u0644\u0645\u062D\u0627\u062F\u062B\u0627\u062A \u062A\u064F\u062D\u0630\u0641 \u062A\u0644\u0642\u0627\u0626\u064A\u064B\u0627 \u0628\u0639\u062F \u0665 \u0633\u0627\u0639\u0627\u062A \u0645\u0646 \u0622\u062E\u0631 \u0631\u0633\u0627\u0644\u0629.",
           footerTextWithCode: "\u0631\u0642\u0645\u0643: {code} \xB7 \u062C\u0645\u064A\u0639 \u0627\u0644\u0645\u062D\u0627\u062F\u062B\u0627\u062A \u062A\u064F\u062D\u0630\u0641 \u062A\u0644\u0642\u0627\u0626\u064A\u064B\u0627 \u0628\u0639\u062F \u0665 \u0633\u0627\u0639\u0627\u062A.",
           back: "\u0631\u062C\u0648\u0639",
@@ -258,7 +258,7 @@
           arenaRateLimit: "\u0627\u0646\u062A\u0638\u0631 {m} \u062F\u0642\u064A\u0642\u0629 \u0642\u0628\u0644 \u0627\u0644\u0625\u0631\u0633\u0627\u0644 \u0645\u062C\u062F\u062F\u0627\u064B."
         },
         en: {
-          headerStatus: "Encrypted \xB7 No login",
+          headerStatus: "Private \xB7 No login",
           headerStatusLive: "Connected \xB7 Supabase Realtime",
           langToggle: "English / \u0627\u0644\u0639\u0631\u0628\u064A\u0629",
           heroTagline: "Private. Fast. Disappears.",
@@ -296,7 +296,7 @@
           copied: "Copied",
           chatsHeader: "Active chats",
           emptyTitle: "No conversations yet",
-          emptyText: "Enter a user code above to start an encrypted chat that auto-deletes.",
+          emptyText: "Enter a user code above to start a private chat that auto-deletes.",
           footerText: "All conversations are automatically deleted 5 hours after the last message.",
           footerTextWithCode: "Your code: {code} \xB7 All conversations auto-delete after 5 hours.",
           back: "Back",
@@ -553,16 +553,6 @@
   }
   function getPrivacyConfig(mode = state.privacyMode) {
     return PRIVACY_MODES[mode] || PRIVACY_MODES["5h"];
-  }
-  function getPrivacyLabel(mode, i18n2) {
-    const t = i18n2[state.currentLang];
-    return {
-      "10s_read": t.privacy10s,
-      "5m": t.privacy5m,
-      "1h": t.privacy1h,
-      "5h": t.privacy5h,
-      "close": t.privacyClose
-    }[mode] || t.privacy5h;
   }
   function getShareLink() {
     const code = state.currentProfile?.public_code || $("profileCodeValue")?.textContent?.trim() || "";
@@ -1118,19 +1108,6 @@
     if (last.mediaUrl) return last.fileName || t.attach;
     return last.text || t.emptyChat;
   }
-  function getChatPill(chat) {
-    const t = i18n[state.currentLang];
-    if (chat.burned) return t.burnedHeader;
-    if (chat.status === "blocked") return t.block;
-    return getPrivacyLabel(chat.privacyMode || "5h", i18n);
-  }
-  function getChatItemMeta(chat) {
-    const t = i18n[state.currentLang];
-    const preview = getChatPreview(chat);
-    const remaining = getChatExpiryTime(chat) - Date.now();
-    const expiry = remaining <= 0 ? t.expiredStateTitle : t.expiresIn.replace("{time}", formatRemaining(remaining, t));
-    return preview ? `${preview} \xB7 ${expiry}` : expiry;
-  }
   function getMessageStatusLabel(message) {
     const t = i18n[state.currentLang];
     if (message.burnAfterRead && message.readAt) return t.burnAfterRead;
@@ -1210,24 +1187,58 @@
       <span>${escapeHtml(label)}</span>
     </button>`;
   }
+  function getChatTimerProgress(chat) {
+    if (chat.burned || chat.status === "blocked") return 0;
+    const expiry = getChatExpiryTime(chat);
+    const remaining = expiry - Date.now();
+    if (remaining <= 0) return 0;
+    const total = FIVE_HOURS;
+    return Math.min(1, Math.max(0, remaining / total));
+  }
+  function renderTimerRing(progress, nearEnd) {
+    const R = 22;
+    const CX = 25;
+    const CY = 25;
+    const CIRC = 2 * Math.PI * R;
+    const dashoffset = CIRC * (1 - progress);
+    const strokeColor = nearEnd ? "#8B0000" : "hsl(220,55%,42%)";
+    return `<svg width="50" height="50" viewBox="0 0 50 50"
+      style="position:absolute;top:0;left:0;transform:rotate(-90deg)"
+      aria-hidden="true">
+    <circle cx="${CX}" cy="${CY}" r="${R}" fill="none"
+      stroke="#ffffff0a" stroke-width="1.5"/>
+    <circle cx="${CX}" cy="${CY}" r="${R}" fill="none"
+      stroke="${strokeColor}" stroke-width="1.5"
+      stroke-linecap="round"
+      stroke-dasharray="${CIRC.toFixed(2)}"
+      stroke-dashoffset="${dashoffset.toFixed(2)}"
+      style="transition:stroke-dashoffset .6s ease,stroke .6s ease"/>
+  </svg>`;
+  }
   function renderChatItem(chat, disabled = false) {
     const t = i18n[state.currentLang];
     const name = getChatName(chat);
     const hue = hashHue(chat.otherProfile?.avatar_seed || name);
-    const statusClass = chat.online ? "online" : "offline";
-    const stateClass = chat.burned ? "is-expired" : chat.status === "blocked" ? "is-blocked" : "";
-    const meta = chat.burned ? t.expiredStateTitle : chat.status === "blocked" ? t.blockedStateTitle : getChatItemMeta(chat);
+    const isExpired = chat.burned;
+    const stateClass = isExpired ? "is-expired" : chat.status === "blocked" ? "is-blocked" : "";
+    const preview = chat.burned ? t.expiredStateTitle : chat.status === "blocked" ? t.blockedStateTitle : getChatPreview(chat);
+    const remaining = getChatExpiryTime(chat) - Date.now();
+    const statusLabel = chat.burned || chat.status === "blocked" ? "" : remaining <= 0 ? t.expiredStateTitle : t.expiresIn.replace("{time}", formatRemaining(remaining, t));
+    const progress = getChatTimerProgress(chat);
+    const nearEnd = !isExpired && progress < 0.2;
     return `
-    <div class="chat-item ${disabled ? "state-only" : ""} ${stateClass}"
-         role="button" tabindex="0"
+    <div class="chat-item ${disabled ? "state-only" : ""} ${stateClass} ${nearEnd ? "near-end" : ""}"
+         role="button" tabindex="${isExpired ? -1 : 0}"
          data-chat-id="${escapeHtml(chat.id)}" aria-label="${escapeHtml(name)}">
-      <div class="chat-avatar" style="--avatar-hue: ${hue}">${escapeHtml(getInitials(name))}</div>
+      <div class="chat-avatar-ring">
+        ${renderTimerRing(progress, nearEnd)}
+        <div class="chat-avatar" style="--avatar-hue: ${hue}">${escapeHtml(getInitials(name))}</div>
+      </div>
       <div class="chat-info">
         <div class="chat-name">${escapeHtml(name)}</div>
-        <div class="chat-meta">${escapeHtml(meta)}</div>
+        ${preview ? `<div class="chat-meta">${escapeHtml(preview)}</div>` : ""}
+        ${statusLabel ? `<div class="chat-status-label ${nearEnd ? "near-end" : ""}">${escapeHtml(statusLabel)}</div>` : ""}
       </div>
-      <div class="chat-pill">${escapeHtml(getChatPill(chat))}</div>
-      <div class="chat-status ${statusClass}" aria-hidden="true"></div>
     </div>`;
   }
   function renderRequestItem(request) {
@@ -1587,7 +1598,7 @@
     let { data: target, error: targetError } = await db.from("profiles").select("*").eq("public_code", code).eq("code_visible", true).maybeSingle();
     if (targetError && isMissingRelationError(targetError)) {
       const fb = await db.from("profiles").select("*").eq("public_code", code).maybeSingle();
-      target = fb.data;
+      target = fb.data && fb.data.code_visible !== false ? fb.data : null;
       targetError = fb.error;
     }
     if (targetError) throw targetError;
@@ -2830,7 +2841,15 @@
   init_config();
   init_utils();
   async function registerPwa() {
-    if (!("Notification" in window) || !("serviceWorker" in navigator)) return;
+    if (!("serviceWorker" in navigator)) return;
+    let registration;
+    try {
+      registration = await navigator.serviceWorker.register(`${getAppBasePath()}sw.js`);
+    } catch (error) {
+      console.warn(error);
+      return;
+    }
+    if (!("Notification" in window)) return;
     if (Notification.permission === "default") {
       try {
         await Notification.requestPermission();
@@ -2840,7 +2859,6 @@
     }
     if (Notification.permission !== "granted") return;
     try {
-      const registration = await navigator.serviceWorker.register(`${getAppBasePath()}sw.js`);
       if (VAPID_PUBLIC_KEY && state.currentProfile?.id && db && registration.pushManager) {
         const subscription = await registration.pushManager.subscribe({
           userVisibleOnly: true,

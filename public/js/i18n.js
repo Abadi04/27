@@ -1,6 +1,6 @@
 export const i18n = {
   ar: {
-    headerStatus: "مشفّر · بدون تسجيل",
+    headerStatus: "خاص · بدون تسجيل",
     headerStatusLive: "متصل · Supabase Realtime",
     langToggle: "العربية / English",
     heroTagline: "خاص. سريع. يختفي.",
@@ -38,7 +38,7 @@ export const i18n = {
     copied: "تم النسخ",
     chatsHeader: "المحادثات النشطة",
     emptyTitle: "لا توجد محادثات بعد",
-    emptyText: "أدخل رقم مستخدم أعلاه لبدء محادثة مشفّرة تختفي تلقائيًا.",
+    emptyText: "أدخل رقم مستخدم أعلاه لبدء محادثة خاصة تختفي تلقائيًا.",
     footerText: "جميع المحادثات تُحذف تلقائيًا بعد ٥ ساعات من آخر رسالة.",
     footerTextWithCode: "رقمك: {code} · جميع المحادثات تُحذف تلقائيًا بعد ٥ ساعات.",
     back: "رجوع",
@@ -165,7 +165,7 @@ export const i18n = {
     arenaRateLimit: "انتظر {m} دقيقة قبل الإرسال مجدداً.",
   },
   en: {
-    headerStatus: "Encrypted · No login",
+    headerStatus: "Private · No login",
     headerStatusLive: "Connected · Supabase Realtime",
     langToggle: "English / العربية",
     heroTagline: "Private. Fast. Disappears.",
@@ -203,7 +203,7 @@ export const i18n = {
     copied: "Copied",
     chatsHeader: "Active chats",
     emptyTitle: "No conversations yet",
-    emptyText: "Enter a user code above to start an encrypted chat that auto-deletes.",
+    emptyText: "Enter a user code above to start a private chat that auto-deletes.",
     footerText: "All conversations are automatically deleted 5 hours after the last message.",
     footerTextWithCode: "Your code: {code} · All conversations auto-delete after 5 hours.",
     back: "Back",

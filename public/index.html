@@ -5,11 +5,27 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="description" content="27 — محادثات خاصة، سريعة، وتُحذف تلقائيًا. تواصل بدون تسجيل.">
     <meta name="theme-color" content="#000000">
+    <link rel="canonical" href="https://abadi04.github.io/27/">
+    <meta name="robots" content="index, follow">
+    <meta name="referrer" content="no-referrer">
+
+    <!-- Open Graph / social sharing -->
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="27">
+    <meta property="og:title" content="27 — خاص. سريع. يختفي.">
+    <meta property="og:description" content="محادثات خاصة ومؤقتة بدون تسجيل. الرسائل تختفي تلقائيًا.">
+    <meta property="og:url" content="https://abadi04.github.io/27/">
+    <meta property="og:image" content="https://abadi04.github.io/27/icons/icon-512.png">
+    <meta property="og:locale" content="ar_AR">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="27 — خاص. سريع. يختفي.">
+    <meta name="twitter:description" content="محادثات خاصة ومؤقتة بدون تسجيل. الرسائل تختفي تلقائيًا.">
+    <meta name="twitter:image" content="https://abadi04.github.io/27/icons/icon-512.png">
     <link rel="manifest" href="manifest.json?v=privacy-core-1">
     <link rel="apple-touch-icon" href="apple-touch-icon.png?v=official-icon-1">
     <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png?v=official-icon-1">
     <title>27</title>
-    <link rel="stylesheet" href="styles.css?v=enhancements-v2">
+    <link rel="stylesheet" href="styles.css?v=fixes-v3">
   </head>
   <body>
     <!-- ============================================================
@@ -291,11 +307,11 @@
         <div class="sheet-handle" aria-hidden="true"></div>
         <h2 id="messageActionsTitle">إجراءات الرسالة</h2>
         <div class="reaction-row" role="group" aria-label="تفاعلات سريعة">
-          <button type="button" data-reaction="🔥">🔥</button>
-          <button type="button" data-reaction="❤️">❤️</button>
-          <button type="button" data-reaction="😂">😂</button>
-          <button type="button" data-reaction="👀">👀</button>
-          <button type="button" data-reaction="✅">✅</button>
+          <button type="button" data-reaction="🔥" aria-label="تفاعل: نار">🔥</button>
+          <button type="button" data-reaction="❤️" aria-label="تفاعل: قلب">❤️</button>
+          <button type="button" data-reaction="😂" aria-label="تفاعل: ضحك">😂</button>
+          <button type="button" data-reaction="👀" aria-label="تفاعل: عيون">👀</button>
+          <button type="button" data-reaction="✅" aria-label="تفاعل: موافق">✅</button>
         </div>
         <button class="message-action-btn" id="replyActionBtn" type="button">رد</button>
         <button class="message-action-btn" id="copyMessageBtn" type="button">نسخ</button>
@@ -409,7 +425,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="vendor/qrcode.min.js?v=privacy-core-1"></script>
-    <script src="app.js?v=hotfix-1"></script>
+    <script src="app.js?v=fixes-v3"></script>
     <script>
     /* ============================================================
        27 Enhancements — Particles · Share Card · Wiring

@@ -228,10 +228,22 @@ alter table public.blocked_profiles enable row level security;
 alter table public.message_receipts enable row level security;
 
 drop policy if exists "profiles select authenticated" on public.profiles;
+-- Hardened from `using (true)`: a profile is readable only if it's your own,
+-- it has chosen to be discoverable (code_visible), or you already share a
+-- conversation with it. This stops blanket enumeration/scraping of every user
+-- while keeping code lookups and conversation joins working.
 create policy "profiles select authenticated"
 on public.profiles for select
 to authenticated
-using (true);
+using (
+  id = auth.uid()
+  or code_visible = true
+  or exists (
+    select 1 from public.conversations c
+    where (c.user_a_id = auth.uid() and c.user_b_id = profiles.id)
+       or (c.user_b_id = auth.uid() and c.user_a_id = profiles.id)
+  )
+);
 
 drop policy if exists "profiles insert own" on public.profiles;
 create policy "profiles insert own"

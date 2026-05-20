@@ -4,8 +4,20 @@ import { VAPID_PUBLIC_KEY } from "./config.js";
 import { getAppBasePath, urlBase64ToUint8Array } from "./utils.js";
 
 export async function registerPwa() {
-  if (!("Notification" in window) || !("serviceWorker" in navigator)) return;
+  // Service worker = offline support + install. Register it regardless of
+  // notification support so the PWA works on every browser.
+  if (!("serviceWorker" in navigator)) return;
 
+  let registration;
+  try {
+    registration = await navigator.serviceWorker.register(`${getAppBasePath()}sw.js`);
+  } catch (error) {
+    console.warn(error);
+    return;
+  }
+
+  // Push notifications are an optional enhancement layered on top.
+  if (!("Notification" in window)) return;
   if (Notification.permission === "default") {
     try { await Notification.requestPermission(); }
     catch (e) { console.warn(e); }
@@ -13,8 +25,6 @@ export async function registerPwa() {
   if (Notification.permission !== "granted") return;
 
   try {
-    const registration = await navigator.serviceWorker.register(`${getAppBasePath()}sw.js`);
-
     if (VAPID_PUBLIC_KEY && state.currentProfile?.id && db && registration.pushManager) {
       const subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,

@@ -121,8 +121,11 @@ export async function startConversationWithCode(code, onOpenChat) {
     .from("profiles").select("*")
     .eq("public_code", code).eq("code_visible", true).maybeSingle();
   if (targetError && isMissingRelationError(targetError)) {
+    // Fallback for older schemas missing the column — but still respect
+    // visibility by filtering client-side; never expose a hidden profile.
     const fb = await db.from("profiles").select("*").eq("public_code", code).maybeSingle();
-    target = fb.data; targetError = fb.error;
+    target = fb.data && fb.data.code_visible !== false ? fb.data : null;
+    targetError = fb.error;
   }
   if (targetError) throw targetError;
   if (!target) { flashError(i18n[state.currentLang].codeNotFound); return null; }

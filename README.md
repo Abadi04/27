@@ -2,131 +2,81 @@
 
 Private, fast, ephemeral chat for the web.
 
-## ✨ What's New - v2.0
+## Overview
 
-The main interface has been completely redesigned with:
+27 is a privacy-first chat app: no sign-up, no email, no phone number. People
+connect through a numeric public code, and messages auto-delete after a set
+time-to-live (up to 5 hours).
 
-- **🎯 Clear Primary Action**: Purple gradient button that stands out
-- **📐 Better Visual Hierarchy**: Organized from most to least important
-- **✨ Elegant Design**: Improved spacing and smooth interactions
-- **🎨 Preserved Identity**: Same dark, private aesthetic
-- **📱 Enhanced Mobile**: Optimized responsive experience
-
-[See detailed changes →](REDESIGN_NOTES.md) | [Design comparison →](DESIGN_COMPARISON.md)
+> **Privacy note:** Messages are protected by Supabase Row Level Security and
+> are auto-deleted after their TTL, but they are **not** end-to-end encrypted —
+> they are stored in plaintext in the database and are readable by the project
+> operator. Do not advertise this app as "encrypted." End-to-end encryption is
+> tracked as a future enhancement (see Roadmap).
 
 ## Live Preview
 
-GitHub Pages:
-
-```text
-https://Abadi04.github.io/27/
-```
+GitHub Pages: `https://abadi04.github.io/27/`
 
 ## Local Preview
 
 The production-ready static app is in `public/`.
 
 ```bash
-cd public
-python3 -m http.server 4188
+npm run serve   # serves public/ at http://localhost:4188/
 ```
 
-Then open:
+## Build
 
-```text
-http://localhost:4188/
+`public/app.js` is a bundle generated from `public/js/` via esbuild. After
+editing anything under `public/js/`, regenerate the bundle and bump the cache
+version string in `index.html` (`app.js?v=...`):
+
+```bash
+npm install        # first time only
+npm run build      # bundles js/app-entry.js -> app.js
 ```
 
 ## Features
 
 - ✅ No sign-up, email, or phone number
-- ✅ Users connect through a numeric public code
-- ✅ Messages expire after 5 hours
+- ✅ Connect through a numeric public code
+- ✅ Messages expire (TTL up to 5 hours); burn-after-read mode
 - ✅ Anonymous temporary rooms and links
-- ✅ End-to-end encryption ready
-- ✅ Dark mode by default
-- ✅ Fully responsive (mobile-first)
-- ✅ PWA support
-
-## Documentation
-
-### For Developers
-- [Quick Start Guide](QUICK_START.md) - Get started quickly
-- [Complete Guide](COMPLETE_GUIDE.md) - Comprehensive documentation
-- [Redesign Notes](REDESIGN_NOTES.md) - Technical details
-
-### For Designers
-- [Design Comparison](DESIGN_COMPARISON.md) - Before/after visual comparison
-- [Summary](SUMMARY.md) - Overview of changes
+- ✅ Dark theme by default
+- ✅ Fully responsive (mobile-first), RTL/Arabic primary + English
+- ✅ PWA with offline app-shell caching
 
 ## Tech Stack
 
-- **Frontend**: Vanilla HTML, CSS, JavaScript
-- **Backend**: Supabase (Anonymous Auth + Realtime)
+- **Frontend**: Vanilla HTML, CSS, JavaScript (no framework)
+- **Backend**: Supabase (Anonymous Auth + Realtime + Postgres RLS)
 - **Hosting**: Static (GitHub Pages, Netlify, Vercel)
 
-## Customization
+## Design
 
-### Colors
+Visual identity, colour tokens, and component decisions live in
+[DESIGN-DECISIONS.md](DESIGN-DECISIONS.md). Keep that file as the single source
+of truth and update it alongside any CSS change.
 
-```css
-:root {
-  --accent-purple: #b48cff;
-  --accent-purple-bright: #c49fff;
-}
-```
+## Database
 
-### Texts
+Apply `supabase-schema.sql` in the Supabase SQL editor. Row Level Security is
+enabled on every table; the `profiles` select policy is scoped to your own
+profile, discoverable (code-visible) profiles, and existing conversation
+partners only.
 
-```javascript
-const i18n = {
-  ar: {
-    heroTagline: "خاص. سريع. يختفي.",
-    // ...
-  }
-}
-```
+## Roadmap
 
-See [Complete Guide](COMPLETE_GUIDE.md) for more customization options.
-
-## Optional Enhancements
-
-Add these files for extra effects:
-
-```html
-<link rel="stylesheet" href="enhancements.css" />
-<script src="enhancements.js"></script>
-```
-
-Features:
-- ✨ Fade-in animations
-- 💫 Pulse effects
-- 🌟 Glow effects
-- 🎯 Ripple effects
-- ⌨️ Keyboard shortcuts
+- [ ] True end-to-end encryption (client-side `crypto.subtle`, key exchange)
+- [ ] Move the Supabase project credentials out of source where feasible
+- [ ] Automate `app.js` bundling in CI instead of committing the artifact
 
 ## Browser Support
 
-- Chrome/Edge 90+
-- Firefox 88+
-- Safari 14+
-- Mobile browsers (iOS Safari, Chrome Mobile)
-
-## Notes
-
-- Supabase Anonymous Auth and Realtime are used by `public/app.js`
-- All conversations auto-delete after 5 hours of inactivity
-- No data is stored permanently
-- Privacy-first design
+Chrome/Edge 90+, Firefox 88+, Safari 14+, and mobile browsers (iOS Safari,
+Chrome Mobile).
 
 ## License
 
 MIT
-
-## Credits
-
-Designed and developed with focus on privacy, simplicity, and elegance.
-
----
-
-**v2.0** - Enhanced UI with improved clarity and organization ✨
