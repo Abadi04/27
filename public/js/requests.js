@@ -1,8 +1,8 @@
 import { db } from "./db.js";
 import { state } from "./state.js";
 import { i18n } from "./i18n.js";
-import { DEMO_PROFILE_ID, MESSAGE_TTL_SECONDS } from "./config.js";
-import { isLiveMode, isMissingRelationError, showToast, handleAsyncError } from "./utils.js";
+import { DEMO_PROFILE_ID } from "./config.js";
+import { isLiveMode, isMissingRelationError, showToast } from "./utils.js";
 import { renderChats } from "./render.js";
 
 export async function loadConversationRequests() {

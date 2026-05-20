@@ -3,9 +3,11 @@ import { state } from "./state.js";
 import { i18n } from "./i18n.js";
 import {
   $, escapeHtml, getInitials, hashHue,
-  formatTime, formatRemaining, formatTTL,
+  formatRemaining, formatTTL,
   getPrivacyConfig, getPrivacyLabel,
 } from "./utils.js";
+// FIX: import attachSwipeToMessages here to call after each render
+import { attachSwipeToMessages } from "./gestures.js";
 
 // ============================================================
 // Helpers used by rendering
@@ -313,6 +315,9 @@ export function renderMessages(chat, onRendered) {
 
   const list = $("messagesList");
   list.innerHTML = `<div class="system-note">${escapeHtml(t.systemNote)}</div>${body}${state.typing ? renderTypingIndicator() : ""}`;
+
+  // FIX: attach swipe gestures to newly rendered message shells
+  attachSwipeToMessages();
 
   requestAnimationFrame(() => { list.scrollTop = list.scrollHeight; });
   onRendered?.(chat);

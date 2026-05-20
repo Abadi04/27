@@ -1,7 +1,7 @@
 import { db } from "./db.js";
 import { state } from "./state.js";
 import { i18n } from "./i18n.js";
-import { FIVE_HOURS, MESSAGE_TTL_SECONDS } from "./config.js";
+import { FIVE_HOURS } from "./config.js";
 import {
   $, escapeHtml, formatTime, vibrate, isUuid, isLiveMode,
   isMissingRelationError, prefersReducedMotion, getPrivacyConfig,

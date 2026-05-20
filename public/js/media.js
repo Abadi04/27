@@ -6,7 +6,7 @@ import {
 } from "./utils.js";
 import { sendMessage } from "./messages.js";
 import { appendDemoMessage } from "./demo.js";
-import { getChat, renderMessages, renderChats, updateChatCountdown } from "./render.js";
+import { renderMessages, renderChats, updateChatCountdown } from "./render.js";
 
 // ============================================================
 // Media sheet open/close

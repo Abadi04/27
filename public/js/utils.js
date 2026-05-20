@@ -1,4 +1,4 @@
-import { PRIVACY_MODES, FIVE_HOURS } from "./config.js";
+import { PRIVACY_MODES } from "./config.js";
 import { state } from "./state.js";
 import { db } from "./db.js";
 

@@ -31,7 +31,7 @@ import {
 import { appendDemoMessage } from "./demo.js";
 import { renderChats, moveExpiredChatsToBurned } from "./render.js";
 import {
-  showHome, openChat, closeChat, openSettings, closeSettings,
+  openChat, closeChat, openSettings, closeSettings,
   openRouteFromHash,
 } from "./routing.js";
 import {
@@ -44,7 +44,7 @@ import {
   handleTemporaryEntryParams,
 } from "./temporary.js";
 import {
-  attachSwipeToMessages, closeMessageActions, replyToActiveMessage,
+  closeMessageActions, replyToActiveMessage,
   copyActiveMessage, burnActiveMessageNow, addReactionToActiveMessage,
 } from "./gestures.js";
 import {
@@ -425,9 +425,8 @@ window.setInterval(async () => {
 }, 60000);
 
 // ============================================================
-// Attach swipe gestures + kick off onboarding → boot
+// Attach onboarding → boot (swipe gestures now attached inside renderMessages)
 // ============================================================
-attachSwipeToMessages();
 startOnboarding(() => boot());
 
 // ============================================================

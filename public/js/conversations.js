@@ -1,13 +1,12 @@
 import { db } from "./db.js";
 import { state } from "./state.js";
 import { i18n } from "./i18n.js";
-import { FIVE_HOURS } from "./config.js";
 import {
-  $, setLoading, isLiveMode, isUuid, isMissingRelationError,
+  $, setLoading, isLiveMode, isMissingRelationError,
   showToast, flashError, vibrate,
 } from "./utils.js";
 import {
-  getChat, getMessages, renderChats, renderMessages,
+  getChat, renderChats, renderMessages,
   updateChatCountdown, moveExpiredChatsToBurned,
 } from "./render.js";
 import {
@@ -214,7 +213,10 @@ export async function createConversationDirectly(targetId, mode = state.privacyM
 export async function loadConversation(conversationId, onExpired) {
   state.activeConversationId = conversationId;
   const chat = getChat(conversationId);
-  setLoading(i18n[state.currentLang].loadingConversation, true);
+  // FIX: Don't call setLoading() here — #loadingState is in #chatsSection (home screen).
+  // Instead update the chat header status text which is the correct loading indicator.
+  const statusEl = $("chatViewStatus");
+  if (statusEl) statusEl.textContent = i18n[state.currentLang].loadingConversation;
 
   try {
     if (!isLiveMode() || chat?.placeholder) {
@@ -286,7 +288,7 @@ export async function loadConversation(conversationId, onExpired) {
         if (status === "SUBSCRIBED") showToast(i18n[state.currentLang].realtimeConnected);
       });
   } finally {
-    setLoading("", false);
+    // FIX: no setLoading here - we use chatViewStatus for chat loading state
   }
 }
 

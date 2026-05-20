@@ -110,6 +110,9 @@ export async function closeChat() {
 // ============================================================
 export function openSettings() {
   $("heroSection").hidden = true;
+  // FIX: hide chatsSection so conversations don't bleed through behind settings
+  $("chatsSection").hidden = true;
+  $("chatView").hidden = true;
   const settingsDivider = document.querySelector(".section-divider");
   if (settingsDivider) settingsDivider.hidden = true;
   $("settingsView").hidden = false;

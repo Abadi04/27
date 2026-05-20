@@ -3,7 +3,7 @@ import { state } from "./state.js";
 import { i18n } from "./i18n.js";
 import { PROFILE_STORAGE_KEY } from "./config.js";
 import {
-  $, escapeHtml, randomPublicCode, isMissingRelationError,
+  $, randomPublicCode, isMissingRelationError,
   showToast, handleAsyncError, getShareLink, isLiveMode,
 } from "./utils.js";
 
