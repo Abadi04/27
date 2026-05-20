@@ -1538,6 +1538,9 @@
       });
       state.blockedChats = mapped.filter((c) => c.status === "blocked");
       state.burnedChats = state.burnedChats.slice(0, 12);
+      if (!state.chats.length && !state.blockedChats.length) {
+        state.chats = demoChats.filter((c) => c.expiresAt > Date.now());
+      }
       await loadConversationRequests();
       renderChats();
       return state.chats;

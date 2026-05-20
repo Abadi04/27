@@ -86,6 +86,12 @@ export async function loadConversations() {
     state.blockedChats = mapped.filter((c) => c.status === "blocked");
     state.burnedChats = state.burnedChats.slice(0, 12);
 
+    // FIX: if Supabase returned zero conversations, keep demo chats as preview
+    // so the user doesn't see a blank screen — they see sample data instead
+    if (!state.chats.length && !state.blockedChats.length) {
+      state.chats = demoChats.filter((c) => c.expiresAt > Date.now());
+    }
+
     await loadConversationRequests();
     renderChats();
     return state.chats;
