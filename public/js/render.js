@@ -182,29 +182,72 @@ function renderExpiringStrip(items) {
     </button>`;
 }
 
+function getChatTimerProgress(chat) {
+  if (chat.burned || chat.status === "blocked") return 0;
+  const expiry = getChatExpiryTime(chat);
+  const remaining = expiry - Date.now();
+  if (remaining <= 0) return 0;
+  const total = FIVE_HOURS;
+  return Math.min(1, Math.max(0, remaining / total));
+}
+
+function renderTimerRing(progress, nearEnd) {
+  const R = 22;
+  const CX = 25;
+  const CY = 25;
+  const CIRC = 2 * Math.PI * R;
+  const dashoffset = CIRC * (1 - progress);
+  const strokeColor = nearEnd ? "#8B0000" : "hsl(220,55%,42%)";
+  return `<svg width="50" height="50" viewBox="0 0 50 50"
+      style="position:absolute;top:0;left:0;transform:rotate(-90deg)"
+      aria-hidden="true">
+    <circle cx="${CX}" cy="${CY}" r="${R}" fill="none"
+      stroke="#ffffff0a" stroke-width="1.5"/>
+    <circle cx="${CX}" cy="${CY}" r="${R}" fill="none"
+      stroke="${strokeColor}" stroke-width="1.5"
+      stroke-linecap="round"
+      stroke-dasharray="${CIRC.toFixed(2)}"
+      stroke-dashoffset="${dashoffset.toFixed(2)}"
+      style="transition:stroke-dashoffset .6s ease,stroke .6s ease"/>
+  </svg>`;
+}
+
 function renderChatItem(chat, disabled = false) {
   const t = i18n[state.currentLang];
   const name = getChatName(chat);
   const hue = hashHue(chat.otherProfile?.avatar_seed || name);
-  const statusClass = chat.online ? "online" : "offline";
-  const stateClass = chat.burned ? "is-expired" : chat.status === "blocked" ? "is-blocked" : "";
-  const meta = chat.burned
+  const isExpired = chat.burned;
+  const stateClass = isExpired ? "is-expired" : chat.status === "blocked" ? "is-blocked" : "";
+
+  const preview = chat.burned
     ? t.expiredStateTitle
     : chat.status === "blocked"
       ? t.blockedStateTitle
-      : getChatItemMeta(chat);
+      : getChatPreview(chat);
+
+  const remaining = getChatExpiryTime(chat) - Date.now();
+  const statusLabel = chat.burned || chat.status === "blocked"
+    ? ""
+    : remaining <= 0
+      ? t.expiredStateTitle
+      : t.expiresIn.replace("{time}", formatRemaining(remaining, t));
+
+  const progress = getChatTimerProgress(chat);
+  const nearEnd = !isExpired && progress < 0.2;
 
   return `
-    <div class="chat-item ${disabled ? "state-only" : ""} ${stateClass}"
-         role="button" tabindex="0"
+    <div class="chat-item ${disabled ? "state-only" : ""} ${stateClass} ${nearEnd ? "near-end" : ""}"
+         role="button" tabindex="${isExpired ? -1 : 0}"
          data-chat-id="${escapeHtml(chat.id)}" aria-label="${escapeHtml(name)}">
-      <div class="chat-avatar" style="--avatar-hue: ${hue}">${escapeHtml(getInitials(name))}</div>
+      <div class="chat-avatar-ring">
+        ${renderTimerRing(progress, nearEnd)}
+        <div class="chat-avatar" style="--avatar-hue: ${hue}">${escapeHtml(getInitials(name))}</div>
+      </div>
       <div class="chat-info">
         <div class="chat-name">${escapeHtml(name)}</div>
-        <div class="chat-meta">${escapeHtml(meta)}</div>
+        ${preview ? `<div class="chat-meta">${escapeHtml(preview)}</div>` : ""}
+        ${statusLabel ? `<div class="chat-status-label ${nearEnd ? "near-end" : ""}">${escapeHtml(statusLabel)}</div>` : ""}
       </div>
-      <div class="chat-pill">${escapeHtml(getChatPill(chat))}</div>
-      <div class="chat-status ${statusClass}" aria-hidden="true"></div>
     </div>`;
 }
 
