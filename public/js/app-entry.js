@@ -53,9 +53,10 @@ import {
 } from "./media.js";
 import { registerPwa } from "./pwa.js";
 import { startOnboarding } from "./onboarding.js";
+import { showSplash } from "./splash.js";
 import {
-  loadArena, subscribeToArena, unsubscribeFromArena,
-  sendArenaMessage, handleArenaInput, updateArenaLang, updateArenaBadge,
+  loadArena, subscribeToArena,
+  sendArenaMessage, handleArenaInput,
 } from "./arena.js";
 import { openArena, closeArena } from "./routing.js";
 
@@ -473,7 +474,8 @@ window.setInterval(async () => {
 // ============================================================
 // Attach onboarding → boot (swipe gestures now attached inside renderMessages)
 // ============================================================
-startOnboarding(() => boot());
+// Entry chain: Splash → Onboarding → Boot
+showSplash(() => startOnboarding(() => boot()));
 
 // ============================================================
 // FAB: Floating Action Button

@@ -2981,3 +2981,124 @@ html[dir="rtl"] .setting-switch-row.is-on .switch-thumb {
   opacity: 0.4;
   cursor: not-allowed;
 }
+
+/* ============================================================
+   Splash Screen — إشعال الشمعة
+   ============================================================ */
+.splash-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #000;
+  overflow: hidden;
+}
+.splash-screen[hidden] { display: none; }
+
+.splash-candle {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 0.55s ease, transform 0.55s ease;
+}
+.splash-running .splash-candle { opacity: 1; transform: translateY(0); }
+
+.splash-candle-svg {
+  width: 60px; height: 120px;
+  filter: drop-shadow(0 2px 8px rgba(0,0,0,0.6));
+}
+
+.splash-flame-wrap {
+  position: absolute;
+  bottom: calc(100% - 74px);
+  left: 50%; transform: translateX(-50%);
+  display: flex; align-items: flex-end; justify-content: center;
+  width: 60px; height: 60px; pointer-events: none;
+}
+
+.splash-halo {
+  position: absolute;
+  width: 48px; height: 48px; border-radius: 50%;
+  background: radial-gradient(circle,rgba(60,80,160,.22) 0%,rgba(40,60,140,.10) 55%,transparent 75%);
+  bottom: 4px; left: 50%; transform: translateX(-50%) scale(0);
+  opacity: 0;
+  transition: opacity 0.4s ease 0.6s, transform 0.5s ease 0.6s;
+}
+.splash-phase2 .splash-halo { opacity: 1; transform: translateX(-50%) scale(1); }
+
+.splash-flame {
+  position: relative; width: 18px; height: 30px; bottom: 2px;
+  opacity: 0; transform: scaleY(0.3) translateY(8px);
+  transition: opacity 0.35s ease 0.62s, transform 0.4s cubic-bezier(0.2,1.4,0.6,1) 0.62s;
+}
+.splash-phase2 .splash-flame {
+  opacity: 1; transform: scaleY(1) translateY(0);
+  animation: flameFlicker 1.8s ease-in-out 1s infinite alternate;
+}
+
+.splash-flame-outer {
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse 55% 80% at 50% 100%,#ff8c00 0%,#ff5500 45%,rgba(255,60,0,0) 100%);
+  border-radius: 50% 50% 30% 30% / 60% 60% 40% 40%; filter: blur(1.5px);
+}
+.splash-flame-inner {
+  position: absolute; inset: 4px 4px 0 4px;
+  background: radial-gradient(ellipse 60% 80% at 50% 100%,#ffe066 0%,#ffaa00 55%,rgba(255,120,0,0) 100%);
+  border-radius: 50% 50% 30% 30% / 60% 60% 40% 40%; filter: blur(0.8px);
+}
+.splash-flame-core {
+  position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%);
+  width: 6px; height: 8px;
+  background: radial-gradient(circle,#fff9e0 0%,#fff0a0 60%,transparent 100%);
+  border-radius: 50%; filter: blur(0.5px);
+}
+
+@keyframes flameFlicker {
+  0%   { transform: scaleY(1.00) scaleX(1.00) rotate(-1deg); }
+  15%  { transform: scaleY(1.05) scaleX(0.97) rotate( 1deg); }
+  30%  { transform: scaleY(0.95) scaleX(1.03) rotate(-0.5deg); }
+  45%  { transform: scaleY(1.08) scaleX(0.96) rotate( 1.5deg); }
+  60%  { transform: scaleY(0.98) scaleX(1.02) rotate(-1deg); }
+  80%  { transform: scaleY(1.04) scaleX(0.98) rotate( 0.5deg); }
+  100% { transform: scaleY(1.00) scaleX(1.00) rotate( 0deg); }
+}
+
+.splash-light {
+  position: fixed; inset: 0; pointer-events: none;
+  background: radial-gradient(circle at 50% 44%,rgba(255,160,40,.13) 0%,rgba(255,100,10,.07) 25%,transparent 65%);
+  opacity: 0; transform: scale(0.2);
+  transition: opacity 0.7s ease 1.4s, transform 0.9s ease 1.4s;
+}
+.splash-phase3 .splash-light { opacity: 1; transform: scale(1); }
+
+.splash-logo {
+  position: absolute;
+  bottom: calc(50% - 110px);
+  left: 50%; transform: translateX(-50%);
+  color: rgba(255,255,255,.88);
+  font-size: 2rem; font-weight: 200; letter-spacing: .18em;
+  opacity: 0; transition: opacity 0.6s ease 1.6s;
+  text-shadow: 0 0 24px rgba(255,160,40,.35);
+  user-select: none;
+}
+.splash-phase3 .splash-logo { opacity: 1; }
+
+.splash-phase4 { animation: splashFadeOut 0.35s ease forwards; }
+@keyframes splashFadeOut { from { opacity:1; } to { opacity:0; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .splash-candle, .splash-halo, .splash-flame, .splash-light, .splash-logo {
+    transition: none !important; animation: none !important;
+  }
+  .splash-running .splash-candle { opacity: 1; transform: none; }
+  .splash-phase2 .splash-flame   { opacity: 1; transform: none; }
+  .splash-phase2 .splash-halo    { opacity: 1; transform: translateX(-50%) scale(1); }
+  .splash-phase3 .splash-light   { opacity: 1; transform: scale(1); }
+  .splash-phase3 .splash-logo    { opacity: 1; }
+}
