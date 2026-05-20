@@ -2505,11 +2505,11 @@ html[dir="rtl"] .setting-switch-row.is-on .switch-thumb {
   width: 56px;
   height: 56px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
-  color: #fff;
+  background: linear-gradient(135deg, #ffffff, #cdb6ff);
+  color: #080a12;
   font-size: 28px;
   line-height: 1;
-  box-shadow: 0 4px 20px rgba(99,102,241,.45);
+  box-shadow: 0 4px 20px rgba(205,182,255,.40);
   border: none;
   cursor: pointer;
   z-index: 200;
@@ -2774,8 +2774,11 @@ html[dir="rtl"] .setting-switch-row.is-on .switch-thumb {
 }
 
 .tab-icon {
-  font-size: 1.25rem;
-  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
 }
 
 .tab-label {
@@ -2990,13 +2993,13 @@ html[dir="rtl"] .setting-switch-row.is-on .switch-thumb {
 }
 
 .arena-send-btn {
-  background: linear-gradient(135deg, #7c4dff, #b48cff);
-  color: #fff;
+  background: linear-gradient(135deg, #ffffff, #cdb6ff);
+  color: #080a12;
   border: none;
   border-radius: 10px;
   padding: 9px 22px;
   font-size: 0.88rem;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
   transition: opacity 0.15s;
 }
