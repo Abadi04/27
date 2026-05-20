@@ -4,7 +4,7 @@ import { i18n } from "./i18n.js";
 import {
   $, escapeHtml, getInitials, hashHue,
   formatRemaining, formatTTL,
-  getPrivacyConfig, getPrivacyLabel,
+  getPrivacyConfig,
 } from "./utils.js";
 // FIX: import attachSwipeToMessages here to call after each render
 import { attachSwipeToMessages } from "./gestures.js";
@@ -66,22 +66,6 @@ function getChatPreview(chat) {
   return last.text || t.emptyChat;
 }
 
-function getChatPill(chat) {
-  const t = i18n[state.currentLang];
-  if (chat.burned) return t.burnedHeader;
-  if (chat.status === "blocked") return t.block;
-  return getPrivacyLabel(chat.privacyMode || "5h", i18n);
-}
-
-function getChatItemMeta(chat) {
-  const t = i18n[state.currentLang];
-  const preview = getChatPreview(chat);
-  const remaining = getChatExpiryTime(chat) - Date.now();
-  const expiry = remaining <= 0
-    ? t.expiredStateTitle
-    : t.expiresIn.replace("{time}", formatRemaining(remaining, t));
-  return preview ? `${preview} · ${expiry}` : expiry;
-}
 
 function getMessageStatusLabel(message) {
   const t = i18n[state.currentLang];
