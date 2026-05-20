@@ -2596,25 +2596,30 @@
     }
   }
   async function boot() {
-    setLoading(i18n[state.currentLang].loadingChats, true);
     state.chats = demoChats.filter((chat) => chat.expiresAt > Date.now());
     setLanguage(state.currentLang);
+    setLoading("", false);
+    renderChats();
+    startMessageTicker();
     const sharedCode = new URLSearchParams(window.location.search).get("code");
     if (sharedCode && /^\d{6}$/.test(sharedCode)) {
       $("codeInput").value = sharedCode;
     }
     handleTemporaryEntryParams();
     if (!db) {
-      setLoading("", false);
       await loadConversationRequests();
       renderChats();
-      startMessageTicker();
       registerPwa();
       showToast(i18n[state.currentLang].demoMode);
       return;
     }
+    const BOOT_TIMEOUT_MS = 8e3;
     try {
-      state.currentProfile = await getOrCreateProfile();
+      const profilePromise = getOrCreateProfile();
+      const timeoutPromise = new Promise(
+        (_, reject) => window.setTimeout(() => reject(new Error("boot_timeout")), BOOT_TIMEOUT_MS)
+      );
+      state.currentProfile = await Promise.race([profilePromise, timeoutPromise]);
       state.displayName = state.currentProfile.display_name || state.displayName;
       $("displayNameInput").value = state.displayName;
       updateProfileCodeUI();
@@ -2623,12 +2628,14 @@
       subscribeToRequests();
       setLanguage(state.currentLang);
       await openRouteFromHash();
-      startMessageTicker();
     } catch (error) {
-      handleAsyncError(error, i18n[state.currentLang].errorChats);
+      if (error.message === "boot_timeout") {
+        showToast(i18n[state.currentLang].demoMode);
+        console.warn("boot: Supabase timeout \u2014 running in demo mode");
+      } else {
+        handleAsyncError(error, i18n[state.currentLang].errorChats);
+      }
       renderChats();
-    } finally {
-      setLoading("", false);
     }
   }
   $("langToggle").addEventListener("click", () => {

@@ -138,9 +138,12 @@ async function handleSendMessage(event) {
 // Boot sequence
 // ============================================================
 async function boot() {
-  setLoading(i18n[state.currentLang].loadingChats, true);
+  // ── Step 1: show content immediately — never leave user on a blank skeleton ──
   state.chats = demoChats.filter((chat) => chat.expiresAt > Date.now());
   setLanguage(state.currentLang);
+  setLoading("", false);   // hide skeleton right away
+  renderChats();           // show demo chats while we attempt live connection
+  startMessageTicker();
 
   const sharedCode = new URLSearchParams(window.location.search).get("code");
   if (sharedCode && /^\d{6}$/.test(sharedCode)) {
@@ -148,18 +151,24 @@ async function boot() {
   }
   handleTemporaryEntryParams();
 
+  // ── Step 2: no Supabase configured → stay in demo mode ──
   if (!db) {
-    setLoading("", false);
     await loadConversationRequests();
     renderChats();
-    startMessageTicker();
     registerPwa();
     showToast(i18n[state.currentLang].demoMode);
     return;
   }
 
+  // ── Step 3: try live connection with 8s timeout ──
+  const BOOT_TIMEOUT_MS = 8000;
   try {
-    state.currentProfile = await getOrCreateProfile();
+    const profilePromise = getOrCreateProfile();
+    const timeoutPromise = new Promise((_, reject) =>
+      window.setTimeout(() => reject(new Error("boot_timeout")), BOOT_TIMEOUT_MS)
+    );
+
+    state.currentProfile = await Promise.race([profilePromise, timeoutPromise]);
     state.displayName = state.currentProfile.display_name || state.displayName;
     $("displayNameInput").value = state.displayName;
     updateProfileCodeUI();
@@ -168,12 +177,15 @@ async function boot() {
     subscribeToRequests();
     setLanguage(state.currentLang);
     await openRouteFromHash();
-    startMessageTicker();
   } catch (error) {
-    handleAsyncError(error, i18n[state.currentLang].errorChats);
+    if (error.message === "boot_timeout") {
+      // Supabase took too long — stay on demo data, show gentle warning
+      showToast(i18n[state.currentLang].demoMode);
+      console.warn("boot: Supabase timeout — running in demo mode");
+    } else {
+      handleAsyncError(error, i18n[state.currentLang].errorChats);
+    }
     renderChats();
-  } finally {
-    setLoading("", false);
   }
 }
 
