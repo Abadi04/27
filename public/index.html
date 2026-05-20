@@ -180,11 +180,36 @@
           <button class="start-btn save-settings" id="saveSettingsBtn" type="button">حفظ</button>
         </div>
       </section>
-    </main>
+      <section class="arena-view" id="arenaView" hidden>
+        <div class="arena-feed" id="arenaFeed" role="feed" aria-live="polite"></div>
+        <div class="arena-composer">
+          <textarea
+            class="arena-input"
+            id="arenaInput"
+            maxlength="280"
+            rows="2"
+            placeholder="شاركهم ما يدور في بالك… تختفي خلال ٦٠ دقيقة"
+            autocomplete="off"
+            dir="auto"></textarea>
+          <div class="arena-composer-bar">
+            <span class="arena-char-count" id="arenaCharCount">280</span>
+            <button class="arena-send-btn" id="arenaSendBtn" type="button">أرسل</button>
+          </div>
+        </div>
+      </section>
+    
 
-    <footer class="app-footer" id="appFooter">
-      <span id="footerText">جميع المحادثات تُحذف تلقائيًا بعد ٥ ساعات من آخر رسالة.</span>
-    </footer>
+    <nav class="tab-bar" id="tabBar" role="tablist" aria-label="التنقل الرئيسي">
+      <button class="tab-btn tab-btn--active" id="tabHome" type="button" role="tab" aria-selected="true">
+        <span class="tab-icon" aria-hidden="true">💬</span>
+        <span class="tab-label" id="homeNavLabel">المحادثات</span>
+      </button>
+      <button class="tab-btn" id="tabArena" type="button" role="tab" aria-selected="false">
+        <span class="tab-icon" aria-hidden="true">⚡</span>
+        <span class="tab-label" id="arenaNavLabel">الساحة</span>
+        <span class="tab-badge" id="arenaBadge" hidden>0</span>
+      </button>
+    </nav>
 
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
     <div class="panic-screen" id="panicScreen" hidden>

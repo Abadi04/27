@@ -19,11 +19,19 @@ import { updatePrivacyModeUI } from "./settings.js";
 export function showHome() {
   stopChatCountdown();
   $("heroSection").hidden = false;
+  $("arenaView").hidden = true;
   const divider = document.querySelector(".section-divider");
   if (divider) divider.hidden = true;
   $("chatsSection").hidden = false;
   $("chatView").hidden = true;
   $("settingsView").hidden = true;
+  $("tabHome")?.setAttribute("aria-selected", "true");
+  $("tabHome")?.classList.add("tab-btn--active");
+  $("tabArena")?.setAttribute("aria-selected", "false");
+  $("tabArena")?.classList.remove("tab-btn--active");
+  $("tabBar")?.classList.remove("tab-bar--hidden");
+  const fab = $("fabBtn");
+  if (fab) fab.hidden = false;
 }
 
 // ============================================================
@@ -46,7 +54,10 @@ export async function openChat(chatId) {
   if (chatDivider) chatDivider.hidden = true;
   $("chatsSection").hidden = true;
   $("settingsView").hidden = true;
+  $("arenaView").hidden = true;
   $("chatView").hidden = false;
+  $("tabBar")?.classList.add("tab-bar--hidden");
+  $("fabBtn").hidden = true;
   $("chatView").dataset.activeChat = chat.id;
   $("chatViewName").textContent = getChatName(chat);
   $("chatViewStatus").textContent = t.loadingConversation;
@@ -110,16 +121,48 @@ export async function closeChat() {
 // ============================================================
 export function openSettings() {
   $("heroSection").hidden = true;
-  // FIX: hide chatsSection so conversations don't bleed through behind settings
   $("chatsSection").hidden = true;
   $("chatView").hidden = true;
+  $("arenaView").hidden = true;
   const settingsDivider = document.querySelector(".section-divider");
   if (settingsDivider) settingsDivider.hidden = true;
   $("settingsView").hidden = false;
+  $("tabBar")?.classList.add("tab-bar--hidden");
+  $("fabBtn").hidden = true;
   window.location.hash = "#settings";
 }
 
 export function closeSettings() {
+  showHome();
+  window.location.hash = "";
+}
+
+// ============================================================
+// Arena
+// ============================================================
+export function openArena() {
+  stopChatCountdown();
+  $("heroSection").hidden = true;
+  $("chatsSection").hidden = true;
+  $("chatView").hidden = true;
+  $("settingsView").hidden = true;
+  $("arenaView").hidden = false;
+  // Update tab active state
+  $("tabHome")?.setAttribute("aria-selected", "false");
+  $("tabHome")?.classList.remove("tab-btn--active");
+  $("tabArena")?.setAttribute("aria-selected", "true");
+  $("tabArena")?.classList.add("tab-btn--active");
+  $("tabBar")?.classList.remove("tab-bar--hidden");
+  $("fabBtn").hidden = true;
+  window.location.hash = "#arena";
+}
+
+export function closeArena() {
+  $("arenaView").hidden = true;
+  $("tabArena")?.setAttribute("aria-selected", "false");
+  $("tabArena")?.classList.remove("tab-btn--active");
+  $("tabHome")?.setAttribute("aria-selected", "true");
+  $("tabHome")?.classList.add("tab-btn--active");
   showHome();
   window.location.hash = "";
 }
@@ -138,5 +181,6 @@ export async function openRouteFromHash() {
     await openChat(chatId);
     return;
   }
-  if (route === "settings") openSettings();
+  if (route === "settings") { openSettings(); return; }
+  if (route === "arena") { openArena(); return; }
 }
