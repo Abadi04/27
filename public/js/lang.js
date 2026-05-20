@@ -19,7 +19,8 @@ export function setLanguage(lang) {
   root.dir = lang === "ar" ? "rtl" : "ltr";
 
   // Header
-  $("headerStatus").textContent = isLiveMode() ? t.headerStatusLive : t.headerStatus;
+  const headerStatus = $("headerStatus");
+  if (headerStatus) headerStatus.textContent = isLiveMode() ? t.headerStatusLive : t.headerStatus;
   $("langToggle").textContent = t.langToggle;
   $("settingsToggle").textContent = t.settings;
 

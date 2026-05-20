@@ -2160,7 +2160,8 @@
     const root = document.documentElement;
     root.lang = lang;
     root.dir = lang === "ar" ? "rtl" : "ltr";
-    $("headerStatus").textContent = isLiveMode() ? t.headerStatusLive : t.headerStatus;
+    const headerStatus = $("headerStatus");
+    if (headerStatus) headerStatus.textContent = isLiveMode() ? t.headerStatusLive : t.headerStatus;
     $("langToggle").textContent = t.langToggle;
     $("settingsToggle").textContent = t.settings;
     $("heroTagline").textContent = t.heroTagline;
