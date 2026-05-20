@@ -10,7 +10,7 @@
   };
 
   // public/js/config.js
-  var SUPABASE_URL, SUPABASE_ANON_KEY, VAPID_PUBLIC_KEY, MESSAGE_TTL_SECONDS, FIVE_HOURS, PRIVACY_MODES, PROFILE_STORAGE_KEY, ONBOARDING_STORAGE_KEY, HIDE_CHATS_STORAGE_KEY, SWIPE_DELETE_THRESHOLD, SWIPE_REPLY_THRESHOLD, DEMO_PROFILE_ID;
+  var SUPABASE_URL, SUPABASE_ANON_KEY, VAPID_PUBLIC_KEY, MESSAGE_TTL_SECONDS, FIVE_HOURS, PRIVACY_MODES, PROFILE_STORAGE_KEY, ONBOARDING_STORAGE_KEY, SPLASH_STORAGE_KEY, HIDE_CHATS_STORAGE_KEY, SWIPE_DELETE_THRESHOLD, SWIPE_REPLY_THRESHOLD, DEMO_PROFILE_ID;
   var init_config = __esm({
     "public/js/config.js"() {
       SUPABASE_URL = "https://rndwafkuqavqabpywosa.supabase.co";
@@ -27,6 +27,7 @@
       };
       PROFILE_STORAGE_KEY = "twentyseven_profile";
       ONBOARDING_STORAGE_KEY = "veil_seen";
+      SPLASH_STORAGE_KEY = "splash_last_seen";
       HIDE_CHATS_STORAGE_KEY = "twentyseven_hide_chats";
       SWIPE_DELETE_THRESHOLD = 80;
       SWIPE_REPLY_THRESHOLD = 56;
@@ -2531,6 +2532,49 @@
     typeNext();
   }
 
+  // public/js/splash.js
+  init_config();
+  var RESHOW_AFTER_MS = 30 * 60 * 1e3;
+  var TOTAL_DURATION = 2500;
+  function shouldShowSplash() {
+    const last = localStorage.getItem(SPLASH_STORAGE_KEY);
+    if (!last) return true;
+    return Date.now() - parseInt(last, 10) > RESHOW_AFTER_MS;
+  }
+  function showSplash(onComplete) {
+    if (!shouldShowSplash()) {
+      onComplete();
+      return;
+    }
+    localStorage.setItem(SPLASH_STORAGE_KEY, String(Date.now()));
+    const screen = document.getElementById("splashScreen");
+    if (!screen) {
+      onComplete();
+      return;
+    }
+    screen.hidden = false;
+    screen.classList.add("splash-running");
+    window.setTimeout(() => {
+      screen.classList.add("splash-phase2");
+    }, 600);
+    window.setTimeout(() => {
+      screen.classList.add("splash-phase3");
+    }, 1400);
+    window.setTimeout(() => {
+      screen.classList.add("splash-phase4");
+    }, 2200);
+    window.setTimeout(() => {
+      screen.hidden = true;
+      screen.classList.remove(
+        "splash-running",
+        "splash-phase2",
+        "splash-phase3",
+        "splash-phase4"
+      );
+      onComplete();
+    }, TOTAL_DURATION);
+  }
+
   // public/js/app-entry.js
   async function handleStartChat() {
     const input = $("codeInput");
@@ -2847,7 +2891,7 @@
       console.warn(error);
     }
   }, 6e4);
-  startOnboarding(() => boot());
+  showSplash(() => startOnboarding(() => boot()));
   function updateFabVisibility() {
     const fab = $("fabBtn");
     if (!fab) return;

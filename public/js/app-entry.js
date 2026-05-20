@@ -53,6 +53,7 @@ import {
 } from "./media.js";
 import { registerPwa } from "./pwa.js";
 import { startOnboarding } from "./onboarding.js";
+import { showSplash } from "./splash.js";
 
 // ============================================================
 // UI Handler: Start chat from code input
@@ -437,9 +438,10 @@ window.setInterval(async () => {
 }, 60000);
 
 // ============================================================
-// Attach onboarding → boot (swipe gestures now attached inside renderMessages)
+// Entry chain: Splash → Onboarding → Boot
+// Splash shows on first visit or after 30+ min inactivity
 // ============================================================
-startOnboarding(() => boot());
+showSplash(() => startOnboarding(() => boot()));
 
 // ============================================================
 // FAB: Floating Action Button

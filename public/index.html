@@ -12,6 +12,44 @@
     <link rel="stylesheet" href="styles.css?v=cta-logo-tune-1">
   </head>
   <body>
+    <!-- ============================================================
+         Splash Screen — "إشعال الشمعة"
+         Hidden by default; shown by splash.js when conditions met
+         ============================================================ -->
+    <div id="splashScreen" class="splash-screen" hidden aria-hidden="true">
+      <div class="splash-candle">
+        <!-- Candle SVG -->
+        <svg class="splash-candle-svg" viewBox="0 0 60 120" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <!-- Wax body -->
+          <rect x="18" y="55" width="24" height="55" rx="4" ry="4" fill="#d4c5a9"/>
+          <!-- Wax drip left -->
+          <path d="M18 72 Q13 80 15 90 Q17 95 18 100" stroke="#c4b49a" stroke-width="3" fill="none" stroke-linecap="round"/>
+          <!-- Wax drip right -->
+          <path d="M42 68 Q47 76 45 86 Q43 92 42 96" stroke="#c4b49a" stroke-width="3" fill="none" stroke-linecap="round"/>
+          <!-- Top rim -->
+          <ellipse cx="30" cy="55" rx="12" ry="3.5" fill="#bfae96"/>
+          <!-- Wick -->
+          <line x1="30" y1="55" x2="30" y2="44" stroke="#3a3020" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+
+        <!-- Flame (hidden until phase 2) -->
+        <div class="splash-flame-wrap">
+          <div class="splash-halo"></div>
+          <div class="splash-flame">
+            <div class="splash-flame-outer"></div>
+            <div class="splash-flame-inner"></div>
+            <div class="splash-flame-core"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Light spread -->
+      <div class="splash-light" aria-hidden="true"></div>
+
+      <!-- Logo -->
+      <div class="splash-logo" aria-hidden="true">27</div>
+    </div>
+
     <div class="bg-glow" aria-hidden="true"></div>
 
     <header class="app-header" id="appHeader">

@@ -16,6 +16,7 @@ export const PRIVACY_MODES = {
 
 export const PROFILE_STORAGE_KEY    = "twentyseven_profile";
 export const ONBOARDING_STORAGE_KEY = "veil_seen";
+export const SPLASH_STORAGE_KEY      = "splash_last_seen";
 export const HIDE_CHATS_STORAGE_KEY = "twentyseven_hide_chats";
 
 export const SWIPE_DELETE_THRESHOLD = 80;
