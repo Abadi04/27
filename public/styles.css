@@ -2580,6 +2580,7 @@ html[dir="rtl"] .setting-switch-row.is-on .switch-thumb {
   100% { background-position: 200% 0; }
 }
 .skeleton-list { display: flex; flex-direction: column; gap: 4px; padding: 8px 0; }
+.skeleton-list[hidden] { display: none; }
 .skeleton-item {
   display: flex; align-items: center; gap: 12px;
   padding: 12px 16px;
