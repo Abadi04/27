@@ -1,0 +1,1951 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0B0A08">
+  <title>مَزْيَن · حِرفة الحلاقة بأناقة</title>
+  <meta name="description" content="منصّة فاخرة تختار لك حلّاقاً موثوقاً قرب حيّك. حجزٌ في ثوانٍ، تجربةٌ تليق بك.">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Inter:wght@300;400;500;600&family=Reem+Kufi:wght@400;500;600;700&family=Tajawal:wght@300;400;500;700&display=swap"
+    rel="stylesheet">
+
+  <style>
+    /* ───────────────────────────────────────────────
+       Design tokens · مَزْيَن
+       crafted, editorial, understated luxury
+       ─────────────────────────────────────────────── */
+    :root {
+      --bg-0: #080705;
+      --bg-1: #0B0A08;
+      --bg-2: #11100C;
+      --bg-3: #1A1611;
+
+      --surface-1: rgba(255, 248, 232, 0.035);
+      --surface-2: rgba(255, 248, 232, 0.06);
+      --surface-3: rgba(255, 248, 232, 0.085);
+
+      --border: rgba(232, 213, 176, 0.10);
+      --border-strong: rgba(232, 213, 176, 0.20);
+      --border-soft: rgba(255, 255, 255, 0.05);
+
+      --text-1: #F5EFE4;
+      --text-2: #B8AE9A;
+      --text-3: #807769;
+
+      --gold-1: #E0C594;
+      --gold-2: #C9A26A;
+      --gold-3: #A98448;
+      --champagne: #E8D5B0;
+      --warm: #F2C97A;
+
+      --shadow-1: 0 1px 1px rgba(0,0,0,0.6), 0 8px 28px rgba(0,0,0,0.35);
+      --shadow-2: 0 12px 48px rgba(0,0,0,0.55), 0 2px 6px rgba(0,0,0,0.5);
+      --shadow-gold: 0 12px 40px -8px rgba(201, 162, 106, 0.18);
+
+      --r-xs: 8px;
+      --r-sm: 12px;
+      --r-md: 18px;
+      --r-lg: 24px;
+      --r-xl: 32px;
+      --r-2xl: 44px;
+
+      --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+      --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+      --ease-bounce: cubic-bezier(0.34, 1.4, 0.64, 1);
+
+      --container: 1240px;
+      --nav-h: 72px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: 'Tajawal', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg-1);
+      color: var(--text-1);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      line-height: 1.6;
+      letter-spacing: 0.005em;
+      overflow-x: hidden;
+      min-height: 100vh;
+    }
+    img { max-width: 100%; display: block; }
+    button { font-family: inherit; cursor: pointer; }
+    a { color: inherit; text-decoration: none; }
+
+    /* Ambient background — very subtle warm wash */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(1200px 700px at 85% -10%, rgba(212, 185, 140, 0.08), transparent 60%),
+        radial-gradient(900px 600px at 5% 30%, rgba(201, 162, 106, 0.045), transparent 60%),
+        radial-gradient(700px 500px at 50% 110%, rgba(232, 213, 176, 0.03), transparent 60%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Editorial film grain */
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml;utf8,<svg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.04 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+      opacity: 0.7;
+      pointer-events: none;
+      z-index: 200;
+      mix-blend-mode: overlay;
+    }
+
+    /* ─── Typography ─── */
+    .display {
+      font-family: 'Reem Kufi', 'Cormorant Garamond', serif;
+      font-weight: 500;
+      letter-spacing: -0.015em;
+      line-height: 1.06;
+    }
+    .serif-en {
+      font-family: 'Cormorant Garamond', serif;
+      font-style: italic;
+      font-weight: 400;
+      letter-spacing: 0.005em;
+    }
+    .eyebrow {
+      font-family: 'Inter', 'Tajawal', sans-serif;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.28em;
+      color: var(--gold-2);
+      font-weight: 500;
+    }
+    .mono { font-feature-settings: "tnum" 1, "lnum" 1; }
+
+    /* ─── Layout primitives ─── */
+    .container {
+      max-width: var(--container);
+      margin: 0 auto;
+      padding: 0 32px;
+      position: relative;
+      z-index: 1;
+    }
+    .section {
+      padding: 96px 0;
+      position: relative;
+    }
+    @media (max-width: 720px) {
+      .container { padding: 0 20px; }
+      .section { padding: 72px 0; }
+    }
+
+    /* ─── Navigation ─── */
+    .nav {
+      position: sticky;
+      top: 0;
+      z-index: 60;
+      backdrop-filter: blur(24px) saturate(180%);
+      -webkit-backdrop-filter: blur(24px) saturate(180%);
+      background: rgba(11, 10, 8, 0.62);
+      border-bottom: 1px solid var(--border-soft);
+    }
+    .nav-inner {
+      height: var(--nav-h);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 28px;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+    }
+    .brand-mark {
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(135deg, var(--gold-1), var(--gold-3));
+      box-shadow: 0 4px 14px rgba(201, 162, 106, 0.30), inset 0 1px 0 rgba(255,255,255,0.25);
+      color: #1A1209;
+    }
+    .brand-mark svg { width: 18px; height: 18px; }
+    .brand-name {
+      font-family: 'Reem Kufi', serif;
+      font-weight: 600;
+      font-size: 19px;
+      letter-spacing: 0.04em;
+    }
+    .brand-sub {
+      font-family: 'Cormorant Garamond', serif;
+      font-style: italic;
+      color: var(--text-3);
+      font-size: 12px;
+      margin-inline-start: 2px;
+      letter-spacing: 0.05em;
+    }
+    .nav-links {
+      display: flex;
+      gap: 36px;
+      list-style: none;
+      padding: 0; margin: 0;
+    }
+    .nav-links a {
+      color: var(--text-2);
+      font-size: 14px;
+      font-weight: 500;
+      letter-spacing: 0.01em;
+      transition: color .25s var(--ease);
+      position: relative;
+      padding: 4px 0;
+    }
+    .nav-links a:hover { color: var(--text-1); }
+    .nav-links a::after {
+      content: ''; position: absolute;
+      inset-inline-start: 0; bottom: -2px;
+      height: 1px; width: 0;
+      background: var(--gold-1);
+      transition: width .35s var(--ease-out);
+    }
+    .nav-links a:hover::after { width: 100%; }
+
+    .nav-cta {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .lang-toggle {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-2);
+      padding: 8px 14px;
+      border-radius: 100px;
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      transition: all .25s var(--ease);
+    }
+    .lang-toggle:hover {
+      color: var(--text-1);
+      border-color: var(--border-strong);
+      background: var(--surface-1);
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px 22px;
+      border-radius: 100px;
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: 0.01em;
+      border: 1px solid transparent;
+      transition: transform .35s var(--ease-out), background .35s var(--ease), border-color .35s var(--ease), box-shadow .35s var(--ease);
+      will-change: transform;
+    }
+    .btn-primary {
+      background: linear-gradient(180deg, #ECD3A0 0%, var(--gold-2) 100%);
+      color: #1A1209;
+      box-shadow: var(--shadow-gold), inset 0 1px 0 rgba(255,255,255,0.35);
+    }
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 18px 48px -10px rgba(201, 162, 106, 0.45), inset 0 1px 0 rgba(255,255,255,0.4);
+    }
+    .btn-primary:active { transform: translateY(0); }
+
+    .btn-ghost {
+      background: var(--surface-1);
+      color: var(--text-1);
+      border: 1px solid var(--border);
+      backdrop-filter: blur(20px);
+    }
+    .btn-ghost:hover {
+      background: var(--surface-2);
+      border-color: var(--border-strong);
+    }
+
+    .btn-lg { padding: 16px 28px; font-size: 15px; }
+    .btn-sm { padding: 9px 16px; font-size: 13px; }
+
+    /* ─── Hero ─── */
+    .hero {
+      position: relative;
+      padding-top: 64px;
+      padding-bottom: 0;
+      overflow: hidden;
+    }
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1.05fr 1fr;
+      gap: 64px;
+      align-items: center;
+      min-height: calc(100vh - var(--nav-h) - 64px);
+    }
+    @media (max-width: 980px) {
+      .hero-grid { grid-template-columns: 1fr; gap: 48px; min-height: auto; padding: 32px 0; }
+    }
+    .hero-copy { max-width: 580px; }
+    .hero-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 28px;
+      padding: 7px 14px;
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      background: var(--surface-1);
+      backdrop-filter: blur(20px);
+    }
+    .hero-eyebrow .dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--warm);
+      box-shadow: 0 0 12px rgba(242, 201, 122, 0.6);
+      animation: pulse 2.4s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+    .hero-title {
+      font-size: clamp(40px, 6.4vw, 84px);
+      margin: 0;
+      font-weight: 500;
+    }
+    .hero-title .accent {
+      color: var(--gold-1);
+      font-family: 'Cormorant Garamond', serif;
+      font-style: italic;
+      font-weight: 500;
+    }
+    .hero-title .stroke {
+      -webkit-text-stroke: 1px var(--text-2);
+      color: transparent;
+      font-family: 'Cormorant Garamond', serif;
+      font-style: italic;
+    }
+    .hero-sub {
+      font-size: 18px;
+      color: var(--text-2);
+      margin: 24px 0 36px;
+      max-width: 480px;
+      line-height: 1.7;
+    }
+    .hero-ctas {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+    .hero-meta {
+      display: flex;
+      align-items: center;
+      gap: 32px;
+      margin-top: 56px;
+      padding-top: 28px;
+      border-top: 1px solid var(--border-soft);
+    }
+    .hero-meta .item .num {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 30px;
+      font-weight: 500;
+      color: var(--gold-1);
+      line-height: 1;
+    }
+    .hero-meta .item .label {
+      font-size: 12px;
+      color: var(--text-3);
+      margin-top: 6px;
+      letter-spacing: 0.08em;
+    }
+
+    /* Hero visual */
+    .hero-visual {
+      position: relative;
+      aspect-ratio: 4/5;
+      max-height: 720px;
+      border-radius: var(--r-2xl);
+      overflow: hidden;
+      background: linear-gradient(135deg, #1A1611, #0E0C09);
+      box-shadow: var(--shadow-2);
+    }
+    .hero-visual::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, transparent 40%, rgba(8,7,5,0.7) 100%);
+      pointer-events: none;
+    }
+    .hero-visual img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      filter: brightness(0.85) contrast(1.05) saturate(0.92);
+      transition: transform 1.4s var(--ease-out);
+    }
+    .hero-visual:hover img { transform: scale(1.03); }
+
+    /* Floating signature card on hero */
+    .hero-sig {
+      position: absolute;
+      inset-inline-end: 22px;
+      bottom: 22px;
+      padding: 18px 22px;
+      border-radius: var(--r-md);
+      backdrop-filter: blur(20px) saturate(180%);
+      -webkit-backdrop-filter: blur(20px) saturate(180%);
+      background: rgba(15, 13, 10, 0.55);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      max-width: 240px;
+    }
+    .hero-sig .avatar {
+      width: 42px; height: 42px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #3A2A1A, #1A1209);
+      border: 1px solid var(--border);
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+    .hero-sig .avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .hero-sig .info .name { font-size: 13px; font-weight: 600; }
+    .hero-sig .info .meta { font-size: 11px; color: var(--text-3); margin-top: 2px; }
+    .hero-sig .rating {
+      margin-inline-start: auto;
+      display: flex; align-items: center; gap: 4px;
+      color: var(--gold-1);
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    /* ─── Search panel ─── */
+    .search-wrap {
+      max-width: 920px;
+      margin: -72px auto 0;
+      position: relative;
+      z-index: 5;
+      padding: 0 32px;
+    }
+    @media (max-width: 980px) { .search-wrap { margin-top: 0; padding-top: 24px; } }
+
+    .search {
+      backdrop-filter: blur(28px) saturate(180%);
+      -webkit-backdrop-filter: blur(28px) saturate(180%);
+      background: linear-gradient(180deg, rgba(26, 22, 17, 0.7), rgba(17, 16, 12, 0.85));
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      padding: 10px;
+      display: grid;
+      grid-template-columns: 1.1fr 1fr 1fr auto;
+      gap: 4px;
+      box-shadow: var(--shadow-2), inset 0 1px 0 rgba(255,255,255,0.05);
+    }
+    @media (max-width: 780px) {
+      .search { grid-template-columns: 1fr 1fr; }
+      .search .search-btn { grid-column: 1 / -1; }
+    }
+    .search-field {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      padding: 12px 18px;
+      border-radius: var(--r-md);
+      cursor: text;
+      position: relative;
+      transition: background .25s var(--ease);
+    }
+    .search-field + .search-field {
+      box-shadow: -1px 0 0 var(--border-soft);
+    }
+    [dir="rtl"] .search-field + .search-field { box-shadow: 1px 0 0 var(--border-soft); }
+    .search-field:hover { background: var(--surface-1); }
+    .search-field .lbl {
+      font-size: 11px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--text-3);
+      font-weight: 500;
+    }
+    .search-field input,
+    .search-field select {
+      background: transparent;
+      border: 0;
+      outline: 0;
+      color: var(--text-1);
+      font-family: inherit;
+      font-size: 15px;
+      font-weight: 500;
+      padding: 0;
+      width: 100%;
+      appearance: none;
+    }
+    .search-field input::placeholder { color: var(--text-3); }
+    .search-btn {
+      display: grid;
+      place-items: center;
+      padding: 0 24px;
+      border-radius: var(--r-md);
+      background: linear-gradient(180deg, #ECD3A0, var(--gold-2));
+      color: #1A1209;
+      border: 0;
+      font-weight: 700;
+      font-size: 14px;
+      gap: 8px;
+      transition: filter .25s var(--ease), transform .25s var(--ease);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.35);
+    }
+    .search-btn:hover { filter: brightness(1.05); transform: translateY(-1px); }
+    .search-btn svg { width: 18px; height: 18px; }
+
+    /* ─── Filter chips ─── */
+    .filters {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-top: 28px;
+    }
+    .filters .label {
+      font-size: 12px;
+      color: var(--text-3);
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      margin-inline-end: 8px;
+    }
+    .chip {
+      background: var(--surface-1);
+      border: 1px solid var(--border);
+      color: var(--text-2);
+      padding: 9px 16px;
+      border-radius: 100px;
+      font-size: 13px;
+      font-weight: 500;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all .25s var(--ease);
+      backdrop-filter: blur(10px);
+    }
+    .chip svg { width: 14px; height: 14px; opacity: 0.7; }
+    .chip:hover {
+      color: var(--text-1);
+      border-color: var(--border-strong);
+      background: var(--surface-2);
+    }
+    .chip.active {
+      background: linear-gradient(180deg, rgba(212,185,140,0.18), rgba(201,162,106,0.10));
+      color: var(--gold-1);
+      border-color: rgba(212, 185, 140, 0.35);
+      box-shadow: 0 0 0 1px rgba(212, 185, 140, 0.10);
+    }
+    .chip.active .pill-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--warm);
+      box-shadow: 0 0 10px rgba(242, 201, 122, 0.7);
+    }
+
+    /* ─── Section heading ─── */
+    .section-head {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 32px;
+      margin-bottom: 48px;
+    }
+    .section-head .title {
+      font-size: clamp(32px, 4vw, 52px);
+      margin: 12px 0 0;
+      max-width: 640px;
+    }
+    .section-head .desc {
+      color: var(--text-2);
+      max-width: 380px;
+      font-size: 15px;
+      line-height: 1.7;
+    }
+    @media (max-width: 720px) {
+      .section-head { flex-direction: column; align-items: flex-start; gap: 18px; }
+    }
+
+    /* ─── Barber cards grid ─── */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+    @media (max-width: 980px) { .grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 620px) { .grid { grid-template-columns: 1fr; } }
+
+    .card {
+      position: relative;
+      border-radius: var(--r-lg);
+      overflow: hidden;
+      background: var(--bg-2);
+      border: 1px solid var(--border-soft);
+      transition: transform .55s var(--ease-out), border-color .35s var(--ease), box-shadow .55s var(--ease);
+      will-change: transform;
+      cursor: pointer;
+    }
+    .card:hover {
+      transform: translateY(-4px);
+      border-color: var(--border);
+      box-shadow: var(--shadow-2);
+    }
+    .card-media {
+      position: relative;
+      aspect-ratio: 4 / 3.4;
+      overflow: hidden;
+    }
+    .card-media img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      transition: transform 1s var(--ease-out);
+      filter: brightness(0.92) contrast(1.04);
+    }
+    .card:hover .card-media img { transform: scale(1.05); }
+    .card-media::after {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(180deg, transparent 50%, rgba(8,7,5,0.65) 100%);
+    }
+    .card-badges {
+      position: absolute;
+      top: 14px; inset-inline-start: 14px;
+      display: flex; gap: 6px;
+      z-index: 2;
+    }
+    .badge {
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      background: rgba(15, 13, 10, 0.55);
+      border: 1px solid var(--border);
+      color: var(--text-1);
+      padding: 6px 10px;
+      border-radius: 100px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .badge .live-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: #5DD18C;
+      box-shadow: 0 0 8px rgba(93,209,140,0.7);
+    }
+    .badge.gold {
+      background: rgba(212, 185, 140, 0.16);
+      color: var(--gold-1);
+      border-color: rgba(212, 185, 140, 0.30);
+    }
+    .card-fav {
+      position: absolute;
+      top: 14px; inset-inline-end: 14px;
+      z-index: 2;
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      display: grid; place-items: center;
+      background: rgba(15, 13, 10, 0.55);
+      border: 1px solid var(--border);
+      backdrop-filter: blur(14px);
+      color: var(--text-1);
+      transition: all .25s var(--ease);
+    }
+    .card-fav:hover { background: rgba(15, 13, 10, 0.85); border-color: var(--gold-2); color: var(--gold-1); }
+    .card-fav svg { width: 16px; height: 16px; }
+    .card-fav.is-saved { color: var(--gold-1); border-color: var(--gold-2); }
+
+    .card-body {
+      padding: 20px 22px 22px;
+    }
+    .card-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .card-name {
+      font-family: 'Reem Kufi', serif;
+      font-size: 19px;
+      font-weight: 600;
+      margin: 0;
+      letter-spacing: 0.01em;
+    }
+    .card-loc {
+      color: var(--text-3);
+      font-size: 12px;
+      margin-top: 4px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .card-loc svg { width: 12px; height: 12px; opacity: 0.7; }
+
+    .card-rating {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--gold-1);
+    }
+    .card-rating svg { width: 14px; height: 14px; }
+    .card-rating .count { color: var(--text-3); font-weight: 400; margin-inline-start: 2px; }
+
+    .card-services {
+      display: flex;
+      gap: 6px;
+      margin-top: 14px;
+      flex-wrap: wrap;
+    }
+    .tag {
+      font-size: 11px;
+      color: var(--text-2);
+      padding: 4px 10px;
+      border-radius: 100px;
+      background: var(--surface-1);
+      border: 1px solid var(--border-soft);
+    }
+
+    .card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 18px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border-soft);
+    }
+    .price .val {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 22px;
+      color: var(--text-1);
+      font-weight: 500;
+    }
+    .price .cur {
+      color: var(--text-3);
+      font-size: 12px;
+      margin-inline-start: 2px;
+    }
+    .price .from {
+      font-size: 11px;
+      color: var(--text-3);
+      display: block;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .card-book {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      color: var(--text-1);
+      padding: 9px 16px;
+      border-radius: 100px;
+      font-size: 13px;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all .25s var(--ease);
+    }
+    .card-book:hover {
+      background: linear-gradient(180deg, #ECD3A0, var(--gold-2));
+      color: #1A1209;
+      border-color: transparent;
+    }
+    .card-book svg { width: 14px; height: 14px; }
+
+    /* ─── Showcase (featured barber wide) ─── */
+    .showcase {
+      display: grid;
+      grid-template-columns: 1.05fr 1fr;
+      gap: 32px;
+      align-items: stretch;
+      border-radius: var(--r-2xl);
+      overflow: hidden;
+      border: 1px solid var(--border);
+      background: linear-gradient(180deg, var(--bg-2), var(--bg-3));
+      position: relative;
+    }
+    @media (max-width: 980px) { .showcase { grid-template-columns: 1fr; } }
+    .showcase-media {
+      position: relative;
+      min-height: 540px;
+    }
+    .showcase-media img {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      object-fit: cover;
+      filter: brightness(0.85) contrast(1.05);
+    }
+    .showcase-media::after {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(110deg, transparent 40%, rgba(11, 10, 8, 0.85));
+    }
+    [dir="rtl"] .showcase-media::after {
+      background: linear-gradient(250deg, transparent 40%, rgba(11, 10, 8, 0.85));
+    }
+
+    .showcase-thumbs {
+      position: absolute;
+      bottom: 22px; inset-inline-start: 22px;
+      display: flex; gap: 8px;
+      z-index: 2;
+    }
+    .showcase-thumbs .t {
+      width: 64px; height: 64px;
+      border-radius: var(--r-sm);
+      overflow: hidden;
+      border: 1px solid var(--border);
+      cursor: pointer;
+      transition: transform .35s var(--ease), border-color .25s var(--ease);
+    }
+    .showcase-thumbs .t img { width: 100%; height: 100%; object-fit: cover; }
+    .showcase-thumbs .t:hover { transform: translateY(-2px); border-color: var(--gold-2); }
+    .showcase-thumbs .t.is-active { border-color: var(--gold-1); }
+
+    .showcase-info {
+      padding: 48px 48px 48px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 24px;
+    }
+    @media (max-width: 720px) { .showcase-info { padding: 32px 24px; } }
+
+    .showcase-row {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+    .showcase h3 {
+      font-family: 'Reem Kufi', serif;
+      font-size: clamp(28px, 4vw, 44px);
+      margin: 0;
+      font-weight: 500;
+      line-height: 1.1;
+    }
+    .showcase .meta-line {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      color: var(--text-2);
+      font-size: 14px;
+    }
+    .meta-dot {
+      width: 4px; height: 4px;
+      border-radius: 50%;
+      background: var(--text-3);
+    }
+    .showcase .bio {
+      color: var(--text-2);
+      line-height: 1.7;
+      max-width: 500px;
+    }
+
+    .services-list {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 8px;
+    }
+    @media (max-width: 480px) { .services-list { grid-template-columns: 1fr; } }
+    .service {
+      padding: 14px 16px;
+      background: var(--surface-1);
+      border: 1px solid var(--border-soft);
+      border-radius: var(--r-md);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      transition: all .25s var(--ease);
+    }
+    .service:hover { background: var(--surface-2); border-color: var(--border); }
+    .service .name { font-size: 14px; font-weight: 500; }
+    .service .duration { font-size: 11px; color: var(--text-3); margin-top: 2px; letter-spacing: 0.08em; }
+    .service .pp {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 20px;
+      color: var(--gold-1);
+      font-weight: 500;
+    }
+
+    .showcase-cta {
+      display: flex;
+      gap: 12px;
+      margin-top: 8px;
+      flex-wrap: wrap;
+    }
+    .icon-btn {
+      width: 48px; height: 48px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      color: var(--text-1);
+      transition: all .25s var(--ease);
+    }
+    .icon-btn:hover {
+      background: var(--surface-3);
+      border-color: var(--border-strong);
+      transform: translateY(-1px);
+    }
+    .icon-btn.whatsapp:hover { color: #25D366; border-color: rgba(37, 211, 102, 0.4); }
+    .icon-btn svg { width: 18px; height: 18px; }
+
+    /* ─── Trust strip ─── */
+    .trust {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1px;
+      border-radius: var(--r-xl);
+      overflow: hidden;
+      border: 1px solid var(--border);
+      background: var(--border);
+    }
+    @media (max-width: 720px) { .trust { grid-template-columns: 1fr 1fr; } }
+    .trust .cell {
+      background: var(--bg-2);
+      padding: 36px 28px;
+      transition: background .35s var(--ease);
+    }
+    .trust .cell:hover { background: var(--bg-3); }
+    .trust .num {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(36px, 4vw, 54px);
+      font-weight: 500;
+      line-height: 1;
+      background: linear-gradient(180deg, var(--gold-1), var(--gold-3));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    .trust .lbl {
+      margin-top: 12px;
+      font-size: 13px;
+      color: var(--text-2);
+      max-width: 220px;
+      line-height: 1.6;
+    }
+    .trust .sub {
+      font-size: 11px;
+      color: var(--text-3);
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      margin-top: 4px;
+    }
+
+    /* ─── Testimonials ─── */
+    .quotes {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+    }
+    @media (max-width: 980px) { .quotes { grid-template-columns: 1fr; } }
+    .quote {
+      padding: 32px;
+      border-radius: var(--r-lg);
+      background: var(--surface-1);
+      border: 1px solid var(--border-soft);
+      backdrop-filter: blur(10px);
+      transition: all .35s var(--ease);
+    }
+    .quote:hover {
+      background: var(--surface-2);
+      border-color: var(--border);
+      transform: translateY(-2px);
+    }
+    .quote .mark {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 56px;
+      line-height: 1;
+      color: var(--gold-2);
+      opacity: 0.6;
+      margin-bottom: -10px;
+    }
+    .quote p {
+      font-size: 16px;
+      line-height: 1.75;
+      color: var(--text-1);
+      margin: 0;
+    }
+    .quote .who {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-top: 24px;
+      padding-top: 18px;
+      border-top: 1px solid var(--border-soft);
+    }
+    .quote .avatar {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--gold-3), var(--bg-3));
+      flex-shrink: 0;
+      display: grid; place-items: center;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-1);
+    }
+    .quote .who .n { font-size: 13px; font-weight: 600; }
+    .quote .who .c { font-size: 12px; color: var(--text-3); margin-top: 2px; }
+
+    /* ─── Final CTA ─── */
+    .cta-band {
+      position: relative;
+      border-radius: var(--r-2xl);
+      padding: 80px 56px;
+      text-align: center;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      background:
+        radial-gradient(800px 400px at 50% 0%, rgba(212, 185, 140, 0.12), transparent 65%),
+        linear-gradient(180deg, var(--bg-3), var(--bg-2));
+    }
+    .cta-band::before {
+      content: '';
+      position: absolute; inset: 0;
+      background-image:
+        linear-gradient(transparent 95%, var(--border) 95%),
+        linear-gradient(90deg, transparent 95%, var(--border) 95%);
+      background-size: 32px 32px;
+      opacity: 0.5;
+      pointer-events: none;
+      mask-image: radial-gradient(ellipse at center, black 30%, transparent 75%);
+    }
+    .cta-band h2 {
+      font-family: 'Reem Kufi', serif;
+      font-size: clamp(32px, 5vw, 56px);
+      font-weight: 500;
+      margin: 0 0 16px;
+      line-height: 1.1;
+    }
+    .cta-band .accent {
+      font-family: 'Cormorant Garamond', serif;
+      font-style: italic;
+      color: var(--gold-1);
+    }
+    .cta-band p {
+      color: var(--text-2);
+      font-size: 17px;
+      max-width: 520px;
+      margin: 0 auto 32px;
+      line-height: 1.7;
+    }
+
+    /* ─── Footer ─── */
+    .footer {
+      padding: 64px 0 40px;
+      border-top: 1px solid var(--border-soft);
+      margin-top: 96px;
+    }
+    .footer-grid {
+      display: grid;
+      grid-template-columns: 1.4fr 1fr 1fr 1fr;
+      gap: 48px;
+    }
+    @media (max-width: 720px) { .footer-grid { grid-template-columns: 1fr 1fr; gap: 32px; } }
+    .footer h5 {
+      font-family: 'Inter', sans-serif;
+      font-size: 11px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--text-3);
+      margin: 0 0 18px;
+      font-weight: 500;
+    }
+    .footer ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; }
+    .footer a {
+      color: var(--text-2);
+      font-size: 14px;
+      transition: color .25s var(--ease);
+    }
+    .footer a:hover { color: var(--gold-1); }
+    .footer .brand-block { max-width: 340px; }
+    .footer .brand-block p {
+      color: var(--text-3);
+      font-size: 13px;
+      margin: 14px 0 0;
+      line-height: 1.7;
+    }
+    .footer-bottom {
+      margin-top: 56px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border-soft);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+      color: var(--text-3);
+      font-size: 12px;
+    }
+    .footer-bottom .links { display: flex; gap: 24px; }
+    .socials { display: flex; gap: 8px; margin-top: 18px; }
+    .socials a {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      display: grid; place-items: center;
+      border: 1px solid var(--border);
+      background: var(--surface-1);
+      transition: all .25s var(--ease);
+    }
+    .socials a:hover { background: var(--surface-2); border-color: var(--border-strong); color: var(--gold-1); }
+    .socials svg { width: 15px; height: 15px; }
+
+    /* ─── Reveal on scroll ─── */
+    .reveal {
+      opacity: 0;
+      transform: translateY(18px);
+      transition: opacity .9s var(--ease-out), transform .9s var(--ease-out);
+    }
+    .reveal.in {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ─── Bottom sheet (mobile) ─── */
+    .sheet-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(5, 4, 3, 0.55);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .35s var(--ease);
+      z-index: 80;
+    }
+    .sheet-overlay.open { opacity: 1; pointer-events: auto; }
+    .sheet {
+      position: fixed;
+      inset-inline: 0;
+      bottom: 0;
+      background: linear-gradient(180deg, #14110D, #0E0C09);
+      border-top: 1px solid var(--border);
+      border-top-left-radius: var(--r-xl);
+      border-top-right-radius: var(--r-xl);
+      padding: 14px 24px 32px;
+      transform: translateY(100%);
+      transition: transform .55s var(--ease-out);
+      z-index: 90;
+      box-shadow: 0 -24px 60px rgba(0,0,0,0.6);
+      max-height: 86vh;
+      overflow-y: auto;
+    }
+    .sheet.open { transform: translateY(0); }
+    .sheet-handle {
+      width: 44px; height: 4px;
+      border-radius: 4px;
+      background: var(--border-strong);
+      margin: 0 auto 18px;
+    }
+    .sheet h4 {
+      font-family: 'Reem Kufi', serif;
+      font-size: 22px;
+      margin: 4px 0 8px;
+    }
+    .sheet .row {
+      display: flex; align-items: center; gap: 14px;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border-soft);
+    }
+    .sheet .row:last-child { border-bottom: 0; }
+    .sheet .row .lbl { color: var(--text-3); font-size: 13px; min-width: 110px; }
+    .sheet .row .val { color: var(--text-1); font-size: 14px; font-weight: 500; }
+    .sheet .actions { margin-top: 20px; display: flex; gap: 10px; }
+    .sheet .actions .btn { flex: 1; }
+
+    /* Skeleton loader (kept for completeness) */
+    @keyframes shimmer {
+      0% { background-position: -300px 0; }
+      100% { background-position: 300px 0; }
+    }
+    .skeleton {
+      background: linear-gradient(90deg, var(--surface-1) 0%, var(--surface-2) 50%, var(--surface-1) 100%);
+      background-size: 600px 100%;
+      animation: shimmer 1.6s infinite linear;
+      border-radius: var(--r-sm);
+    }
+
+    /* Accessibility helpers */
+    .sr { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+    :focus-visible { outline: 2px solid var(--gold-1); outline-offset: 3px; border-radius: 4px; }
+
+    /* Reduce motion */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+      }
+    }
+
+    /* Mobile nav adjustments */
+    @media (max-width: 780px) {
+      .nav-links { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ──────── Navigation ──────── -->
+  <header class="nav">
+    <div class="container nav-inner">
+      <a class="brand" href="#" aria-label="مَزْيَن — الصفحة الرئيسية">
+        <span class="brand-mark" aria-hidden="true">
+          <!-- shears mark -->
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="6" cy="6" r="3"/>
+            <circle cx="6" cy="18" r="3"/>
+            <line x1="20" y1="4" x2="8.12" y2="15.88"/>
+            <line x1="14.47" y1="14.48" x2="20" y2="20"/>
+            <line x1="8.12" y1="8.12" x2="12" y2="12"/>
+          </svg>
+        </span>
+        <span>
+          <span class="brand-name">مَزْيَن</span>
+          <span class="brand-sub">· Mazyan</span>
+        </span>
+      </a>
+
+      <nav aria-label="رئيسية">
+        <ul class="nav-links">
+          <li><a href="#barbers">حلّاقون</a></li>
+          <li><a href="#showcase">تجربة الحجز</a></li>
+          <li><a href="#trust">لِمَ مَزْيَن</a></li>
+          <li><a href="#footer">للأعمال</a></li>
+        </ul>
+      </nav>
+
+      <div class="nav-cta">
+        <button type="button" class="lang-toggle" aria-label="تغيير اللغة">EN</button>
+        <a href="#search" class="btn btn-primary btn-sm">احجز الآن</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- ──────── Hero ──────── -->
+  <section class="hero">
+    <div class="container">
+      <div class="hero-grid">
+        <div class="hero-copy reveal">
+          <div class="hero-eyebrow">
+            <span class="dot" aria-hidden="true"></span>
+            <span class="eyebrow">منصّة دعوة فقط · بيروت ، الرياض ، الدوحة</span>
+          </div>
+
+          <h1 class="hero-title display">
+            حلّاقُكَ
+            <span class="serif-en accent">المختار</span>،
+            <br>
+            على بُعدِ
+            <span class="stroke">لمسة</span>.
+          </h1>
+
+          <p class="hero-sub">
+            لا قوائم لا تنتهي. ولا حلّاقاً عشوائيًّا. <br>
+            نختار لك من حيّك بضعةَ أسماءٍ صنعوا أناقتهم بأيديهم،
+            ونحجز لك الموعد الذي يليق بانشغالك.
+          </p>
+
+          <div class="hero-ctas">
+            <a href="#search" class="btn btn-primary btn-lg">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                <circle cx="12" cy="10" r="3"/>
+              </svg>
+              ابحث حسب حيّي
+            </a>
+            <a href="#barbers" class="btn btn-ghost btn-lg">
+              تصفّح الحلّاقين
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14">
+                <path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/>
+              </svg>
+            </a>
+          </div>
+
+          <div class="hero-meta">
+            <div class="item">
+              <div class="num mono">4.92</div>
+              <div class="label">متوسّط تقييم العملاء</div>
+            </div>
+            <div class="item">
+              <div class="num mono">‎+1,800</div>
+              <div class="label">حلاقة مكتملة هذا الشهر</div>
+            </div>
+            <div class="item">
+              <div class="num mono">‎9:47</div>
+              <div class="label">دقيقة لِحَجز موعدك</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="hero-visual reveal" aria-hidden="true">
+          <img
+            src="https://images.unsplash.com/photo-1599351431202-1e0f0137899a?w=900&q=85&auto=format&fit=crop"
+            alt=""
+            loading="eager"
+            referrerpolicy="no-referrer">
+          <div class="hero-sig">
+            <div class="avatar">
+              <img src="https://images.unsplash.com/photo-1568602471122-7832951cc4c5?w=200&q=80&auto=format&fit=crop" alt="">
+            </div>
+            <div class="info">
+              <div class="name">يوسُف الزّيدان</div>
+              <div class="meta">حيّ الحمراء · 1.2 كم</div>
+            </div>
+            <div class="rating" role="img" aria-label="تقييم 4.9">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+              4.9
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ──────── Search bar ──────── -->
+  <div class="search-wrap" id="search">
+    <form class="search reveal" onsubmit="event.preventDefault(); document.getElementById('barbers').scrollIntoView({behavior:'smooth'});">
+      <label class="search-field">
+        <span class="lbl">المدينة</span>
+        <select id="city">
+          <option>بيروت</option>
+          <option>الرياض</option>
+          <option>الدوحة</option>
+          <option>أبوظبي</option>
+          <option>عمّان</option>
+        </select>
+      </label>
+      <label class="search-field">
+        <span class="lbl">الحيّ</span>
+        <input id="neigh" type="text" placeholder="الحمراء، الأشرفية، الجميزة…">
+      </label>
+      <label class="search-field">
+        <span class="lbl">الموعد</span>
+        <select id="when">
+          <option>الآن — متاح فورًا</option>
+          <option>اليوم</option>
+          <option>غدًا</option>
+          <option>اختر تاريخًا</option>
+        </select>
+      </label>
+      <button class="search-btn" type="submit">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="7"/>
+          <path d="M21 21l-4.3-4.3"/>
+        </svg>
+        ابحث
+      </button>
+    </form>
+
+    <div class="filters reveal" role="group" aria-label="فلاتر">
+      <span class="label">صفّ النتائج</span>
+      <button type="button" class="chip active" data-filter="now"><span class="pill-dot"></span> متاح الآن</button>
+      <button type="button" class="chip" data-filter="near">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="9"/></svg>
+        قريب منّي
+      </button>
+      <button type="button" class="chip" data-filter="price">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1v22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        السعر — منخفض إلى مرتفع
+      </button>
+      <button type="button" class="chip" data-filter="type">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/></svg>
+        قصّة كلاسيكية
+      </button>
+      <button type="button" class="chip" data-filter="beard">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a5 5 0 0 0-5 5v4a5 5 0 0 0 10 0V7a5 5 0 0 0-5-5z"/><path d="M5 12c0 5 3 9 7 9s7-4 7-9"/></svg>
+        تهذيب لحية
+      </button>
+      <button type="button" class="chip" data-filter="women">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="5"/><path d="M12 13v8M9 18h6"/></svg>
+        صالون نسائي
+      </button>
+    </div>
+  </div>
+
+  <!-- ──────── Barber cards ──────── -->
+  <section class="section" id="barbers">
+    <div class="container">
+      <div class="section-head reveal">
+        <div>
+          <span class="eyebrow">منتقَون لِحيّك</span>
+          <h2 class="display title">
+            ثقةٌ ، لا
+            <span class="serif-en" style="color: var(--gold-1);">صدفة</span>.
+          </h2>
+        </div>
+        <p class="desc">
+          ستّةٌ من الأكثر طلبًا الأسبوع الماضي في نطاقِ كيلومترين من موقعك. كلّ بطاقةٍ تَفتح تجربةً كاملة: خدماتٌ، أوقاتٌ، ومعرضُ صور.
+        </p>
+      </div>
+
+      <div class="grid" id="barbers-grid">
+        <!-- Cards populated by data array, kept inline for static fidelity -->
+      </div>
+    </div>
+  </section>
+
+  <!-- ──────── Showcase (featured barber detail) ──────── -->
+  <section class="section" id="showcase" style="padding-top: 0;">
+    <div class="container">
+      <div class="section-head reveal">
+        <div>
+          <span class="eyebrow">تجربة الحجز</span>
+          <h2 class="display title">
+            من البطاقة إلى الكُرسيّ،
+            <span class="serif-en" style="color: var(--gold-1);">في لمسة</span>.
+          </h2>
+        </div>
+        <p class="desc">
+          هكذا تبدو صفحةُ الحلّاق عندنا: خدماتُه، صورُ أعماله، أوقاتُ عمله، وزرّان فقط — اتّصل، أو احجز.
+        </p>
+      </div>
+
+      <article class="showcase reveal">
+        <div class="showcase-media">
+          <img
+            id="showcase-img"
+            src="https://images.unsplash.com/photo-1622286342621-4bd786c2447c?w=1100&q=85&auto=format&fit=crop"
+            alt="معرض أعمال الحلاق"
+            loading="lazy"
+            referrerpolicy="no-referrer">
+          <div class="showcase-thumbs" role="tablist" aria-label="معرض">
+            <button type="button" class="t is-active" aria-label="عرض الصورة" data-img="https://images.unsplash.com/photo-1622286342621-4bd786c2447c?w=200&q=80&auto=format&fit=crop">
+              <img src="https://images.unsplash.com/photo-1622286342621-4bd786c2447c?w=200&q=80&auto=format&fit=crop" alt="">
+            </button>
+            <button type="button" class="t" aria-label="عرض الصورة" data-img="https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=1100&q=85&auto=format&fit=crop">
+              <img src="https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=200&q=80&auto=format&fit=crop" alt="">
+            </button>
+            <button type="button" class="t" aria-label="عرض الصورة" data-img="https://images.unsplash.com/photo-1599351431202-1e0f0137899a?w=1100&q=85&auto=format&fit=crop">
+              <img src="https://images.unsplash.com/photo-1599351431202-1e0f0137899a?w=200&q=80&auto=format&fit=crop" alt="">
+            </button>
+            <button type="button" class="t" aria-label="عرض الصورة" data-img="https://images.unsplash.com/photo-1593702288056-7927a9e6a8a3?w=1100&q=85&auto=format&fit=crop">
+              <img src="https://images.unsplash.com/photo-1593702288056-7927a9e6a8a3?w=200&q=80&auto=format&fit=crop" alt="">
+            </button>
+          </div>
+        </div>
+
+        <div class="showcase-info">
+          <div class="showcase-row">
+            <span class="badge gold">‎15+ سنة خبرة</span>
+            <span class="badge"><span class="live-dot"></span> متاح الآن</span>
+          </div>
+          <h3>
+            صالون <span class="serif-en" style="color: var(--gold-1);">Atelier 27</span>
+          </h3>
+          <div class="meta-line">
+            <span>الأشرفيّة ، بيروت</span>
+            <span class="meta-dot"></span>
+            <span>1.4 كم</span>
+            <span class="meta-dot"></span>
+            <span class="card-rating">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+              4.97
+              <span class="count">(312)</span>
+            </span>
+          </div>
+
+          <p class="bio">
+            ورشةُ حلاقةٍ صغيرةٌ من ثلاثة كراسي، تَخصُّصُها القصّاتُ الكلاسيكيّةُ بأدواتٍ يدويّةٍ، وتشذيبُ اللحيةِ بفوطةٍ ساخنة. كلُّ موعدٍ نصفُ ساعةٍ لكَ وحدك.
+          </p>
+
+          <div class="services-list">
+            <div class="service">
+              <div>
+                <div class="name">قصّة شعر كاملة</div>
+                <div class="duration">45 دقيقة · شامبو</div>
+              </div>
+              <div class="pp">40<span class="cur" style="font-size:11px;color:var(--text-3);">$</span></div>
+            </div>
+            <div class="service">
+              <div>
+                <div class="name">تهذيب لحية</div>
+                <div class="duration">25 دقيقة · فوطة ساخنة</div>
+              </div>
+              <div class="pp">25<span class="cur" style="font-size:11px;color:var(--text-3);">$</span></div>
+            </div>
+            <div class="service">
+              <div>
+                <div class="name">باكِج كامل</div>
+                <div class="duration">70 دقيقة · توصيل</div>
+              </div>
+              <div class="pp">60<span class="cur" style="font-size:11px;color:var(--text-3);">$</span></div>
+            </div>
+            <div class="service">
+              <div>
+                <div class="name">حلاقة عريس</div>
+                <div class="duration">90 دقيقة · بالموقع</div>
+              </div>
+              <div class="pp">120<span class="cur" style="font-size:11px;color:var(--text-3);">$</span></div>
+            </div>
+          </div>
+
+          <div class="showcase-cta">
+            <button type="button" class="btn btn-primary btn-lg" onclick="openSheet()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16">
+                <rect x="3" y="4" width="18" height="18" rx="2"/>
+                <line x1="16" y1="2" x2="16" y2="6"/>
+                <line x1="8" y1="2" x2="8" y2="6"/>
+                <line x1="3" y1="10" x2="21" y2="10"/>
+              </svg>
+              احجز عند Atelier 27
+            </button>
+            <button type="button" class="icon-btn" aria-label="اتصال">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13 1.05.37 2.07.72 3.06a2 2 0 0 1-.45 2.11L8.09 10.91a16 16 0 0 0 6 6l2.02-1.29a2 2 0 0 1 2.11-.45c.99.35 2.01.59 3.06.72A2 2 0 0 1 22 16.92z"/></svg>
+            </button>
+            <button type="button" class="icon-btn whatsapp" aria-label="واتساب">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.498 14.382c-.301-.15-1.767-.867-2.04-.966-.273-.101-.473-.15-.673.15-.197.295-.771.964-.944 1.162-.175.195-.349.21-.646.075-.3-.15-1.263-.465-2.403-1.485-.888-.795-1.484-1.77-1.66-2.07-.174-.3-.019-.465.13-.615.136-.135.301-.345.451-.523.146-.181.194-.301.297-.496.1-.21.049-.375-.025-.524-.075-.15-.672-1.62-.922-2.206-.24-.584-.487-.51-.672-.51-.172-.015-.371-.015-.571-.015-.2 0-.523.074-.797.359-.273.3-1.045 1.02-1.045 2.475s1.07 2.865 1.219 3.075c.149.195 2.105 3.195 5.1 4.485.714.3 1.27.48 1.704.629.714.227 1.365.195 1.88.121.574-.091 1.767-.721 2.016-1.426.255-.705.255-1.29.18-1.425-.074-.135-.27-.21-.57-.345m-5.446 7.443h-.016c-1.77 0-3.524-.48-5.055-1.38l-.36-.214-3.75.975 1.005-3.645-.239-.375a9.869 9.869 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413"/></svg>
+            </button>
+          </div>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <!-- ──────── Trust strip ──────── -->
+  <section class="section" id="trust" style="padding-top: 32px;">
+    <div class="container">
+      <div class="section-head reveal">
+        <div>
+          <span class="eyebrow">لِمَ مَزْيَن</span>
+          <h2 class="display title">
+            عقدُ ثقةٍ ،
+            <span class="serif-en" style="color: var(--gold-1);">لا مجرّد حجز</span>.
+          </h2>
+        </div>
+        <p class="desc">
+          نعتني بأدقّ التفاصيل؛ لأنّ نصفَ ساعةٍ على كرسيِّ الحلاقة تُغيِّر أسبوعَك.
+        </p>
+      </div>
+
+      <div class="trust reveal">
+        <div class="cell">
+          <div class="num mono">4.92</div>
+          <div class="sub">متوسّط</div>
+          <div class="lbl">تقييم 12,400 حلاقةٍ مكتملةٍ على المنصّة.</div>
+        </div>
+        <div class="cell">
+          <div class="num mono">‎ 9د</div>
+          <div class="sub">متوسط</div>
+          <div class="lbl">الوقت من فتحِ التطبيق إلى تأكيد الحجز.</div>
+        </div>
+        <div class="cell">
+          <div class="num mono">‎ 100%</div>
+          <div class="sub">ضمان</div>
+          <div class="lbl">إن لم تَرْضَ، نُعيد لك المبلغ كاملاً — بلا أسئلة.</div>
+        </div>
+        <div class="cell">
+          <div class="num mono">‎ 230+</div>
+          <div class="sub">حلّاق</div>
+          <div class="lbl">منتقَى يدويًّا بمقابلةٍ شخصيّةٍ وزيارةٍ للصالون.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ──────── Testimonials ──────── -->
+  <section class="section" style="padding-top: 32px;">
+    <div class="container">
+      <div class="section-head reveal">
+        <div>
+          <span class="eyebrow">رأي العملاء</span>
+          <h2 class="display title">
+            كلامُهم ،
+            <span class="serif-en" style="color: var(--gold-1);">لا كلامُنا</span>.
+          </h2>
+        </div>
+      </div>
+
+      <div class="quotes">
+        <figure class="quote reveal">
+          <div class="mark">”</div>
+          <p>أوّلُ مرّةٍ أحجزُ حلاقةَ عريسٍ من الجوّال ولا أَقلق. وصلَ الحلّاقُ بدقيقتين قبلَ الموعد، وكأنّه يَعرفُني منذ سنوات.</p>
+          <figcaption class="who">
+            <div class="avatar">ك</div>
+            <div>
+              <div class="n">كرم الخالد</div>
+              <div class="c">عميل · بيروت</div>
+            </div>
+          </figcaption>
+        </figure>
+        <figure class="quote reveal">
+          <div class="mark">”</div>
+          <p>الفرقُ في التفاصيل: تذكيرٌ قبل ساعة، تعديلُ الموعد بضغطة، ودفعٌ بلا احتكاك. خدمةٌ تشعر أنّها صُمِّمت لك أنت.</p>
+          <figcaption class="who">
+            <div class="avatar">ل</div>
+            <div>
+              <div class="n">ليلى م. خوري</div>
+              <div class="c">عميلة · الرياض</div>
+            </div>
+          </figcaption>
+        </figure>
+        <figure class="quote reveal">
+          <div class="mark">”</div>
+          <p>كَمَن دخلَ متجراً صغيراً يَعرف صاحبَه باسمه. هكذا أَشعرُ مع <em>مَزْيَن</em> بعد ستِّ حلاقات.</p>
+          <figcaption class="who">
+            <div class="avatar">ه</div>
+            <div>
+              <div class="n">هشام العَمري</div>
+              <div class="c">عميل · الدوحة</div>
+            </div>
+          </figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <!-- ──────── CTA Band ──────── -->
+  <section class="section" style="padding-top: 32px;">
+    <div class="container">
+      <div class="cta-band reveal">
+        <h2>
+          أَطلّ بأناقتك،
+          <span class="accent">على راحتك</span>.
+        </h2>
+        <p>
+          سَجِّل بريدَك لِتَصِلَك دعوتُنا الأولى عند افتتاحِ خِدمتنا في حيِّك.
+        </p>
+        <form class="search" style="max-width: 480px; margin: 0 auto;" onsubmit="event.preventDefault(); this.querySelector('button').textContent='تمّ — سنُراسلك قريبًا';">
+          <label class="search-field" style="grid-column: 1 / span 3;">
+            <span class="lbl">بريدُك</span>
+            <input id="email" type="email" placeholder="you@domain.com" required>
+          </label>
+          <button class="search-btn" type="submit">
+            انضمّ
+          </button>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- ──────── Footer ──────── -->
+  <footer class="footer" id="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="brand-block">
+          <a class="brand" href="#">
+            <span class="brand-mark" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/>
+                <line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/>
+              </svg>
+            </span>
+            <span>
+              <span class="brand-name">مَزْيَن</span>
+              <span class="brand-sub">· Mazyan</span>
+            </span>
+          </a>
+          <p>منصّة تَختار لك حلّاقًا موثوقًا قُربَ حيّك. حِرفةٌ ، لا تطبيقٌ آخر.</p>
+          <div class="socials">
+            <a href="#" aria-label="انستغرام"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg></a>
+            <a href="#" aria-label="تيك توك"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5.8 20.1a6.34 6.34 0 0 0 10.86-4.43V8.51a8.41 8.41 0 0 0 4.91 1.59v-3.4a4.84 4.84 0 0 1-1.98-.01z"/></svg></a>
+            <a href="#" aria-label="تويتر"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a>
+          </div>
+        </div>
+        <div>
+          <h5>المنتج</h5>
+          <ul>
+            <li><a href="#barbers">حلّاقون قرب منّي</a></li>
+            <li><a href="#search">حجز موعد</a></li>
+            <li><a href="#showcase">صفحات الحلّاقين</a></li>
+            <li><a href="#">بطاقات الإهداء</a></li>
+          </ul>
+        </div>
+        <div>
+          <h5>الشركة</h5>
+          <ul>
+            <li><a href="#">من نحن</a></li>
+            <li><a href="#">معايير الانتقاء</a></li>
+            <li><a href="#">دعوة حلّاق</a></li>
+            <li><a href="#">للشركاء</a></li>
+          </ul>
+        </div>
+        <div>
+          <h5>المساعدة</h5>
+          <ul>
+            <li><a href="#">مركز الدعم</a></li>
+            <li><a href="#">سياسة الإلغاء</a></li>
+            <li><a href="#">ضمان الجودة</a></li>
+            <li><a href="#">تواصل معنا</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <span>© 2026 Mazyan · جميع الحقوق محفوظة.</span>
+        <div class="links">
+          <a href="#">شروط الاستخدام</a>
+          <a href="#">الخصوصية</a>
+          <a href="#">ملفّات تعريف الارتباط</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ──────── Bottom sheet (booking) ──────── -->
+  <div class="sheet-overlay" id="sheet-overlay" onclick="closeSheet()"></div>
+  <aside class="sheet" id="sheet" aria-modal="true" aria-labelledby="sheet-title" role="dialog">
+    <div class="sheet-handle" aria-hidden="true"></div>
+    <span class="eyebrow">تأكيد الحجز</span>
+    <h4 id="sheet-title">Atelier 27 — قصّة شعر كاملة</h4>
+
+    <div class="row">
+      <span class="lbl">التاريخ</span>
+      <span class="val">الجمعة، 30 أيار — 17:30</span>
+    </div>
+    <div class="row">
+      <span class="lbl">المدّة</span>
+      <span class="val">45 دقيقة</span>
+    </div>
+    <div class="row">
+      <span class="lbl">العنوان</span>
+      <span class="val">الأشرفيّة، شارع جان عبد النور 12</span>
+    </div>
+    <div class="row">
+      <span class="lbl">الكلفة</span>
+      <span class="val" style="color: var(--gold-1); font-family: 'Cormorant Garamond', serif; font-size: 22px;">‎40$ — تُدفع في المحلّ</span>
+    </div>
+
+    <div class="actions">
+      <button type="button" class="btn btn-ghost" onclick="closeSheet()">إلغاء</button>
+      <button type="button" class="btn btn-primary" onclick="this.textContent='✓ تمّ تأكيد حجزك'">تأكيد الحجز</button>
+    </div>
+  </aside>
+
+  <script>
+    /* ────────────────────────────
+       Data — curated barbers
+       ──────────────────────────── */
+    const BARBERS = [
+      {
+        name: 'يوسُف الزَّيدان',
+        en: 'Yusuf Zaidan',
+        loc: 'الحمراء · بيروت',
+        dist: '1.2 كم',
+        rating: 4.93,
+        count: 218,
+        img: 'https://images.unsplash.com/photo-1605497788044-5a32c7078486?w=800&q=85&auto=format&fit=crop',
+        tags: ['قصّة كلاسيكية','تهذيب لحية','حلاقة بالموس'],
+        price: 35,
+        live: true,
+        gold: true,
+      },
+      {
+        name: 'صالون Atelier 27',
+        en: 'Atelier 27',
+        loc: 'الأشرفيّة · بيروت',
+        dist: '1.4 كم',
+        rating: 4.97,
+        count: 312,
+        img: 'https://images.unsplash.com/photo-1622286342621-4bd786c2447c?w=800&q=85&auto=format&fit=crop',
+        tags: ['Premium','3 كراسي','بفوطة ساخنة'],
+        price: 40,
+        live: true,
+        gold: true,
+      },
+      {
+        name: 'أمين قبّاني',
+        en: 'Amin Kabbani',
+        loc: 'الجمَيْزة · بيروت',
+        dist: '2.0 كم',
+        rating: 4.88,
+        count: 184,
+        img: 'https://images.unsplash.com/photo-1593702288056-7927a9e6a8a3?w=800&q=85&auto=format&fit=crop',
+        tags: ['Skin Fade','Buzz','تشذيب يوميّ'],
+        price: 28,
+        live: false,
+      },
+      {
+        name: 'Maison Dahlia',
+        en: 'Maison Dahlia',
+        loc: 'الروشة · بيروت',
+        dist: '2.7 كم',
+        rating: 4.91,
+        count: 421,
+        img: 'https://images.unsplash.com/photo-1521590832167-7bcbfaa6381f?w=800&q=85&auto=format&fit=crop',
+        tags: ['نسائي','صبغة','قصّ راقٍ'],
+        price: 65,
+        live: true,
+      },
+      {
+        name: 'حنّا إيليّا',
+        en: 'Hanna Elia',
+        loc: 'مار مخايل · بيروت',
+        dist: '3.1 كم',
+        rating: 4.86,
+        count: 142,
+        img: 'https://images.unsplash.com/photo-1599351431202-1e0f0137899a?w=800&q=85&auto=format&fit=crop',
+        tags: ['كلاسيك','حلاقة عريس','نطاق منزلي'],
+        price: 45,
+        live: true,
+      },
+      {
+        name: 'Studio Noir',
+        en: 'Studio Noir',
+        loc: 'البَدارو · بيروت',
+        dist: '3.5 كم',
+        rating: 4.81,
+        count: 96,
+        img: 'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=800&q=85&auto=format&fit=crop',
+        tags: ['Editorial','Photo-shoot','حلاقة فنانين'],
+        price: 80,
+        live: false,
+      },
+    ];
+
+    function cardHTML(b, i) {
+      return `
+        <article class="card reveal" style="transition-delay:${i*60}ms" tabindex="0">
+          <div class="card-media">
+            <div class="card-badges">
+              ${b.live ? `<span class="badge"><span class="live-dot"></span> متاح الآن</span>` : ''}
+              ${b.gold ? `<span class="badge gold">مَزْيَن · مختار</span>` : ''}
+            </div>
+            <button type="button" class="card-fav" aria-label="حفظ" onclick="event.stopPropagation(); this.classList.toggle('is-saved');">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+            </button>
+            <img src="${b.img}" alt="" loading="lazy" referrerpolicy="no-referrer">
+          </div>
+          <div class="card-body">
+            <div class="card-row">
+              <div>
+                <h3 class="card-name">${b.name}</h3>
+                <div class="card-loc">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                  ${b.loc} · ${b.dist}
+                </div>
+              </div>
+              <span class="card-rating" aria-label="تقييم ${b.rating}">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                ${b.rating} <span class="count">(${b.count})</span>
+              </span>
+            </div>
+            <div class="card-services">
+              ${b.tags.map(t => `<span class="tag">${t}</span>`).join('')}
+            </div>
+            <div class="card-footer">
+              <div class="price">
+                <span class="from">يبدأ من</span>
+                <span class="val mono">${b.price}</span><span class="cur">$</span>
+              </div>
+              <button type="button" class="card-book" onclick="event.stopPropagation(); openSheet('${b.name}');">
+                احجز
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
+              </button>
+            </div>
+          </div>
+        </article>
+      `;
+    }
+
+    const grid = document.getElementById('barbers-grid');
+    if (grid) grid.innerHTML = BARBERS.map(cardHTML).join('');
+
+    /* ────────────────────────────
+       Filter chips
+       ──────────────────────────── */
+    document.querySelectorAll('.filters .chip').forEach(c => {
+      c.addEventListener('click', () => {
+        document.querySelectorAll('.filters .chip').forEach(x => x.classList.remove('active'));
+        c.classList.add('active');
+      });
+    });
+
+    /* ────────────────────────────
+       Showcase gallery thumbs
+       ──────────────────────────── */
+    const showImg = document.getElementById('showcase-img');
+    document.querySelectorAll('.showcase-thumbs .t').forEach(t => {
+      t.addEventListener('click', () => {
+        document.querySelectorAll('.showcase-thumbs .t').forEach(x => x.classList.remove('is-active'));
+        t.classList.add('is-active');
+        const src = t.dataset.img;
+        if (src && showImg) {
+          showImg.style.opacity = 0;
+          setTimeout(() => {
+            showImg.src = src;
+            showImg.style.transition = 'opacity .45s ease';
+            showImg.style.opacity = 1;
+          }, 220);
+        }
+      });
+    });
+
+    /* ────────────────────────────
+       Bottom sheet
+       ──────────────────────────── */
+    function openSheet(name) {
+      const overlay = document.getElementById('sheet-overlay');
+      const sheet = document.getElementById('sheet');
+      const title = document.getElementById('sheet-title');
+      if (name && title) title.textContent = `${name} — قصّة شعر كاملة`;
+      overlay.classList.add('open');
+      sheet.classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+    function closeSheet() {
+      document.getElementById('sheet-overlay').classList.remove('open');
+      document.getElementById('sheet').classList.remove('open');
+      document.body.style.overflow = '';
+    }
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSheet(); });
+
+    /* ────────────────────────────
+       Reveal on scroll
+       ──────────────────────────── */
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          e.target.classList.add('in');
+          io.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+    document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+
+    /* ────────────────────────────
+       Very subtle parallax on hero visual
+       ──────────────────────────── */
+    const heroVisual = document.querySelector('.hero-visual img');
+    if (heroVisual && window.matchMedia('(min-width: 980px)').matches) {
+      window.addEventListener('scroll', () => {
+        const y = Math.min(window.scrollY, 600);
+        heroVisual.style.transform = `translateY(${y * 0.06}px) scale(1.04)`;
+      }, { passive: true });
+    }
+
+    /* ────────────────────────────
+       Lang toggle (visual only)
+       ──────────────────────────── */
+    const langBtn = document.querySelector('.lang-toggle');
+    let isAr = true;
+    langBtn?.addEventListener('click', () => {
+      isAr = !isAr;
+      document.documentElement.lang = isAr ? 'ar' : 'en';
+      document.documentElement.dir = isAr ? 'rtl' : 'ltr';
+      langBtn.textContent = isAr ? 'EN' : 'ع';
+    });
+  </script>
+</body>
+</html>
